@@ -1,3 +1,5 @@
+'use client';
+import { useState } from 'react';
 import { Raleway } from 'next/font/google';
 import swampHacksLogo from '@/public/logos/swamphacks_code_logo.svg';
 import Image from 'next/image';
@@ -14,14 +16,16 @@ const ralewayRegular = Raleway({
   weight: ['500'],
 });
 
-const headerLink = `${ralewayRegular.className} group flex flex-col items-center text-2xl opacity-85 transition duration-200 hover:opacity-100 select-none`;
+const headerLink = `${ralewayRegular.className} group flex-col items-center text-2xl opacity-85 transition duration-200 hover:opacity-100 select-none hidden xl:flex`;
 const headerLinkUnderline =
   'duration-350 h-0.5 w-0 bg-white bg-opacity-75 transition-all group-hover:w-full';
 
 const Header = () => {
+  const [menuOpen, setMenuOpen] = useState(false); // For hamburger menu for mobile
+
   return (
     <header className='border-green flex h-24 w-full flex-row items-center  bg-black bg-opacity-75 pl-6 pr-6 text-white'>
-      <div className='flex select-none flex-row items-center justify-between gap-10'>
+      <div className='flex select-none flex-row items-center justify-between gap-10 sm:justify-start'>
         <a href='/'>
           <Image
             priority
