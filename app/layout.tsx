@@ -1,14 +1,17 @@
 import type { Metadata } from 'next';
-import Header from '@/components/header';
-import { Inter } from 'next/font/google';
+import { Raleway } from 'next/font/google';
 import './globals.css';
+import React from 'react';
 
-const inter = Inter({ subsets: ['latin'] });
+const RalewayRegular = Raleway({
+  display: 'swap',
+  subsets: ['latin'],
+  weight: ['500', '700'],
+});
 
 export const metadata: Metadata = {
-  title: 'Swamphacks X',
-  description:
-    "Welcome to Swamphacks X! The 10th iteration of the University of Florida's premier hackathon. Join us for 36 hours of hacking, workshops, and fun!",
+  title: 'SwampHacks X',
+  description: "SwampHacks X's website and login portal",
 };
 
 export default function RootLayout({
@@ -18,10 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body className={inter.className}>
-        <Header />
-        {children}
-      </body>
+      <body className={RalewayRegular.className}>{children}</body>
     </html>
   );
 }

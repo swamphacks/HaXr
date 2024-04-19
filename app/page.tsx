@@ -1,7 +1,10 @@
 import Header from '@/components/header';
 
-const Home = () => {
-  return <main></main>;
-};
-
-export default Home;
+export default function Home() {
+  return (
+    <>
+      <Header />
+      <main></main>
+    </>
+  );
+}

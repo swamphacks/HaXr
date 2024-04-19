@@ -5,7 +5,7 @@ export const config = {
   providers: [GitHub],
   theme: {
     colorScheme: 'dark',
-    logo: '/swamphacks_hd.png',
+    logo: '/logos/swamphacks_hd.png',
   },
 } satisfies NextAuthConfig;
 
