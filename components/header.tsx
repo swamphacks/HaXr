@@ -14,33 +14,44 @@ const ralewayRegular = Raleway({
   weight: ['500'],
 });
 
+const headerLink = `${ralewayRegular.className} group flex flex-col items-center text-2xl opacity-85 transition duration-200 hover:opacity-100 select-none`;
+const headerLinkUnderline =
+  'duration-350 h-0.5 w-0 bg-white bg-opacity-75 transition-all group-hover:w-full';
+
 const Header = () => {
   return (
     <header className='border-green flex h-24 w-full flex-row items-center  bg-black bg-opacity-75 pl-6 pr-6 text-white'>
-      <div className='flex flex-1 flex-row items-center justify-between'>
-        <Image
-          priority
-          className='h-40 w-40'
-          src={swampHacksLogo}
-          alt='SwampHacks Logo'
-        />
+      <div className='flex select-none flex-row items-center justify-between gap-10'>
+        <a href='/'>
+          <Image
+            priority
+            className='h-40 w-40'
+            src={swampHacksLogo}
+            alt='SwampHacks Logo'
+          />
+        </a>
         <p className={`${ralewayBold.className} text-4xl`}>Swamphacks X</p>
-        <a className={`${ralewayRegular.className} text-2xl`} href='#'>
+        <a className={headerLink} href='#'>
           Schedule
+          <span className={headerLinkUnderline}></span>
         </a>
-        <a className={`${ralewayRegular.className} text-2xl`} href='#'>
+        <a className={headerLink} href='#'>
           Sponsors
+          <span className={headerLinkUnderline}></span>
         </a>
-        <a className={`${ralewayRegular.className} text-2xl`} href='#'>
+        <a className={headerLink} href='#'>
           Apply
+          <span className={headerLinkUnderline}></span>
         </a>
-        <a className={`${ralewayRegular.className} text-2xl`} href='#'>
+        <a className={headerLink} href='#'>
           FAQ
+          <span className={headerLinkUnderline}></span>
         </a>
       </div>
-      <div className='flex flex-1 flex-row justify-end'>
-        <a className={`${ralewayRegular.className} text-2xl`} href='#'>
+      <div className='flex grow flex-row justify-end'>
+        <a className={headerLink} href='#'>
           Sign-In
+          <span className={headerLinkUnderline}></span>
         </a>
       </div>
     </header>
