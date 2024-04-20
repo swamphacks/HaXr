@@ -1,13 +1,7 @@
 import type { Metadata } from 'next';
-import { Raleway } from 'next/font/google';
 import './globals.css';
 import React from 'react';
-
-const RalewayRegular = Raleway({
-  display: 'swap',
-  subsets: ['latin'],
-  weight: ['500', '700'],
-});
+import { ClerkProvider } from '@clerk/nextjs';
 
 export const metadata: Metadata = {
   title: 'SwampHacks X',
@@ -20,8 +14,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
-      <body className={RalewayRegular.className}>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang='en'>
+        <body>{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

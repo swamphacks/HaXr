@@ -1,6 +1,7 @@
 import swampHacksLogo from '@/public/logos/swamphacks_code_logo.svg';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
 // TODO: fix this (use components); tailwind-prettier doesn't recognize this string
 const headerLink =
@@ -15,7 +16,7 @@ const Header = () => {
         <a href='/'>
           <Image
             priority
-            className='w-32'
+            className='w-32 fill-amber-700'
             src={swampHacksLogo}
             alt='SwampHacks Logo'
           />
@@ -41,10 +42,12 @@ const Header = () => {
         </Link>
       </div>
       <div className='flex grow flex-row justify-end'>
-        <Link className={headerLink} href='/api/auth/signin'>
-          Sign-In
-          <span className={headerLinkUnderline}></span>
-        </Link>
+        <SignedOut>
+          <SignInButton />
+        </SignedOut>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
       </div>
     </header>
   );
