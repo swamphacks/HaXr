@@ -1,4 +1,4 @@
-import Header from '@/components/frontpage/header';
+import Header from '@/components/frontpage/Header';
 import { Raleway } from 'next/font/google';
 
 const RalewayRegular = Raleway({

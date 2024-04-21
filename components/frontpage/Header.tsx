@@ -21,8 +21,8 @@ const Header = () => {
             alt='SwampHacks Logo'
           />
         </a>
-        <Link href={'/'}>
-          <p className={`text-3xl font-bold`}>SwampHacks X</p>
+        <Link href='/'>
+          <p className='text-3xl font-bold'>SwampHacks X</p>
         </Link>
         <Link className={headerLink} href='#'>
           Schedule
