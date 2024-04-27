@@ -2,7 +2,7 @@
 
 export {};
 
-export type Role = 'admin' | 'organizer' | undefined;
+export type Role = 'admin' | undefined;
 
 declare global {
   interface CustomJwtSessionClaims {

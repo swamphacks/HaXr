@@ -17,16 +17,22 @@ export default function Subpage() {
         </div>
       </ClerkLoaded>
 
-      <IsRole role='admin'>
+      <IsRole role={undefined}>
         <div className='italic'>
-          You can see this because you are an <b>Admin</b> (shh, organizers and
-          applicants cannot).
+          You can see this because you are a <b>Hacker</b>!
         </div>
       </IsRole>
 
-      <IsRole role={['organizer', 'admin']}>
+      <IsRole role='admin'>
         <div className='italic'>
-          You can see this because you are either an <b>Organizer</b> or an{' '}
+          You can see this because you are an <b>Admin</b> (shh, mere hackers
+          can&apos;t see this).
+        </div>
+      </IsRole>
+
+      <IsRole role={[undefined, 'admin']}>
+        <div className='italic'>
+          You can see this because you are either a <b>Hacker</b> or an{' '}
           <b>Admin</b>.
         </div>
       </IsRole>

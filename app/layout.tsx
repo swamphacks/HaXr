@@ -5,7 +5,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 
 export const metadata: Metadata = {
   title: 'SwampHacks X',
-  description: "SwampHacks X's website and login portal",
+  description: 'SwampHacks portal for Hackers and Admins!',
 };
 
 export default function RootLayout({
