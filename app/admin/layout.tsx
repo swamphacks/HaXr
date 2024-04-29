@@ -8,6 +8,7 @@ import {
   Image,
   NavLink,
   Select,
+  Text,
   Title,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
@@ -115,7 +116,11 @@ export default function AdminLayout({
           />
           <NavLink
             label='Item Loan'
-            description='2 items overdue'
+            description={
+              <Text inherit={true} c='red'>
+                2 items overdue
+              </Text>
+            }
             leftSection={<IconExchange size='1rem' />}
           />
         </NavLink>
