@@ -5,7 +5,6 @@ import {
 } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-const isProtectedRoute = createRouteMatcher(['/hacker(.*)', '/admin(.*)']);
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 const middlewareGetRole = (auth: ClerkMiddlewareAuth) =>
@@ -14,8 +13,8 @@ const middlewareGetRole = (auth: ClerkMiddlewareAuth) =>
 export default clerkMiddleware((auth, req) => {
   const url = req.nextUrl.clone();
 
-  // Ensure that user is signed in, if necessary
-  if (isProtectedRoute(req)) auth().protect();
+  // Ensure that user is signed in
+  auth().protect();
 
   // Root redirects to dashboard corresponding to user's role
   if (url.pathname === '/') {
