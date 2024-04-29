@@ -1,5 +1,10 @@
 'use client';
-import { ClerkLoaded, ClerkLoading, useSession } from '@clerk/nextjs';
+import {
+  ClerkLoaded,
+  ClerkLoading,
+  UserProfile,
+  useSession,
+} from '@clerk/nextjs';
 import IsRole from '@/components/auth/IsRole';
 
 export default function Subpage() {
@@ -11,6 +16,7 @@ export default function Subpage() {
         <div>Loading...</div>
       </ClerkLoading>
       <ClerkLoaded>
+        <UserProfile />
         <div>
           Hi, {session?.user.firstName}! You are logged in (this page is hidden
           to logged out people using middleware).
