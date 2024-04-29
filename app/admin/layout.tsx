@@ -2,11 +2,12 @@
 import React from 'react';
 import {
   AppShell,
-  Box,
   Burger,
+  Divider,
   Group,
   Image,
   NavLink,
+  ScrollArea,
   Select,
   Text,
   Title,
@@ -42,8 +43,8 @@ export default function AdminLayout({
       padding='md'
     >
       <AppShell.Header>
-        <Group justify='space-between'>
-          <Group h='100%' px='md'>
+        <Group h='100%' px='md' justify='space-between'>
+          <Group h='100%'>
             <Burger
               opened={opened}
               onClick={toggle}
@@ -55,13 +56,12 @@ export default function AdminLayout({
               mah={60}
               fit='contain'
               alt='SwampHacks logo'
+              visibleFrom='sm'
             />
-            <Title order={2}>Administration Portal</Title>
+            <Title order={2}>Admin Portal</Title>
           </Group>
 
-          <Box mx='md'>
-            <UserButton showName={true} />
-          </Box>
+          <UserButton showName={true} />
         </Group>
       </AppShell.Header>
 
@@ -75,55 +75,61 @@ export default function AdminLayout({
             },
           ]}
           defaultValue='sh-x'
+          allowDeselect={false}
         />
 
-        <NavLink
-          label='Overview'
-          leftSection={<IconInfoCircle size='1rem' />}
-        />
+        <Divider my='xs' />
 
-        <NavLink
-          label='Configuration'
-          leftSection={<IconSettings size='1rem' />}
-        />
-
-        <NavLink label='Applications' leftSection={<IconInbox size='1rem' />}>
-          <NavLink label='Edit Form' leftSection={<IconEdit size='1rem' />} />
+        <AppShell.Section grow component={ScrollArea}>
           <NavLink
-            label='Review'
-            description='75% reviewed (57 remaining)'
-            leftSection={<IconStatusChange size='1rem' />}
+            label='Overview'
+            leftSection={<IconInfoCircle size='1rem' />}
+            active={true}
           />
-        </NavLink>
 
-        <NavLink
-          label='Redeemables & Swag'
-          leftSection={<IconCoin size='1rem' />}
-        />
+          <NavLink
+            label='Configuration'
+            leftSection={<IconSettings size='1rem' />}
+          />
 
-        <NavLink label='Events' leftSection={<IconCalendar size='1rem' />} />
+          <NavLink label='Applications' leftSection={<IconInbox size='1rem' />}>
+            <NavLink label='Edit Form' leftSection={<IconEdit size='1rem' />} />
+            <NavLink
+              label='Review'
+              description='75% reviewed (57 remaining)'
+              leftSection={<IconStatusChange size='1rem' />}
+            />
+          </NavLink>
 
-        <NavLink label='Scanner' leftSection={<IconQrcode size='1rem' />}>
           <NavLink
-            label='Check-in'
-            description='17% checked-in (323 remaining)'
-            leftSection={<IconDoorEnter size='1rem' />}
+            label='Redeemables & Swag'
+            leftSection={<IconCoin size='1rem' />}
           />
-          <NavLink label='Swag Shop' leftSection={<IconLego size='1rem' />} />
-          <NavLink
-            label='Event Attendance'
-            leftSection={<IconTicket size='1rem' />}
-          />
-          <NavLink
-            label='Item Loan'
-            description={
-              <Text inherit={true} c='red'>
-                2 items overdue
-              </Text>
-            }
-            leftSection={<IconExchange size='1rem' />}
-          />
-        </NavLink>
+
+          <NavLink label='Events' leftSection={<IconCalendar size='1rem' />} />
+
+          <NavLink label='Scanner' leftSection={<IconQrcode size='1rem' />}>
+            <NavLink
+              label='Check-in'
+              description='17% checked-in (323 remaining)'
+              leftSection={<IconDoorEnter size='1rem' />}
+            />
+            <NavLink label='Swag Shop' leftSection={<IconLego size='1rem' />} />
+            <NavLink
+              label='Event Attendance'
+              leftSection={<IconTicket size='1rem' />}
+            />
+            <NavLink
+              label='Item Loan'
+              description={
+                <Text inherit={true} c='red'>
+                  2 items overdue
+                </Text>
+              }
+              leftSection={<IconExchange size='1rem' />}
+            />
+          </NavLink>
+        </AppShell.Section>
       </AppShell.Navbar>
 
       <AppShell.Main>{children}</AppShell.Main>
