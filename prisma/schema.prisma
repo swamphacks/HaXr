@@ -1,0 +1,114 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+enum Role {
+  Hacker
+  Admin
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(Hacker)
+  accounts      Account[]
+  sessions      Session[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Application Application[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Competition {
+  code          String        @id
+  name          String
+  description   String
+  frontpage_url String
+  start_date    DateTime
+  end_date      DateTime
+  location      String
+  location_url  String
+  questions     Json
+  applications  Application[]
+  visible       Boolean       @default(false)
+}
+
+enum Status {
+  STARTED // Save state
+
+  // After submission
+  APPLIED
+
+  // After review
+  REJECTED
+  WAITLISTED
+  ACCEPTED
+
+  // After confirmation
+  NOT_ATTENDING
+  ATTENDING
+}
+
+model Application {
+  user_id          String
+  competition_code String
+  questions        Json
+  responses        Json
+  status           Status    @default(STARTED)
+  applied_at       DateTime?
+  updated_at       DateTime  @updatedAt
+
+  user        User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  competition Competition @relation(fields: [competition_code], references: [code], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([competition_code, user_id])
+}
