@@ -1,17 +1,20 @@
-// noinspection JSUnusedGlobalSymbols
+import { Role } from '@prisma/client';
 
-export {};
-
-export type Role = 'admin' | undefined;
-
-declare global {
-  interface CustomJwtSessionClaims {
-    metadata: {
-      role?: Role;
-    };
+declare module 'next-auth' {
+  interface Session {
+    id: string;
+    role: Role;
   }
 
-  interface UserPublicMetadata {
-    role?: Role;
+  interface User {
+    id: string;
+    role: Role;
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id: string;
+    role: Role;
   }
 }
