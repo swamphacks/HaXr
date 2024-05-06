@@ -1,35 +1,29 @@
-import {
-  clerkMiddleware,
-  ClerkMiddlewareAuth,
-  createRouteMatcher,
-} from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { Role } from '@prisma/client';
+import { NextRequest, NextResponse } from 'next/server';
 
-const isAdminRoute = createRouteMatcher(['/admin(.*)']);
+const NextRedirect = (req: NextRequest, url: string) => {
+  const newUrl = req.nextUrl.clone();
+  newUrl.pathname = url;
+  return NextResponse.redirect(newUrl);
+};
 
-const middlewareGetRole = (auth: ClerkMiddlewareAuth) =>
-  auth().sessionClaims?.metadata.role;
+export default auth((req) => {
+  // If not signed in then redirected to sign-in page
+  if (!req.auth?.user) return NextRedirect(req, '/api/auth/signin');
 
-export default clerkMiddleware((auth, req) => {
-  const url = req.nextUrl.clone();
+  const { pathname } = req.nextUrl;
+  const { role } = req.auth.user;
 
-  // Ensure that user is signed in
-  auth().protect();
+  // Redirect signed in at root to correct dashboard
+  if (pathname == '/')
+    return NextRedirect(req, role === Role.Admin ? '/admin' : '/hacker');
 
-  // Root redirects to dashboard corresponding to user's role
-  if (url.pathname === '/') {
-    url.pathname = middlewareGetRole(auth) === 'admin' ? '/admin' : '/hacker';
-    return NextResponse.redirect(url);
-  }
-
-  // Ensure user is an admin, if necessary
-  if (isAdminRoute(req) && middlewareGetRole(auth) !== 'admin') {
-    // Redirect to applicant dashboard
-    url.pathname = '/hacker';
-    return NextResponse.redirect(url);
-  }
+  // Protect admin dashboard
+  if (pathname.startsWith('/admin') && role !== Role.Admin)
+    return NextRedirect(req, '/');
 });
 
 export const config = {
-  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
