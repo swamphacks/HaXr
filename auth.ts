@@ -13,6 +13,9 @@ const adapter = new PrismaNeon(neon);
 const prisma = new PrismaClient({ adapter });
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  session: {
+    strategy: 'database',
+  },
   adapter: PrismaAdapter(prisma),
   providers: [GitHub],
   callbacks: {
@@ -21,9 +24,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     //   if (pathname === "/middleware-example") return !!auth
     //   return true
     // },
-    jwt({ token, trigger, session }) {
-      if (trigger === 'update') token.name = session?.user?.name;
-      return token;
+    // jwt({ token, trigger, session }) {
+    //   if (trigger === 'update') token.name = session?.user?.name;
+    //   return token;
+    // },
+    session({ session, user }) {
+      session.user.isAdmin = user.isAdmin;
+      return session;
     },
   },
 });
