@@ -7,7 +7,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 
 // Edge connection
 const neon = new Pool({
-  connectionString: process.env.AUTH_POSTGRES_PRISMA_URL,
+  connectionString: process.env.POSTGRES_PRISMA_URL,
 });
 const adapter = new PrismaNeon(neon);
 const prisma = new PrismaClient({ adapter });
