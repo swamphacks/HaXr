@@ -4,6 +4,7 @@ import './globals.css';
 import React from 'react';
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
 import Head from 'next/head';
+import { SessionProvider } from 'next-auth/react';
 
 export const metadata: Metadata = {
   title: 'SwampHacks Portal',
@@ -16,13 +17,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='en'>
-      <Head>
-        <ColorSchemeScript />
-      </Head>
-      <body>
-        <MantineProvider defaultColorScheme='dark'>{children}</MantineProvider>
-      </body>
-    </html>
+    <SessionProvider>
+      <html lang='en'>
+        <Head>
+          <ColorSchemeScript />
+        </Head>
+        <body>
+          <MantineProvider defaultColorScheme='dark'>
+            {children}
+          </MantineProvider>
+        </body>
+      </html>
+    </SessionProvider>
   );
 }
