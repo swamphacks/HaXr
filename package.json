@@ -12,8 +12,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@clerk/nextjs": "^5.0.1",
-    "@clerk/themes": "^2.1.0",
     "@mantine/core": "^7.8.1",
     "@mantine/hooks": "^7.8.1",
     "@prisma/client": "^5.12.1",
