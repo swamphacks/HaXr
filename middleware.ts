@@ -1,31 +1,37 @@
 import NextAuth from 'next-auth';
 import authConfig from '@/auth.config';
+import { NextRequest } from 'next/server';
 
 const { auth } = NextAuth(authConfig);
 
+const RedirectResponse = (req: NextRequest, pathname: string) => {
+  const newUrl = req.nextUrl.clone();
+  newUrl.pathname = pathname;
+  return Response.redirect(newUrl);
+};
+
 export default auth((req) => {
-  if (!req.auth || !req.auth.user) {
-    // If not signed in, send to login page
-    const url = req.nextUrl.clone();
-    url.pathname = '/api/auth/signin';
-    return Response.redirect(url);
-  }
+  /* Authentication & Authorization */
+
+  // If not signed in, send to login page
+  if (!req.auth || !req.auth.user)
+    return RedirectResponse(req, '/api/auth/signin');
 
   const { pathname } = req.nextUrl;
   const { isAdmin } = req.auth.user;
 
-  // If root, send to respective dashboard
-  if (pathname === '/') {
-    const url = req.nextUrl.clone();
-    url.pathname = isAdmin ? '/admin' : '/hacker';
-    return Response.redirect(url);
-  }
+  // Redirect if accessing unauthorized pages
+  if (pathname.startsWith('/admin') && !isAdmin)
+    return RedirectResponse(req, '/hacker');
 
-  if (pathname.startsWith('/admin') && !isAdmin) {
-    const url = req.nextUrl.clone();
-    url.pathname = '/hacker';
-    return Response.redirect(url);
-  }
+  /* Redirects */
+
+  // If root, send to respective dashboard
+  if (pathname === '/')
+    return RedirectResponse(req, isAdmin ? '/admin/comp' : '/hacker');
+
+  // If admin root, send to admin competition dashboard
+  if (pathname === '/admin') return RedirectResponse(req, '/admin/comp');
 });
 
 export const config = {
