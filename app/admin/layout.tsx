@@ -1,11 +1,8 @@
+import React, { PropsWithChildren } from 'react';
 import AdminShell from '@/components/admin/AdminShell';
 import { auth } from '@/auth';
-import { PropsWithChildren } from 'react';
 
-export default async function AdminLayout({
-  children,
-}: Readonly<PropsWithChildren>) {
+export default async function AdminLayout({ children }: PropsWithChildren) {
   const session = await auth();
-
   return <AdminShell session={session!}>{children}</AdminShell>;
 }
