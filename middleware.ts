@@ -1,27 +1,31 @@
-import { auth } from '@/auth';
-import { Role } from '@prisma/client';
-import { NextRequest, NextResponse } from 'next/server';
+import NextAuth from 'next-auth';
+import authConfig from '@/auth.config';
 
-const NextRedirect = (req: NextRequest, url: string) => {
-  const newUrl = req.nextUrl.clone();
-  newUrl.pathname = url;
-  return NextResponse.redirect(newUrl);
-};
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  // If not signed in then redirected to sign-in page
-  if (!req.auth?.user) return NextRedirect(req, '/api/auth/signin');
+  if (!req.auth || !req.auth.user) {
+    // If not signed in, send to login page
+    const url = req.nextUrl.clone();
+    url.pathname = '/api/auth/signin';
+    return Response.redirect(url);
+  }
 
   const { pathname } = req.nextUrl;
-  const { role } = req.auth.user;
+  const { isAdmin } = req.auth.user;
 
-  // Redirect signed in at root to correct dashboard
-  if (pathname == '/')
-    return NextRedirect(req, role === Role.Admin ? '/admin' : '/hacker');
+  // If root, send to respective dashboard
+  if (pathname === '/') {
+    const url = req.nextUrl.clone();
+    url.pathname = isAdmin ? '/admin' : '/hacker';
+    return Response.redirect(url);
+  }
 
-  // Protect admin dashboard
-  if (pathname.startsWith('/admin') && role !== Role.Admin)
-    return NextRedirect(req, '/');
+  if (pathname.startsWith('/admin') && !isAdmin) {
+    const url = req.nextUrl.clone();
+    url.pathname = '/hacker';
+    return Response.redirect(url);
+  }
 });
 
 export const config = {
