@@ -4,5 +4,6 @@ import { auth } from '@/auth';
 
 export default async function AdminLayout({ children }: PropsWithChildren) {
   const session = await auth();
+
   return <AdminShell session={session!}>{children}</AdminShell>;
 }
