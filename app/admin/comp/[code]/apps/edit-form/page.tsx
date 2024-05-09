@@ -111,10 +111,10 @@ export default function EditForm() {
         <Table.Thead>
           <Table.Tr>
             <Table.Th />
-            <Table.Th>Element position</Table.Th>
-            <Table.Th>Element name</Table.Th>
-            <Table.Th>Symbol</Table.Th>
-            <Table.Th>Atomic mass</Table.Th>
+            <Table.Th>Form Name</Table.Th>
+            <Table.Th>Date Modified</Table.Th>
+            <Table.Th>Date Created</Table.Th>
+            <Table.Th>Creator</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>
