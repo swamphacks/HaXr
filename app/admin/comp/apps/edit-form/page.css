@@ -1,0 +1,11 @@
+.title {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.form-table {
+  display: grid;
+  grid-template-columns: auto 17% 17% 20%;
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+}
