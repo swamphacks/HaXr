@@ -133,10 +133,10 @@ export default function AdminShell({
               >
                 <NavLink
                   component={Link}
-                  label='Edit Form'
+                  label='Edit Forms'
                   leftSection={<IconEdit size='1rem' />}
-                  href='/admin/comp/apps/edit-form'
-                  active={pathname === '/admin/comp/apps/edit-form'}
+                  href='/admin/comp/apps/forms'
+                  active={pathname === '/admin/comp/apps/forms'}
                 />
 
                 <NavLink

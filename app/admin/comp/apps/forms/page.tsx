@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { NavLink, TextInput, rem, useMantineTheme } from '@mantine/core';
+import { Button, TextInput, rem, useMantineTheme } from '@mantine/core';
 import { IconSearch, IconEdit } from '@tabler/icons-react';
 import { Table, Checkbox } from '@mantine/core';
-import './page.css';
 
 const forms = [
   {
@@ -40,7 +40,9 @@ const forms = [
   },
 ];
 
-export default function EditForm() {
+export default function Forms() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const rows = forms.map((form) => (
     <Table.Tr
@@ -64,10 +66,14 @@ export default function EditForm() {
           }
         />
       </Table.Td>
-      <Table.Td>{form.name}</Table.Td>
+      <Table.Td>
+        <a href='/forms/'>{form.name}</a>
+      </Table.Td>
       <Table.Td>{form.dateModified}</Table.Td>
       <Table.Td>{form.dateCreated}</Table.Td>
-      <Table.Td>{form.creator}</Table.Td>
+      <Table.Td>
+        <a href={`/admin/user/${form.creator}`}>{form.creator}</a>
+      </Table.Td>
     </Table.Tr>
   ));
   return (
@@ -91,23 +97,21 @@ export default function EditForm() {
             },
           }}
         />
-        <NavLink
-          component={Link}
-          label='Create Form'
+        <Button
           leftSection={<IconEdit size='1rem' />}
-          styles={{
-            root: {
-              width: 'fit-content',
-              borderRadius: rem(20),
-            },
+          radius='xl'
+          onClick={(event) => {
+            event.preventDefault();
+            router.push(`${pathname}/create`);
           }}
-          href='/admin/comp/edit-form/create'
-        />
+        >
+          Create Form
+        </Button>
       </div>
       <div className='mb-2 grid grid-cols-[auto_40%]'>
         <div className='self-center text-[1.4rem]'>Recent Forms</div>
       </div>
-      <Table>
+      <Table highlightOnHover={true}>
         <Table.Thead>
           <Table.Tr>
             <Table.Th />
