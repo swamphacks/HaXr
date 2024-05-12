@@ -1,4 +1,3 @@
-import { Stack } from '@mantine/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -19,13 +18,12 @@ export default function Choices({
 }) {
   return (
     <SortableContext items={choices} strategy={verticalListSortingStrategy}>
-      {choices.map((choice: answerChoice, index: number) => (
+      {choices.map((choice: answerChoice) => (
         <Choice
           key={choice.id}
           choices={choices}
           choice={choice}
           setChoices={setChoices}
-          index={index}
         />
       ))}
     </SortableContext>
