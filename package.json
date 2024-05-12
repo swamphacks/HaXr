@@ -20,6 +20,7 @@
     "@prisma/client": "^5.13.0",
     "@tabler/icons-react": "^3.2.0",
     "@zxing/library": "^0.21.0",
+    "framer-motion": "^11.1.9",
     "next": "14.2.2",
     "next-auth": "^5.0.0-beta.17",
     "prettier": "^3.2.5",

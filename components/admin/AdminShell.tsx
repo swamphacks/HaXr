@@ -37,6 +37,7 @@ import { Competition } from '@prisma/client';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Spinner from '../misc/Spinner';
 
 interface Props {
   session: Session;
@@ -53,14 +54,23 @@ export default function AdminShell({
   session,
   children,
 }: PropsWithChildren<Props>) {
+  const [loading, setLoading] = useState<boolean>(true);
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
 
   const { data } = useSWR<Competition[]>('/api/comp', fetcher, {
     fallbackData: [],
+    onSuccess: () => setLoading(false),
   });
 
   const [comp, setComp] = useState<string | null>(null);
+
+  if (loading)
+    return (
+      <div className='flex h-screen w-screen items-center justify-center overflow-hidden'>
+        <Spinner />
+      </div>
+    );
 
   return (
     <CompetitionContext.Provider
