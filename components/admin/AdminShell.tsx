@@ -1,5 +1,10 @@
 'use client';
-import React, { createContext, PropsWithChildren, useState } from 'react';
+import React, {
+  createContext,
+  PropsWithChildren,
+  useState,
+  useEffect,
+} from 'react';
 import {
   AppShell,
   AppShellHeader,
@@ -60,6 +65,13 @@ export default function AdminShell({
     fallbackData: [],
   });
 
+  useEffect(() => {
+    const selectedComp = sessionStorage.getItem('selectedComp');
+    if (selectedComp && data?.find((c) => c.code === selectedComp)) {
+      setComp(selectedComp);
+    }
+  }, [data]);
+
   const [comp, setComp] = useState<string | null>(null);
 
   return (
@@ -103,7 +115,15 @@ export default function AdminShell({
             placeholder='Select a competition'
             data={data?.map((c) => ({ value: c.code, label: c.name }))}
             value={comp}
-            onChange={(comp) => setComp(comp)}
+            onChange={(comp) => {
+              setComp(comp);
+
+              if (comp) {
+                sessionStorage.setItem('selectedComp', comp);
+              } else {
+                sessionStorage.removeItem('selectedComp');
+              }
+            }}
             allowDeselect={true}
           />
 
