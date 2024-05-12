@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, TextInput, Select, Text } from '@mantine/core';
+import { Grid, Button, TextInput, Select, Text } from '@mantine/core';
 import { useDroppable, DndContext, closestCorners } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { v4 as uuidv4 } from 'uuid';
@@ -76,7 +76,7 @@ export default function Question(props: question) {
             onDragEnd={handleDragged}
           >
             <Droppable>
-              <Choices choices={choices} />
+              <Choices choices={choices} setChoices={setChoices} />
             </Droppable>
           </DndContext>
           <Button

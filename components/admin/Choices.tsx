@@ -10,14 +10,24 @@ type answerChoice = {
   id: string;
 };
 
-export default function Choices({ choices }: { choices: answerChoice[] }) {
+export default function Choices({
+  choices,
+  setChoices,
+}: {
+  choices: answerChoice[];
+  setChoices: any;
+}) {
   return (
     <SortableContext items={choices} strategy={verticalListSortingStrategy}>
-      <Stack align='stretch'>
-        {choices.map((choice: answerChoice, index: number) => (
-          <Choice key={choice.id} choice={choice} index={index} />
-        ))}
-      </Stack>
+      {choices.map((choice: answerChoice, index: number) => (
+        <Choice
+          key={choice.id}
+          choices={choices}
+          choice={choice}
+          setChoices={setChoices}
+          index={index}
+        />
+      ))}
     </SortableContext>
   );
 }
