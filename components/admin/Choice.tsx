@@ -11,10 +11,14 @@ type answerChoice = {
 };
 
 export default function Choice({
+  choices,
   choice,
+  setChoices,
   index,
 }: {
+  choices: answerChoice[];
   choice: answerChoice;
+  setChoices: any;
   index: number;
 }) {
   const id = choice.id;
@@ -26,16 +30,20 @@ export default function Choice({
     transform: CSS.Transform.toString(transform),
   };
   return (
-    <Group key={choice.id} ref={setNodeRef} {...attributes} style={style}>
+    <div
+      key={choice.id}
+      ref={setNodeRef}
+      {...attributes}
+      style={style}
+      className='mb-2 grid grid-cols-[1.3rem_auto_1.3rem] items-center'
+    >
       <IconGripVertical {...listeners} style={{ width: '1.2rem' }} />
-      <TextInput
-        defaultValue={choice.value}
-        rightSection={
-          <CloseButton
-          // onClick={() => setChoices(choices.filter((_, i) => i !== index))}
-          />
+      <TextInput defaultValue={choice.value} />
+      <CloseButton
+        onClick={() =>
+          setChoices(choices.filter((c: answerChoice) => c.id !== choice.id))
         }
       />
-    </Group>
+    </div>
   );
 }
