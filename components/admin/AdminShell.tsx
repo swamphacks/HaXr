@@ -151,6 +151,7 @@ export default function AdminShell({
               <NavLink
                 label='Applications'
                 leftSection={<IconInbox size='1rem' />}
+                defaultOpened={pathname.startsWith('/admin/comp/apps')}
               >
                 <NavLink
                   component={Link}
@@ -186,7 +187,11 @@ export default function AdminShell({
                 active={pathname === '/admin/comp/events'}
               />
 
-              <NavLink label='Scanner' leftSection={<IconQrcode size='1rem' />}>
+              <NavLink
+                label='Scanner'
+                leftSection={<IconQrcode size='1rem' />}
+                defaultOpened={pathname.startsWith('/admin/comp/scan')}
+              >
                 <NavLink
                   component={Link}
                   label='Check-in'
