@@ -60,6 +60,7 @@ export default function AdminShell({
 }: PropsWithChildren<Props>) {
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
+  const [comp, setComp] = useState<string | null>(null);
 
   const { data } = useSWR<Competition[]>('/api/comp', fetcher, {
     fallbackData: [],
@@ -71,8 +72,6 @@ export default function AdminShell({
       setComp(selectedComp);
     }
   }, [data]);
-
-  const [comp, setComp] = useState<string | null>(null);
 
   return (
     <CompetitionContext.Provider
