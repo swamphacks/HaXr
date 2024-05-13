@@ -31,11 +31,136 @@ type question = {
   type: questionType;
   answerChoices?: string[];
   id: string;
+  mlhRequired: boolean;
 };
+
+const requiredQuestions: question[] = [
+  {
+    title: 'First Name',
+    type: questionType.shortResponse,
+    mlhRequired: true,
+    id: '1',
+  },
+  {
+    title: 'Last Name',
+    type: questionType.shortResponse,
+    mlhRequired: true,
+    id: '2',
+  },
+  {
+    title: 'Age',
+    type: questionType.radio,
+    answerChoices: [
+      'Under 18',
+      '18-24',
+      '25-34',
+      '35-44',
+      '45-54',
+      '55-64',
+      '65+',
+    ],
+    mlhRequired: true,
+    id: '3',
+  },
+  {
+    title: 'Phone Number',
+    type: questionType.shortResponse,
+    mlhRequired: true,
+    id: '4',
+  },
+  {
+    title: 'Email',
+    type: questionType.shortResponse,
+    mlhRequired: true,
+    id: '5',
+  },
+  {
+    title: 'School',
+    type: questionType.radio,
+    mlhRequired: true,
+    answerChoices: [
+      'University of Florida',
+      'University of South Florida',
+      'Florida State University',
+      'University of Central Florida',
+      'Florida International University',
+      'Florida Atlantic University',
+      'University of Miami',
+      'Florida Gulf Coast University',
+      'Florida A&M University',
+      'Stetson University',
+      'Embry-Riddle Aeronautical University',
+      'Rollins College',
+      'Florida Institute of Technology',
+      'Other',
+    ],
+    id: '6',
+  },
+  {
+    title: 'Level of Study',
+    type: questionType.radio,
+    mlhRequired: true,
+    answerChoices: [
+      'Less than Secondary / High School',
+      'Secondary / High School',
+      'Undergraduate University (2 year - community college or similar)',
+      'Undergraduate University (3+ year)',
+      'Graduate University (Masters, Professional, Doctoral, etc)',
+      'Code School / Bottcamp',
+      'Other Vocational / Trade Program or Apprenticeship',
+      'Post Doctorate',
+      'Other',
+      "I'm not currently a student",
+      'Prefer not to answer',
+    ],
+    id: '7',
+  },
+  {
+    title: 'Country of Residence',
+    type: questionType.radio,
+    mlhRequired: true,
+    answerChoices: [
+      'United States',
+      'Canada',
+      'United Kingdom',
+      'Australia',
+      'Germany',
+      'France',
+      'India',
+      'Netherlands',
+      'Spain',
+      'Italy',
+      'Brazil',
+      'China',
+      'Japan',
+      'South Korea',
+      'Sweden',
+      'Russia',
+      'Switzerland',
+      'Other',
+    ],
+    id: '8',
+  },
+];
 
 export default function CreateForm() {
   const iconStyle = { width: rem(12), height: rem(12) };
-  const [questions, setQuestions] = useState<question[]>([]);
+  const [questions, setQuestions] = useState<question[]>(requiredQuestions);
+  const handleAddQuestions = () => {
+    setQuestions((oldQuestions: question[]) => {
+      return [
+        ...oldQuestions,
+        {
+          title: '',
+          description: '',
+          type: questionType.radio,
+          answerChoices: [],
+          mlhRequired: false,
+          id: uuidv4(),
+        },
+      ];
+    });
+  };
 
   return (
     <Tabs defaultValue='gallery'>
@@ -72,25 +197,15 @@ export default function CreateForm() {
                 strategy={verticalListSortingStrategy}
               >
                 {questions.map((q: question, _) => (
-                  <Question key={q.id} question={q} />
+                  <Question
+                    key={q.id}
+                    question={q}
+                    setQuestions={setQuestions}
+                    editable={false}
+                  />
                 ))}
               </SortableContext>
-              <Button
-                variant='light'
-                color='gray'
-                onClick={() =>
-                  setQuestions([
-                    ...questions,
-                    {
-                      title: '',
-                      description: '',
-                      type: questionType.radio,
-                      answerChoices: [],
-                      id: uuidv4(),
-                    },
-                  ])
-                }
-              >
+              <Button variant='light' color='gray' onClick={handleAddQuestions}>
                 Add Question
               </Button>
             </Stack>

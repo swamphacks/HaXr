@@ -17,6 +17,7 @@ enum questionType {
   freeResponse = 'Free Response',
   shortResponse = 'Short Answer',
   multi = 'Multiple Select',
+  dropdown = 'Dropdown',
   radio = 'Multiple Choice',
 }
 
@@ -26,6 +27,7 @@ type question = {
   type: questionType;
   answerChoices?: string[];
   id: string;
+  mlhRequired: boolean;
 };
 
 type answerChoice = {
@@ -33,11 +35,22 @@ type answerChoice = {
   id: string;
 };
 
-export default function Question({ question }: { question: question }) {
-  const [value, setValue] = useState<string | null>(
+function AnswerChoiceHeader() {
+  return <h2 className='text-lg font-semibold'>Answer Choices</h2>;
+}
+
+export default function Question({
+  question,
+  setQuestions,
+}: {
+  question: question;
+  setQuestions: any;
+}) {
+  const [selectedQuestionType, setQuestionType] = useState<string | null>(
     Object.values(questionType)[0] as string
   );
   const [choices, setChoices] = useState<answerChoice[]>([]);
+
   const getChoicePos = (id: string) =>
     choices.findIndex((choice: answerChoice) => choice.id === id);
   const handleDragged = (event: any) => {
@@ -55,33 +68,11 @@ export default function Question({ question }: { question: question }) {
   const id = question.id;
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
+
   const style = {
     transition,
     transform: CSS.Transform.toString(transform),
   };
-
-  useEffect(() => {
-    const textarea = document.getElementById(
-      'autoresizing-textarea'
-    ) as HTMLTextAreaElement;
-    if (!textarea) {
-      console.error('Could not load autoresizing element');
-      return;
-    }
-
-    // Function to resize textarea
-    const resizeTextarea = () => {
-      // Reset the height to a minimum or to the scroll height, whichever is bigger
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
-    };
-
-    // Resize on input events
-    textarea.addEventListener('input', resizeTextarea);
-
-    // Initial resize (useful if the textarea is pre-filled on page load)
-    resizeTextarea();
-  }, []);
 
   return (
     <div
@@ -91,42 +82,56 @@ export default function Question({ question }: { question: question }) {
       ref={setNodeRef}
       {...attributes}
     >
-      <div className='grid grid-cols-3'>
-        <div />
-        <IconGripHorizontal
-          className='w-5 justify-self-center'
-          {...listeners}
-        />
-        <button
-          className='w-fit justify-self-end'
-          onClick={
-            () => 0
-            // setQuestions(questions.filter((q) => q.id !== question.id))
-          }
-        >
-          <IconTrash className='color-red-700 w-5' stroke={1.25} />
-        </button>
-      </div>
+      {!question.mlhRequired ? (
+        <div className='grid grid-cols-3'>
+          <div />
+          <IconGripHorizontal
+            className='w-5 justify-self-center'
+            {...listeners}
+          />
+          <button
+            className='w-fit justify-self-end'
+            onClick={() =>
+              setQuestions((oldQuestions: question[]) =>
+                oldQuestions.filter((q) => q.id !== question.id)
+              )
+            }
+          >
+            <IconTrash className='color-red-700 w-5' stroke={1.25} />
+          </button>
+        </div>
+      ) : (
+        <div className='flex flex-row justify-center font-bold text-rose-600'>
+          <h1 className='text-md'>MLH Required Question</h1>
+        </div>
+      )}
 
       <Stack>
-        <textarea
-          id='autoresizing-textarea'
-          placeholder='Enter question title'
-          className={
-            classes.input + ' box-border resize-none overflow-y-hidden text-lg'
-          }
-          required
-        />
-        <Select
-          data={Object.values(questionType)}
-          value={value}
-          onChange={setValue}
-          required
-        />
-        {value === questionType.radio || value === questionType.multi ? (
+        {!question.mlhRequired ? (
+          <textarea
+            placeholder='Enter question title'
+            className={
+              classes.input +
+              ' box-border h-8 resize-y overflow-y-hidden text-lg'
+            }
+            required
+          />
+        ) : (
+          <h1 className={classes.input + ' mt-2 text-lg'}>Question Title</h1>
+        )}
+        {!question.mlhRequired ? (
+          <Select
+            data={Object.values(questionType)}
+            value={selectedQuestionType}
+            onChange={setQuestionType}
+            required
+          />
+        ) : null}
+        {selectedQuestionType === questionType.radio ||
+        selectedQuestionType === questionType.multi ? (
           <>
             <div className='grid grid-cols-2'>
-              <Text size='lg'>Answer Choices</Text>
+              <AnswerChoiceHeader />
               <Button
                 variant='outline'
                 color='gray'
@@ -147,6 +152,25 @@ export default function Question({ question }: { question: question }) {
               </Droppable>
             </DndContext>
           </>
+        ) : null}
+        {question.mlhRequired &&
+        (question.type === questionType.radio ||
+          question.type === questionType.multi) ? (
+          <div className='grid grid-rows-2'>
+            <AnswerChoiceHeader />
+            <Choices
+              choices={
+                question.answerChoices
+                  ? question.answerChoices.map((c: string, i: number) => ({
+                      value: c,
+                      id: i.toString(),
+                    }))
+                  : []
+              }
+              setChoices={setChoices}
+              editable={false}
+            />
+          </div>
         ) : null}
       </Stack>
     </div>

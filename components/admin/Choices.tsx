@@ -12,9 +12,11 @@ type answerChoice = {
 export default function Choices({
   choices,
   setChoices,
+  editable = true,
 }: {
   choices: answerChoice[];
   setChoices: any;
+  editable?: boolean;
 }) {
   return (
     <SortableContext items={choices} strategy={verticalListSortingStrategy}>
@@ -24,6 +26,7 @@ export default function Choices({
           choices={choices}
           choice={choice}
           setChoices={setChoices}
+          editable={editable}
         />
       ))}
     </SortableContext>
