@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Stack, Button, Select, Text, Paper } from '@mantine/core';
 import { DndContext, closestCorners } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import { IconGripHorizontal } from '@tabler/icons-react';
+import { IconGripHorizontal, IconTrash } from '@tabler/icons-react';
 import { v4 as uuidv4 } from 'uuid';
 import Choices from '@/components/admin/Choices';
 import classes from '@/styles/Input.module.css';
@@ -91,8 +91,21 @@ export default function Question({ question }: { question: question }) {
       ref={setNodeRef}
       {...attributes}
     >
-      <div className='flex-column mb-4 flex justify-center'>
-        <IconGripHorizontal className='w-5' {...listeners} />
+      <div className='grid grid-cols-3'>
+        <div />
+        <IconGripHorizontal
+          className='w-5 justify-self-center'
+          {...listeners}
+        />
+        <button
+          className='w-fit justify-self-end'
+          onClick={
+            () => 0
+            // setQuestions(questions.filter((q) => q.id !== question.id))
+          }
+        >
+          <IconTrash className='color-red-700 w-5' stroke={1.25} />
+        </button>
       </div>
 
       <Stack>
