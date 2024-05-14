@@ -76,7 +76,7 @@ export default function Question({
 
   return (
     <div
-      className='rounded-md border-2 border-[var(--mantine-color-dark-2)] p-4 pt-1'
+      className='rounded-md border-2 border-[var(--mantine-color-dark-2)] bg-[var(--mantine-color-body)] p-4 pt-1'
       style={{ width: rem(500), ...style }}
       key={question.id}
       ref={setNodeRef}
