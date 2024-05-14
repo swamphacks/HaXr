@@ -55,6 +55,8 @@ export default function AdminShell({
   children,
 }: PropsWithChildren<Props>) {
   const [loading, setLoading] = useState<boolean>(true);
+  const [comp, setComp] = useState<string | null>(null);
+
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
 
@@ -62,8 +64,6 @@ export default function AdminShell({
     fallbackData: [],
     onSuccess: () => setLoading(false),
   });
-
-  const [comp, setComp] = useState<string | null>(null);
 
   if (loading)
     return (
@@ -95,7 +95,7 @@ export default function AdminShell({
                 size='sm'
               />
               <Image
-                src='logos/swamphacks_hd.png'
+                src='/logo/swamphacks_hd.png'
                 mah={60}
                 fit='contain'
                 alt='SwampHacks logo'

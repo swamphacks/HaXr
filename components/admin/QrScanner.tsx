@@ -29,7 +29,12 @@ const QrScanner = ({ onScan }: QrScannerProps) => {
     };
   }, [videoRef, onScan]);
 
-  return <video ref={videoRef} />;
+  return (
+    <div className='relative flex h-[70vh] items-center justify-center'>
+      <video ref={videoRef} className='h-full w-full' />
+      <div className='absolute h-[30vh] w-[30vh] border'></div>
+    </div>
+  );
 };
 
 export default QrScanner;
