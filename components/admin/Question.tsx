@@ -16,9 +16,9 @@ enum questionType {
   select = 'Select Answer Type',
   freeResponse = 'Free Response',
   shortResponse = 'Short Answer',
-  multi = 'Multiple Select',
+  checkbox = 'Checkbox',
   dropdown = 'Dropdown',
-  radio = 'Multiple Choice',
+  radio = 'Radio',
 }
 
 type question = {
@@ -117,7 +117,7 @@ export default function Question({
             required
           />
         ) : (
-          <h1 className={classes.input + ' mt-2 text-lg'}>Question Title</h1>
+          <h1 className={classes.input + ' mt-2 text-lg'}>{question.title}</h1>
         )}
         {!question.mlhRequired ? (
           <Select
@@ -126,9 +126,14 @@ export default function Question({
             onChange={setQuestionType}
             required
           />
-        ) : null}
+        ) : (
+          <h2>
+            <b className='font-bold'>Question Type</b>: {question.type}
+          </h2>
+        )}
         {selectedQuestionType === questionType.radio ||
-        selectedQuestionType === questionType.multi ? (
+        selectedQuestionType === questionType.checkbox ||
+        selectedQuestionType === questionType.dropdown ? (
           <>
             <div className='grid grid-cols-2'>
               <AnswerChoiceHeader />
@@ -155,7 +160,7 @@ export default function Question({
         ) : null}
         {question.mlhRequired &&
         (question.type === questionType.radio ||
-          question.type === questionType.multi) ? (
+          question.type === questionType.checkbox) ? (
           <div className='grid grid-rows-2'>
             <AnswerChoiceHeader />
             <Choices
@@ -171,6 +176,9 @@ export default function Question({
               editable={false}
             />
           </div>
+        ) : null}
+        {question.mlhRequired && question.type === questionType.dropdown ? (
+          <Select data={question.answerChoices} />
         ) : null}
       </Stack>
     </div>

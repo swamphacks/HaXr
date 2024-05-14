@@ -19,9 +19,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { handleDragged } from '@/components/dnd/utils';
 
 enum questionType {
-  radio = 'Multiple Choice',
-  multi = 'Multiple Select',
+  radio = 'Radio',
+  checkbox = 'Checkbox',
   freeResponse = 'Free Response',
+  dropdown = 'Dropdown',
   shortResponse = 'Short Answer',
 }
 
@@ -49,7 +50,7 @@ const requiredQuestions: question[] = [
   },
   {
     title: 'Age',
-    type: questionType.radio,
+    type: questionType.dropdown,
     answerChoices: [
       'Under 18',
       '18-24',
@@ -76,7 +77,7 @@ const requiredQuestions: question[] = [
   },
   {
     title: 'School',
-    type: questionType.radio,
+    type: questionType.dropdown,
     mlhRequired: true,
     answerChoices: [
       'University of Florida',
@@ -117,7 +118,7 @@ const requiredQuestions: question[] = [
   },
   {
     title: 'Country of Residence',
-    type: questionType.radio,
+    type: questionType.dropdown,
     mlhRequired: true,
     answerChoices: [
       'United States',
@@ -192,18 +193,29 @@ export default function CreateForm() {
               <Box w={rem(500)}>
                 <input placeholder='Untitled Form' className={classes.title} />
               </Box>
-              <SortableContext
-                items={questions}
-                strategy={verticalListSortingStrategy}
-              >
-                {questions.map((q: question, _) => (
+
+              {questions.map((q: question, _) =>
+                q.mlhRequired ? (
                   <Question
                     key={q.id}
                     question={q}
                     setQuestions={setQuestions}
-                    editable={false}
                   />
-                ))}
+                ) : null
+              )}
+              <SortableContext
+                items={questions}
+                strategy={verticalListSortingStrategy}
+              >
+                {questions.map((q: question, _) =>
+                  !q.mlhRequired ? (
+                    <Question
+                      key={q.id}
+                      question={q}
+                      setQuestions={setQuestions}
+                    />
+                  ) : null
+                )}
               </SortableContext>
               <Button variant='light' color='gray' onClick={handleAddQuestions}>
                 Add Question
