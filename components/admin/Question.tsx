@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Stack, Button, Select, Text, Paper } from '@mantine/core';
+import { useState } from 'react';
+import { Stack, Button, Select, Switch, Divider } from '@mantine/core';
 import { DndContext, closestCorners } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { IconGripHorizontal, IconTrash } from '@tabler/icons-react';
@@ -27,6 +27,7 @@ type question = {
   type: questionType;
   answerChoices?: string[];
   id: string;
+  required: boolean;
   mlhRequired: boolean;
 };
 
@@ -50,6 +51,7 @@ export default function Question({
     Object.values(questionType)[0] as string
   );
   const [choices, setChoices] = useState<answerChoice[]>([]);
+  const [required, setRequired] = useState<boolean>(false);
 
   const getChoicePos = (id: string) =>
     choices.findIndex((choice: answerChoice) => choice.id === id);
@@ -76,7 +78,7 @@ export default function Question({
 
   return (
     <div
-      className='rounded-md border-2 border-[var(--mantine-color-dark-2)] bg-[var(--mantine-color-body)] p-4 pt-1'
+      className='cursor-default rounded-md border-2 border-[var(--mantine-color-dark-2)] bg-[var(--mantine-color-body)] p-4 pt-1'
       style={{ width: rem(500), ...style }}
       key={question.id}
       ref={setNodeRef}
@@ -86,19 +88,9 @@ export default function Question({
         <div className='grid grid-cols-3'>
           <div />
           <IconGripHorizontal
-            className='w-5 justify-self-center'
+            className='w-5 cursor-pointer justify-self-center'
             {...listeners}
           />
-          <button
-            className='w-fit justify-self-end'
-            onClick={() =>
-              setQuestions((oldQuestions: question[]) =>
-                oldQuestions.filter((q) => q.id !== question.id)
-              )
-            }
-          >
-            <IconTrash className='color-red-700 w-5' stroke={1.25} />
-          </button>
         </div>
       ) : null}
 
@@ -175,6 +167,34 @@ export default function Question({
         ) : null}
         {question.mlhRequired && question.type === questionType.dropdown ? (
           <Select data={question.answerChoices} />
+        ) : null}
+        {!question.mlhRequired ? (
+          <>
+            <div className='w-full border border-solid border-[var(--tab-border-color)]' />
+            <div className='flex flex-row-reverse items-center gap-4'>
+              <Switch
+                label='Required'
+                onChange={() =>
+                  setRequired((value) => {
+                    return !value;
+                  })
+                }
+                size='xs'
+                labelPosition='left'
+              />
+              <Divider orientation='vertical' />
+              <button
+                className='justify-self-end'
+                onClick={() =>
+                  setQuestions((oldQuestions: question[]) =>
+                    oldQuestions.filter((q) => q.id !== question.id)
+                  )
+                }
+              >
+                <IconTrash className='w-5' stroke={1.25} />
+              </button>
+            </div>
+          </>
         ) : null}
       </Stack>
     </div>

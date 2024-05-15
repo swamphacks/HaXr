@@ -9,7 +9,6 @@ import {
   rem,
   Accordion,
   Checkbox,
-  Title,
 } from '@mantine/core';
 import {
   IconForms,
@@ -45,6 +44,7 @@ type question = {
   answerChoices?: string[];
   id: string;
   mlhRequired: boolean;
+  required: boolean;
 };
 
 const requiredQuestions: question[] = [
@@ -52,17 +52,20 @@ const requiredQuestions: question[] = [
     title: 'First Name',
     type: questionType.shortResponse,
     mlhRequired: true,
+    required: true,
     id: '1',
   },
   {
     title: 'Last Name',
     type: questionType.shortResponse,
     mlhRequired: true,
+    required: true,
     id: '2',
   },
   {
     title: 'Age',
     type: questionType.dropdown,
+    required: true,
     answerChoices: [
       'Under 18',
       '18-24',
@@ -79,6 +82,7 @@ const requiredQuestions: question[] = [
     title: 'Phone Number',
     type: questionType.shortResponse,
     mlhRequired: true,
+    required: true,
     id: '4',
   },
   {
@@ -86,11 +90,13 @@ const requiredQuestions: question[] = [
     type: questionType.shortResponse,
     mlhRequired: true,
     id: '5',
+    required: true,
   },
   {
     title: 'School',
     type: questionType.dropdown,
     mlhRequired: true,
+    required: true,
     answerChoices: [
       'University of Florida',
       'University of South Florida',
@@ -113,6 +119,7 @@ const requiredQuestions: question[] = [
     title: 'Level of Study',
     type: questionType.radio,
     mlhRequired: true,
+    required: true,
     answerChoices: [
       'Less than Secondary / High School',
       'Secondary / High School',
@@ -132,6 +139,7 @@ const requiredQuestions: question[] = [
     title: 'Country of Residence',
     type: questionType.dropdown,
     mlhRequired: true,
+    required: true,
     answerChoices: [
       'United States',
       'Canada',
@@ -174,6 +182,7 @@ function FormCreator({
           description: '',
           type: questionType.radio,
           answerChoices: [],
+          required: false,
           mlhRequired: false,
           id: uuidv4(),
         },
