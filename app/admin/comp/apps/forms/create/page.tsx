@@ -1,7 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Button, Stack, Tabs, rem, Accordion } from '@mantine/core';
+import {
+  Box,
+  Button,
+  Stack,
+  Tabs,
+  rem,
+  Accordion,
+  Checkbox,
+  Title,
+} from '@mantine/core';
 import {
   IconForms,
   IconMessageCircle,
@@ -150,9 +159,11 @@ const requiredQuestions: question[] = [
 function FormCreator({
   questions,
   setQuestions,
+  includeMLH,
 }: {
   questions: question[];
   setQuestions: any;
+  includeMLH: boolean;
 }) {
   const handleAddQuestions = () => {
     setQuestions((oldQuestions: question[]) => {
@@ -183,33 +194,35 @@ function FormCreator({
           panel: accordionClasses.panel,
         }}
       >
-        <Accordion.Item key='MLH' value='MLH Required Questions'>
-          <Accordion.Control
-            icon={
-              <Image
-                src='/logos/mlh-logo-color.svg'
-                alt='MLH Logo'
-                width={70}
-                height={70}
-              />
-            }
-          >
-            MLH Required Questions
-          </Accordion.Control>
-          <Accordion.Panel>
-            <Stack gap='md' align='center' justify='flex-start'>
-              {questions.map((q: question, _) =>
-                q.mlhRequired ? (
-                  <Question
-                    key={q.id}
-                    question={q}
-                    setQuestions={setQuestions}
-                  />
-                ) : null
-              )}
-            </Stack>
-          </Accordion.Panel>
-        </Accordion.Item>
+        {includeMLH ? (
+          <Accordion.Item key='MLH' value='MLH Required Questions'>
+            <Accordion.Control
+              icon={
+                <Image
+                  src='/logos/mlh-logo-color.svg'
+                  alt='MLH Logo'
+                  width={70}
+                  height={70}
+                />
+              }
+            >
+              MLH Required Questions
+            </Accordion.Control>
+            <Accordion.Panel>
+              <Stack gap='md' align='center' justify='flex-start'>
+                {questions.map((q: question, _) =>
+                  q.mlhRequired ? (
+                    <Question
+                      key={q.id}
+                      question={q}
+                      setQuestions={setQuestions}
+                    />
+                  ) : null
+                )}
+              </Stack>
+            </Accordion.Panel>
+          </Accordion.Item>
+        ) : null}
 
         <Accordion.Item key='Additional' value='Additional Questions'>
           <Accordion.Control
@@ -257,9 +270,27 @@ function FormCreator({
     </>
   );
 }
+
+function Settings({ setIncludeMLH }: { setIncludeMLH: any }) {
+  return (
+    <div className='mt-8 flex flex-col items-center'>
+      <div className='w-full max-w-2xl'>
+        <h1 className='mb-2 text-2xl font-bold'>Questions</h1>
+        <div className='mb-6 border border-solid border-[var(--tab-border-color)]' />
+        <Checkbox
+          defaultChecked
+          onChange={() => setIncludeMLH((value: boolean) => !value)}
+          label='Include MLH Required Questions'
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function CreateForm() {
   const iconStyle = { width: rem(12), height: rem(12) };
   const [questions, setQuestions] = useState<question[]>(requiredQuestions);
+  const [includeMLH, setIncludeMLH] = useState(true);
 
   return (
     <Tabs defaultValue='gallery'>
@@ -282,12 +313,18 @@ export default function CreateForm() {
       </Tabs.List>
 
       <Tabs.Panel value='gallery'>
-        <FormCreator questions={questions} setQuestions={setQuestions} />
+        <FormCreator
+          questions={questions}
+          setQuestions={setQuestions}
+          includeMLH={includeMLH}
+        />
       </Tabs.Panel>
 
       <Tabs.Panel value='messages'>Responses tab content</Tabs.Panel>
 
-      <Tabs.Panel value='settings'>Settings tab content</Tabs.Panel>
+      <Tabs.Panel value='settings'>
+        <Settings setIncludeMLH={setIncludeMLH} />
+      </Tabs.Panel>
     </Tabs>
   );
 }
