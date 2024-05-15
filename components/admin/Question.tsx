@@ -100,11 +100,7 @@ export default function Question({
             <IconTrash className='color-red-700 w-5' stroke={1.25} />
           </button>
         </div>
-      ) : (
-        <div className='flex flex-row justify-center font-bold text-rose-600'>
-          <h1 className='text-md'>MLH Required Question</h1>
-        </div>
-      )}
+      ) : null}
 
       <Stack>
         {!question.mlhRequired ? (

@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Button, Stack, Tabs, rem } from '@mantine/core';
+import { Box, Button, Stack, Tabs, rem, Accordion } from '@mantine/core';
 import {
   IconForms,
   IconMessageCircle,
   IconSettings,
+  IconPlus,
 } from '@tabler/icons-react';
 import Question from '@/components/admin/Question';
 import classes from '@/styles/Input.module.css';
@@ -17,6 +18,8 @@ import {
 } from '@dnd-kit/sortable';
 import { v4 as uuidv4 } from 'uuid';
 import { handleDragged } from '@/components/dnd/utils';
+import accordionClasses from '@/styles/CreateForm.module.css';
+import Image from 'next/image';
 
 enum questionType {
   radio = 'Radio',
@@ -144,9 +147,13 @@ const requiredQuestions: question[] = [
   },
 ];
 
-export default function CreateForm() {
-  const iconStyle = { width: rem(12), height: rem(12) };
-  const [questions, setQuestions] = useState<question[]>(requiredQuestions);
+function FormCreator({
+  questions,
+  setQuestions,
+}: {
+  questions: question[];
+  setQuestions: any;
+}) {
   const handleAddQuestions = () => {
     setQuestions((oldQuestions: question[]) => {
       return [
@@ -162,6 +169,97 @@ export default function CreateForm() {
       ];
     });
   };
+  return (
+    <>
+      <Stack gap='md' align='center' justify='flex-start'>
+        <Box w={rem(500)}>
+          <input placeholder='Untitled Form' className={classes.title} />
+        </Box>
+      </Stack>
+
+      <Accordion
+        classNames={{
+          label: accordionClasses.label,
+          panel: accordionClasses.panel,
+        }}
+      >
+        <Accordion.Item key='MLH' value='MLH Required Questions'>
+          <Accordion.Control
+            icon={
+              <Image
+                src='/logos/mlh-logo-color.svg'
+                alt='MLH Logo'
+                width={70}
+                height={70}
+              />
+            }
+          >
+            MLH Required Questions
+          </Accordion.Control>
+          <Accordion.Panel>
+            <Stack gap='md' align='center' justify='flex-start'>
+              {questions.map((q: question, _) =>
+                q.mlhRequired ? (
+                  <Question
+                    key={q.id}
+                    question={q}
+                    setQuestions={setQuestions}
+                  />
+                ) : null
+              )}
+            </Stack>
+          </Accordion.Panel>
+        </Accordion.Item>
+
+        <Accordion.Item key='Additional' value='Additional Questions'>
+          <Accordion.Control
+            icon={<IconPlus stroke={1} className='h-10 w-10' />}
+          >
+            Additional Questions
+          </Accordion.Control>
+          <Accordion.Panel>
+            <DndContext
+              collisionDetection={closestCorners}
+              onDragEnd={(event) => handleDragged(event, setQuestions)}
+            >
+              <Droppable id='droppable2'>
+                <Stack gap='md' align='center' justify='flex-start'>
+                  <SortableContext
+                    items={questions}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {questions.map((q: question, _) =>
+                      !q.mlhRequired ? (
+                        <Question
+                          key={q.id}
+                          question={q}
+                          setQuestions={setQuestions}
+                        />
+                      ) : null
+                    )}
+                  </SortableContext>
+                  <Button
+                    variant='light'
+                    color='gray'
+                    onClick={handleAddQuestions}
+                  >
+                    Add Question
+                  </Button>
+                </Stack>
+              </Droppable>
+            </DndContext>
+          </Accordion.Panel>
+        </Accordion.Item>
+      </Accordion>
+      <Stack gap='md' align='center' justify='flex-start' className='mt-4'>
+        <Button>Save Form</Button>
+      </Stack>
+    </>
+  );
+}
+export default function CreateForm() {
+  const iconStyle = { width: rem(12), height: rem(12) };
+  const [questions, setQuestions] = useState<question[]>(requiredQuestions);
 
   return (
     <Tabs defaultValue='gallery'>
@@ -184,45 +282,7 @@ export default function CreateForm() {
       </Tabs.List>
 
       <Tabs.Panel value='gallery'>
-        <DndContext
-          collisionDetection={closestCorners}
-          onDragEnd={(event) => handleDragged(event, setQuestions)}
-        >
-          <Droppable id='droppable2'>
-            <Stack gap='md' align='center' justify='flex-start'>
-              <Box w={rem(500)}>
-                <input placeholder='Untitled Form' className={classes.title} />
-              </Box>
-
-              {questions.map((q: question, _) =>
-                q.mlhRequired ? (
-                  <Question
-                    key={q.id}
-                    question={q}
-                    setQuestions={setQuestions}
-                  />
-                ) : null
-              )}
-              <SortableContext
-                items={questions}
-                strategy={verticalListSortingStrategy}
-              >
-                {questions.map((q: question, _) =>
-                  !q.mlhRequired ? (
-                    <Question
-                      key={q.id}
-                      question={q}
-                      setQuestions={setQuestions}
-                    />
-                  ) : null
-                )}
-              </SortableContext>
-              <Button variant='light' color='gray' onClick={handleAddQuestions}>
-                Add Question
-              </Button>
-            </Stack>
-          </Droppable>
-        </DndContext>
+        <FormCreator questions={questions} setQuestions={setQuestions} />
       </Tabs.Panel>
 
       <Tabs.Panel value='messages'>Responses tab content</Tabs.Panel>
