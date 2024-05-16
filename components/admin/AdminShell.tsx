@@ -1,5 +1,10 @@
 'use client';
-import React, { createContext, PropsWithChildren, useState } from 'react';
+import React, {
+  createContext,
+  PropsWithChildren,
+  useState,
+  useEffect,
+} from 'react';
 import {
   AppShell,
   AppShellHeader,
@@ -65,12 +70,14 @@ export default function AdminShell({
     onSuccess: () => setLoading(false),
   });
 
-  if (loading)
-    return (
-      <div className='flex h-screen w-screen items-center justify-center overflow-hidden'>
-        <Spinner />
-      </div>
-    );
+  useEffect(() => {
+    const selectedComp = sessionStorage.getItem('selectedComp');
+
+    // Check if the selected competition still exists
+    if (selectedComp && data?.some((c) => c.code === selectedComp)) {
+      setComp(selectedComp);
+    }
+  }, [data]);
 
   return (
     <CompetitionContext.Provider
@@ -113,7 +120,14 @@ export default function AdminShell({
             placeholder='Select a competition'
             data={data?.map((c) => ({ value: c.code, label: c.name }))}
             value={comp}
-            onChange={(comp) => setComp(comp)}
+            onChange={(c) => {
+              setComp(c);
+              if (c) {
+                sessionStorage.setItem('selectedComp', c);
+              } else {
+                sessionStorage.removeItem('selectedComp');
+              }
+            }}
             allowDeselect={true}
           />
 
@@ -140,6 +154,7 @@ export default function AdminShell({
               <NavLink
                 label='Applications'
                 leftSection={<IconInbox size='1rem' />}
+                defaultOpened={pathname.startsWith('/admin/comp/apps')}
               >
                 <NavLink
                   component={Link}
@@ -175,7 +190,11 @@ export default function AdminShell({
                 active={pathname === '/admin/comp/events'}
               />
 
-              <NavLink label='Scanner' leftSection={<IconQrcode size='1rem' />}>
+              <NavLink
+                label='Scanner'
+                leftSection={<IconQrcode size='1rem' />}
+                defaultOpened={pathname.startsWith('/admin/comp/scan')}
+              >
                 <NavLink
                   component={Link}
                   label='Check-in'
