@@ -11,11 +11,9 @@ type answerChoice = {
 
 export default function Choices({
   choices,
-  setChoices,
   editable = true,
 }: {
   choices: answerChoice[];
-  setChoices?: any;
   editable?: boolean;
 }) {
   return (
@@ -23,25 +21,13 @@ export default function Choices({
       {editable ? (
         <SortableContext items={choices} strategy={verticalListSortingStrategy}>
           {choices.map((choice: answerChoice) => (
-            <Choice
-              key={choice.id}
-              choices={choices}
-              choice={choice}
-              setChoices={setChoices}
-              editable={editable}
-            />
+            <Choice key={choice.id} choice={choice} editable={editable} />
           ))}
         </SortableContext>
       ) : (
         <>
           {choices.map((choice: answerChoice) => (
-            <Choice
-              key={choice.id}
-              choices={choices}
-              choice={choice}
-              setChoices={setChoices}
-              editable={editable}
-            />
+            <Choice key={choice.id} choice={choice} editable={editable} />
           ))}
         </>
       )}

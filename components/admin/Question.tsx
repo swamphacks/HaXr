@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { createContext } from 'react';
-import { Stack, Select, Switch, Divider } from '@mantine/core';
+import {
+  Stack,
+  Select,
+  Switch,
+  Divider,
+  Tooltip,
+  Checkbox,
+} from '@mantine/core';
 import {
   DndContext,
   closestCorners,
@@ -11,7 +18,11 @@ import {
   KeyboardSensor,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import { IconGripHorizontal, IconTrash } from '@tabler/icons-react';
+import {
+  IconGripHorizontal,
+  IconTrash,
+  IconRubberStamp,
+} from '@tabler/icons-react';
 import { v4 as uuidv4 } from 'uuid';
 import Choices from '@/components/admin/Choices';
 import classes from '@/styles/Input.module.css';
@@ -26,9 +37,31 @@ function AnswerChoiceHeader() {
   return <h2 className='text-lg font-semibold'>Answer Choices</h2>;
 }
 
+function getQuestionType(value: string) {
+  switch (value) {
+    case 'Multiple Choice':
+      return questionType.multiplechoice;
+    case 'Checkbox':
+      return questionType.checkbox;
+    case 'Dropdown':
+      return questionType.dropdown;
+    case 'Short Answer':
+      return questionType.shortResponse;
+    case 'Paragraph':
+      return questionType.paragraph;
+    case 'Address':
+      return questionType.address;
+    default:
+      console.error(
+        `Invalid question type '{value}'. Defaulting to 'Paragraph'`
+      );
+      return questionType.paragraph;
+  }
+}
+
 export const OtherIncludedContext = createContext({
-  otherIncluded: false,
   setOther: (value: boolean) => {},
+  setChoices: (value: any) => {},
 });
 
 export default function Question({
@@ -38,10 +71,12 @@ export default function Question({
   question: question;
   setQuestions: any;
 }) {
-  const [selectedQuestionType, setQuestionType] = useState<string | null>(
-    Object.values(questionType)[0] as string
+  const [selectedQuestionType, setQuestionType] = useState<string>(
+    question.type
   );
-  const [choices, setChoices] = useState<answerChoice[]>([]);
+  const [choices, setChoices] = useState<answerChoice[]>(
+    question.answerChoices || []
+  );
   const [required, setRequired] = useState<boolean>(false);
   const [otherIncluded, setOther] = useState<boolean>(false);
 
@@ -98,6 +133,8 @@ export default function Question({
           className={
             classes.input + ' box-border h-8 resize-y overflow-y-hidden text-lg'
           }
+          defaultValue={question.title}
+          onChange={(e) => (question.title = e.target.value)}
           required
         />
 
@@ -105,13 +142,18 @@ export default function Question({
         <Select
           data={Object.values(questionType)}
           value={selectedQuestionType}
-          onChange={setQuestionType}
+          onChange={(e) => {
+            if (e) {
+              question.type = getQuestionType(e);
+              setQuestionType(e);
+            }
+          }}
           required
         />
-        {selectedQuestionType === questionType.radio ||
+        {selectedQuestionType === questionType.multiplechoice ||
         selectedQuestionType === questionType.checkbox ||
         selectedQuestionType === questionType.dropdown ? (
-          <OtherIncludedContext.Provider value={{ otherIncluded, setOther }}>
+          <OtherIncludedContext.Provider value={{ setOther, setChoices }}>
             <AnswerChoiceHeader />
             <DndContext
               sensors={sensors}
@@ -119,7 +161,7 @@ export default function Question({
               onDragEnd={handleDragged}
             >
               <Droppable id='droppable'>
-                <Choices choices={choices} setChoices={setChoices} />
+                <Choices choices={choices} />
               </Droppable>
             </DndContext>
             <div className='flex flex-row gap-2'>
@@ -160,6 +202,7 @@ export default function Question({
         <div className='flex flex-row-reverse items-center gap-4'>
           <Switch
             label='Required'
+            defaultChecked={question.required}
             onChange={() =>
               setRequired((value) => {
                 return !value;
@@ -169,16 +212,38 @@ export default function Question({
             labelPosition='left'
           />
           <Divider orientation='vertical' />
-          <button
-            className='justify-self-end'
-            onClick={() =>
-              setQuestions((oldQuestions: question[]) =>
-                oldQuestions.filter((q) => q.id !== question.id)
-              )
-            }
-          >
-            <IconTrash className='w-5' stroke={1.25} />
-          </button>
+          <Tooltip label='Delete' color='gray'>
+            <button
+              className='justify-self-end'
+              onClick={() =>
+                setQuestions((oldQuestions: question[]) =>
+                  oldQuestions.filter((q) => q.id !== question.id)
+                )
+              }
+            >
+              <IconTrash className='w-5' stroke={1.25} />
+            </button>
+          </Tooltip>
+          <Tooltip label='Duplicate' color='gray'>
+            <button
+              className='justify-self-end'
+              onClick={() =>
+                setQuestions((oldQuestions: question[]) => [
+                  ...oldQuestions,
+                  {
+                    title: question.title,
+                    type: selectedQuestionType,
+                    answerChoices: choices,
+                    mlh: false,
+                    required: required,
+                    id: uuidv4(),
+                  },
+                ])
+              }
+            >
+              <IconRubberStamp className='w-5' stroke={1.25} />
+            </button>
+          </Tooltip>
         </div>
       </Stack>
     </div>

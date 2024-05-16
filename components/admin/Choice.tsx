@@ -13,12 +13,10 @@ import { answerChoice } from '@/types/questionTypes';
 function ChoiceInput({
   choice,
   setChoices,
-  choices,
   setOther,
 }: {
   choice: answerChoice;
   setChoices: any;
-  choices: answerChoice[];
   setOther: any;
 }) {
   const id = choice.id;
@@ -42,11 +40,26 @@ function ChoiceInput({
       <input
         type='text'
         defaultValue={choice.value}
+        onChange={(e) => {
+          choice.value = e.target.value;
+          setChoices((choices: answerChoice[]) => {
+            const index = choices.findIndex(
+              (c: answerChoice) => c.id === choice.id
+            );
+            return [
+              ...choices.slice(0, index),
+              choice,
+              ...choices.slice(index + 1),
+            ];
+          });
+        }}
         className={classes.input}
       />
       <CloseButton
         onClick={() => {
-          setChoices(choices.filter((c: answerChoice) => c.id !== choice.id));
+          setChoices((choices: answerChoice[]) =>
+            choices.filter((c: answerChoice) => c.id !== choice.id)
+          );
           if (choice.other) {
             setOther(false);
           }
@@ -57,17 +70,13 @@ function ChoiceInput({
 }
 
 export default function Choice({
-  choices,
-  setChoices,
   choice,
   editable = true,
 }: {
-  choices: answerChoice[];
-  setChoices: any;
   choice: answerChoice;
   editable?: boolean;
 }) {
-  const { _, setOther } = useContext(OtherIncludedContext);
+  const { setOther, setChoices } = useContext(OtherIncludedContext);
 
   return (
     <>
@@ -75,7 +84,6 @@ export default function Choice({
         <ChoiceInput
           choice={choice}
           setChoices={setChoices}
-          choices={choices}
           setOther={setOther}
         />
       ) : null}
@@ -84,7 +92,7 @@ export default function Choice({
           <p className={classes.input + ' col-start-2'}>Other...</p>
           <CloseButton
             onClick={() => {
-              setChoices(
+              setChoices((choices: answerChoice[]) =>
                 choices.filter((c: answerChoice) => c.id !== choice.id)
               );
               if (choice.other) {
