@@ -1,7 +1,6 @@
-import { CSS } from '@dnd-kit/utilities';
-
 import classes from '@/styles/Input.module.css';
+import { answerChoice } from '@/types/questionTypes';
 
-export default function Choice({ choice }: { choice: string }) {
-  return <p className={classes.input}>{choice}</p>;
+export default function Choice({ choice }: { choice: answerChoice }) {
+  return <p className={classes.input}>{choice.value}</p>;
 }

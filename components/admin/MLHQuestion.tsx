@@ -31,7 +31,9 @@ export default function MLHQuestion({
         </h2>
 
         {/* Answer Choices */}
-        {[questionType.radio, questionType.dropdown].includes(question.type) ||
+        {[questionType.multiplechoice, questionType.dropdown].includes(
+          question.type
+        ) ||
         (question.type === questionType.checkbox &&
           question.answerChoices &&
           question.answerChoices.length > 1) ? (
@@ -42,7 +44,13 @@ export default function MLHQuestion({
                 <MLHChoice key={i} choice={choice} />
               ))
             ) : (
-              <Select data={question.answerChoices} />
+              <Select
+                data={
+                  question.answerChoices
+                    ? question.answerChoices.map((c) => c.value)
+                    : []
+                }
+              />
             )}
           </>
         ) : null}
