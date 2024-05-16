@@ -70,7 +70,7 @@ export default function AdminShell({
     const selectedComp = sessionStorage.getItem('selectedComp');
 
     // Check if the selected competition still exists
-    if (selectedComp && data?.find((c) => c.code === selectedComp)) {
+    if (selectedComp && data?.some((c) => c.code === selectedComp)) {
       setComp(selectedComp);
     }
   }, [data]);
@@ -116,11 +116,10 @@ export default function AdminShell({
             placeholder='Select a competition'
             data={data?.map((c) => ({ value: c.code, label: c.name }))}
             value={comp}
-            onChange={(comp) => {
-              setComp(comp);
-
-              if (comp) {
-                sessionStorage.setItem('selectedComp', comp);
+            onChange={(c) => {
+              setComp(c);
+              if (c) {
+                sessionStorage.setItem('selectedComp', c);
               } else {
                 sessionStorage.removeItem('selectedComp');
               }
