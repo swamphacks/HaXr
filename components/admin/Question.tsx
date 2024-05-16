@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Stack, Button, Select, Switch, Divider } from '@mantine/core';
+import { createContext } from 'react';
+import { Stack, Select, Switch, Divider } from '@mantine/core';
 import {
   DndContext,
   closestCorners,
@@ -19,34 +20,16 @@ import { rem } from '@mantine/core';
 
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-
-enum questionType {
-  select = 'Select Answer Type',
-  freeResponse = 'Free Response',
-  shortResponse = 'Short Answer',
-  checkbox = 'Checkbox',
-  dropdown = 'Dropdown',
-  radio = 'Radio',
-}
-
-type question = {
-  title: string;
-  description?: string;
-  type: questionType;
-  answerChoices?: string[];
-  id: string;
-  required: boolean;
-  mlhRequired: boolean;
-};
-
-type answerChoice = {
-  value: string;
-  id: string;
-};
+import { question, questionType, answerChoice } from '@/types/questionTypes';
 
 function AnswerChoiceHeader() {
   return <h2 className='text-lg font-semibold'>Answer Choices</h2>;
 }
+
+export const OtherIncludedContext = createContext({
+  otherIncluded: false,
+  setOther: (value: boolean) => {},
+});
 
 export default function Question({
   question,
@@ -60,6 +43,7 @@ export default function Question({
   );
   const [choices, setChoices] = useState<answerChoice[]>([]);
   const [required, setRequired] = useState<boolean>(false);
+  const [otherIncluded, setOther] = useState<boolean>(false);
 
   const getChoicePos = (id: string) =>
     choices.findIndex((choice: answerChoice) => choice.id === id);
@@ -100,58 +84,35 @@ export default function Question({
       ref={setNodeRef}
       {...attributes}
     >
-      {!question.mlhRequired ? (
-        <div className='grid grid-cols-3'>
-          <div />
-          <IconGripHorizontal
-            className='w-5 cursor-pointer justify-self-center'
-            {...listeners}
-          />
-        </div>
-      ) : null}
+      <div className='grid grid-cols-3'>
+        <div />
+        <IconGripHorizontal
+          className='w-5 cursor-pointer justify-self-center'
+          {...listeners}
+        />
+      </div>
 
       <Stack>
-        {!question.mlhRequired ? (
-          <textarea
-            placeholder='Enter question title'
-            className={
-              classes.input +
-              ' box-border h-8 resize-y overflow-y-hidden text-lg'
-            }
-            required
-          />
-        ) : (
-          <h1 className={classes.input + ' mt-2 text-lg'}>{question.title}</h1>
-        )}
-        {!question.mlhRequired ? (
-          <Select
-            data={Object.values(questionType)}
-            value={selectedQuestionType}
-            onChange={setQuestionType}
-            required
-          />
-        ) : (
-          <h2>
-            <b className='font-bold'>Question Type</b>: {question.type}
-          </h2>
-        )}
+        <textarea
+          placeholder='Enter question title'
+          className={
+            classes.input + ' box-border h-8 resize-y overflow-y-hidden text-lg'
+          }
+          required
+        />
+
+        {/* Answer Choices */}
+        <Select
+          data={Object.values(questionType)}
+          value={selectedQuestionType}
+          onChange={setQuestionType}
+          required
+        />
         {selectedQuestionType === questionType.radio ||
         selectedQuestionType === questionType.checkbox ||
         selectedQuestionType === questionType.dropdown ? (
-          <>
-            <div className='grid grid-cols-2'>
-              <AnswerChoiceHeader />
-              <Button
-                variant='outline'
-                color='gray'
-                onClick={() =>
-                  setChoices([...choices, { value: '', id: uuidv4() }])
-                }
-                style={{ width: '8rem', justifySelf: 'end' }}
-              >
-                Add Choice
-              </Button>
-            </div>
+          <OtherIncludedContext.Provider value={{ otherIncluded, setOther }}>
+            <AnswerChoiceHeader />
             <DndContext
               sensors={sensors}
               collisionDetection={closestCorners}
@@ -161,58 +122,64 @@ export default function Question({
                 <Choices choices={choices} setChoices={setChoices} />
               </Droppable>
             </DndContext>
-          </>
-        ) : null}
-        {question.mlhRequired &&
-        (question.type === questionType.radio ||
-          question.type === questionType.checkbox) ? (
-          <div className='grid grid-rows-2'>
-            <AnswerChoiceHeader />
-            <Choices
-              choices={
-                question.answerChoices
-                  ? question.answerChoices.map((c: string, i: number) => ({
-                      value: c,
-                      id: i.toString(),
-                    }))
-                  : []
-              }
-              setChoices={setChoices}
-              editable={false}
-            />
-          </div>
-        ) : null}
-        {question.mlhRequired && question.type === questionType.dropdown ? (
-          <Select data={question.answerChoices} />
-        ) : null}
-        {!question.mlhRequired ? (
-          <>
-            <div className='w-full border border-solid border-[var(--tab-border-color)]' />
-            <div className='flex flex-row-reverse items-center gap-4'>
-              <Switch
-                label='Required'
-                onChange={() =>
-                  setRequired((value) => {
-                    return !value;
-                  })
-                }
-                size='xs'
-                labelPosition='left'
-              />
-              <Divider orientation='vertical' />
+            <div className='flex flex-row gap-2'>
               <button
-                className='justify-self-end'
-                onClick={() =>
-                  setQuestions((oldQuestions: question[]) =>
-                    oldQuestions.filter((q) => q.id !== question.id)
-                  )
-                }
+                onClick={() => {
+                  return otherIncluded
+                    ? setChoices([
+                        ...choices.slice(0, -1),
+                        { value: '', id: uuidv4() },
+                        choices[choices.length - 1],
+                      ])
+                    : setChoices([...choices, { value: '', id: uuidv4() }]);
+                }}
               >
-                <IconTrash className='w-5' stroke={1.25} />
+                Add Choice
               </button>
+              {!otherIncluded ? (
+                <>
+                  <p> or </p>
+                  <button
+                    onClick={() => {
+                      setChoices([
+                        ...choices,
+                        { value: '', id: uuidv4(), other: true },
+                      ]);
+                      setOther(true);
+                    }}
+                    className='text-blue-500'
+                  >
+                    add &quot;Other&quot;
+                  </button>
+                </>
+              ) : null}
             </div>
-          </>
+          </OtherIncludedContext.Provider>
         ) : null}
+        <Divider />
+        <div className='flex flex-row-reverse items-center gap-4'>
+          <Switch
+            label='Required'
+            onChange={() =>
+              setRequired((value) => {
+                return !value;
+              })
+            }
+            size='xs'
+            labelPosition='left'
+          />
+          <Divider orientation='vertical' />
+          <button
+            className='justify-self-end'
+            onClick={() =>
+              setQuestions((oldQuestions: question[]) =>
+                oldQuestions.filter((q) => q.id !== question.id)
+              )
+            }
+          >
+            <IconTrash className='w-5' stroke={1.25} />
+          </button>
+        </div>
       </Stack>
     </div>
   );

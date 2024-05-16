@@ -15,20 +15,36 @@ export default function Choices({
   editable = true,
 }: {
   choices: answerChoice[];
-  setChoices: any;
+  setChoices?: any;
   editable?: boolean;
 }) {
   return (
-    <SortableContext items={choices} strategy={verticalListSortingStrategy}>
-      {choices.map((choice: answerChoice) => (
-        <Choice
-          key={choice.id}
-          choices={choices}
-          choice={choice}
-          setChoices={setChoices}
-          editable={editable}
-        />
-      ))}
-    </SortableContext>
+    <div className='flex flex-col gap-2'>
+      {editable ? (
+        <SortableContext items={choices} strategy={verticalListSortingStrategy}>
+          {choices.map((choice: answerChoice) => (
+            <Choice
+              key={choice.id}
+              choices={choices}
+              choice={choice}
+              setChoices={setChoices}
+              editable={editable}
+            />
+          ))}
+        </SortableContext>
+      ) : (
+        <>
+          {choices.map((choice: answerChoice) => (
+            <Choice
+              key={choice.id}
+              choices={choices}
+              choice={choice}
+              setChoices={setChoices}
+              editable={editable}
+            />
+          ))}
+        </>
+      )}
+    </div>
   );
 }

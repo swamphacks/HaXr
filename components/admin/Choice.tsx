@@ -1,4 +1,5 @@
-import NextImage from 'next/image';
+import { useContext } from 'react';
+import { OtherIncludedContext } from '@/components/admin/Question';
 import { CloseButton } from '@mantine/core';
 import { IconGripVertical } from '@tabler/icons-react';
 
@@ -7,21 +8,18 @@ import { useSortable } from '@dnd-kit/sortable';
 
 import classes from '@/styles/Input.module.css';
 
-type answerChoice = {
-  value: string;
-  id: string;
-};
+import { answerChoice } from '@/types/questionTypes';
 
-export default function Choice({
-  choices,
+function ChoiceInput({
   choice,
   setChoices,
-  editable = true,
+  choices,
+  setOther,
 }: {
-  choices: answerChoice[];
   choice: answerChoice;
   setChoices: any;
-  editable?: boolean;
+  choices: answerChoice[];
+  setOther: any;
 }) {
   const id = choice.id;
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -31,33 +29,72 @@ export default function Choice({
     transition,
     transform: CSS.Transform.toString(transform),
   };
+
+  return (
+    <div
+      key={choice.id}
+      ref={setNodeRef}
+      {...attributes}
+      style={style}
+      className='grid touch-none grid-cols-[1.3rem_auto_1.3rem] items-center'
+    >
+      <IconGripVertical {...listeners} className='w-[1.2rem]' />
+      <input
+        type='text'
+        defaultValue={choice.value}
+        className={classes.input}
+      />
+      <CloseButton
+        onClick={() => {
+          setChoices(choices.filter((c: answerChoice) => c.id !== choice.id));
+          if (choice.other) {
+            setOther(false);
+          }
+        }}
+      />
+    </div>
+  );
+}
+
+export default function Choice({
+  choices,
+  setChoices,
+  choice,
+  editable = true,
+}: {
+  choices: answerChoice[];
+  setChoices: any;
+  choice: answerChoice;
+  editable?: boolean;
+}) {
+  const { _, setOther } = useContext(OtherIncludedContext);
+
   return (
     <>
-      {editable ? (
-        <div
-          key={choice.id}
-          ref={setNodeRef}
-          {...attributes}
-          style={style}
-          className='mb-2 grid touch-none grid-cols-[1.3rem_auto_1.3rem] items-center'
-        >
-          <IconGripVertical {...listeners} className='w-[1.2rem]' />
-          <input
-            type='text'
-            defaultValue={choice.value}
-            className={classes.input}
-          />
+      {editable && !choice.other ? (
+        <ChoiceInput
+          choice={choice}
+          setChoices={setChoices}
+          choices={choices}
+          setOther={setOther}
+        />
+      ) : null}
+      {editable && choice.other ? (
+        <div className='grid grid-cols-[1.3rem_auto_1.3rem] items-center'>
+          <p className={classes.input + ' col-start-2'}>Other...</p>
           <CloseButton
-            onClick={() =>
+            onClick={() => {
               setChoices(
                 choices.filter((c: answerChoice) => c.id !== choice.id)
-              )
-            }
+              );
+              if (choice.other) {
+                setOther(false);
+              }
+            }}
           />
         </div>
-      ) : (
-        <p className={classes.input}>{choice.value}</p>
-      )}
+      ) : null}
+      {!editable ? <p className={classes.input}>{choice.value}</p> : null}
     </>
   );
 }
