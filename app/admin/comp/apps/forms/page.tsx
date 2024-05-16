@@ -1,11 +1,12 @@
 'use client';
 
-import Link from 'next/link';
+import { useContext } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button, TextInput, rem, useMantineTheme } from '@mantine/core';
+import { Button, TextInput, rem } from '@mantine/core';
 import { IconSearch, IconEdit } from '@tabler/icons-react';
 import { Table, Checkbox } from '@mantine/core';
+import { CompetitionContext } from '@/components/admin/AdminShell';
 
 const forms = [
   {
@@ -44,6 +45,7 @@ export default function Forms() {
   const router = useRouter();
   const pathname = usePathname();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const competition = useContext(CompetitionContext);
   const rows = forms.map((form) => (
     <Table.Tr
       key={form.name}
@@ -76,6 +78,7 @@ export default function Forms() {
       </Table.Td>
     </Table.Tr>
   ));
+
   return (
     <div>
       <div className='mb-4 flex flex-row items-center'>
@@ -109,7 +112,13 @@ export default function Forms() {
         </Button>
       </div>
       <div className='mb-2 grid grid-cols-[auto_40%]'>
-        <div className='self-center text-[1.4rem]'>Recent Forms</div>
+        <div className='self-center text-[1.4rem]'>
+          {competition.competition ? (
+            <h1>Displaying Forms for {competition.competition.name}</h1>
+          ) : (
+            <h1>Displaying Forms for All Competitions</h1>
+          )}
+        </div>
       </div>
       <Table highlightOnHover={true}>
         <Table.Thead>

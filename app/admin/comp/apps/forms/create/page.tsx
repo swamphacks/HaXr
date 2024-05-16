@@ -37,37 +37,21 @@ import { v4 as uuidv4 } from 'uuid';
 import { handleDragged } from '@/components/dnd/utils';
 import accordionClasses from '@/styles/CreateForm.module.css';
 import Image from 'next/image';
-
-enum questionType {
-  radio = 'Radio',
-  checkbox = 'Checkbox',
-  freeResponse = 'Free Response',
-  dropdown = 'Dropdown',
-  shortResponse = 'Short Answer',
-}
-
-type question = {
-  title: string;
-  description?: string;
-  type: questionType;
-  answerChoices?: string[];
-  id: string;
-  mlhRequired: boolean;
-  required: boolean;
-};
+import MLHQuestion from '@/components/admin/MLHQuestion';
+import { question, questionType } from '@/types/questionTypes';
 
 const requiredQuestions: question[] = [
   {
     title: 'First Name',
     type: questionType.shortResponse,
-    mlhRequired: true,
+    mlh: true,
     required: true,
     id: '1',
   },
   {
     title: 'Last Name',
     type: questionType.shortResponse,
-    mlhRequired: true,
+    mlh: true,
     required: true,
     id: '2',
   },
@@ -84,27 +68,27 @@ const requiredQuestions: question[] = [
       '55-64',
       '65+',
     ],
-    mlhRequired: true,
+    mlh: true,
     id: '3',
   },
   {
     title: 'Phone Number',
     type: questionType.shortResponse,
-    mlhRequired: true,
+    mlh: true,
     required: true,
     id: '4',
   },
   {
     title: 'Email',
     type: questionType.shortResponse,
-    mlhRequired: true,
+    mlh: true,
     id: '5',
     required: true,
   },
   {
     title: 'School',
     type: questionType.dropdown,
-    mlhRequired: true,
+    mlh: true,
     required: true,
     answerChoices: [
       'University of Florida',
@@ -127,7 +111,7 @@ const requiredQuestions: question[] = [
   {
     title: 'Level of Study',
     type: questionType.radio,
-    mlhRequired: true,
+    mlh: true,
     required: true,
     answerChoices: [
       'Less than Secondary / High School',
@@ -147,7 +131,7 @@ const requiredQuestions: question[] = [
   {
     title: 'Country of Residence',
     type: questionType.dropdown,
-    mlhRequired: true,
+    mlh: true,
     required: true,
     answerChoices: [
       'United States',
@@ -171,6 +155,169 @@ const requiredQuestions: question[] = [
     ],
     id: '8',
   },
+  {
+    title:
+      'I have read and agree to the MLH Code of Conduct. (https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md)',
+    type: questionType.checkbox,
+    mlh: true,
+    required: true,
+    mustAgree: true,
+    id: '9',
+  },
+  {
+    title:
+      'I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the MLH Privacy Policy (https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md). I further agree to the terms of both the MLH Contest Terms and Conditions (https://github.com/MLH/mlh-policies/blob/main/contest-terms.md) and the MLH Privacy Policy (https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md).',
+    type: questionType.checkbox,
+    mlh: true,
+    required: true,
+    mustAgree: true,
+    id: '10',
+  },
+  {
+    title:
+      'I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.',
+    type: questionType.checkbox,
+    mlh: true,
+    required: true,
+    mustAgree: false,
+    id: '0',
+  },
+  {
+    title: 'Dietary Restrictions',
+    type: questionType.checkbox,
+    mlh: true,
+    required: false,
+    id: '11',
+    answerChoices: [
+      'Vegetarian',
+      'Vegan',
+      'Celiac Disease',
+      'Allergies',
+      'Kosher',
+      'Halal',
+    ],
+  },
+  {
+    title:
+      'Do you identify as part of an underrepresented group in the technology industry?',
+    type: questionType.radio,
+    required: false,
+    mlh: true,
+    id: '12',
+    answerChoices: ['Yes', 'No', 'Unsure'],
+  },
+  {
+    title: 'Gender',
+    type: questionType.radio,
+    required: false,
+    mlh: true,
+    answerChoices: [
+      'Man',
+      'Woman',
+      'Non-Binary',
+      'Prefer Not to self-describe',
+      'Prefer Not to Answer',
+    ],
+    id: '13',
+  },
+  {
+    title: 'Pronouns',
+    type: questionType.radio,
+    required: false,
+    mlh: true,
+    answerChoices: [
+      'He/Him',
+      'She/Her',
+      'They/Them',
+      'She/They',
+      'He/They',
+      'Prefer Not to Answer',
+      'Other',
+    ],
+    id: '14',
+  },
+  {
+    title: 'Race / Ethnicity',
+    type: questionType.checkbox,
+    required: false,
+    mlh: true,
+    answerChoices: [
+      'American Indian or Alaska Native',
+      'Asian',
+      'Black or African American',
+      'Hispanic or Latino',
+      'Native Hawaiian or Other Pacific Islander',
+      'White',
+      'Prefer not to answer',
+      'Other',
+    ],
+    id: '15',
+  },
+  {
+    title: 'Do you consider yourself any of the following?',
+    mlh: true,
+    required: false,
+    type: questionType.radio,
+    answerChoices: [
+      'Heterosexual or Straight',
+      'Gay or Lesbian',
+      'Bisexual',
+      'Other',
+      'Prefer not to answer',
+    ],
+    id: '16',
+  },
+  {
+    title:
+      'What is the highest level of formal education that you have completed?',
+    mlh: true,
+    required: false,
+    type: questionType.radio,
+    answerChoices: [
+      'Less than High School',
+      'High School Diploma or Equivalent',
+      'Some College',
+      'Associate Degree',
+      'Bachelor’s Degree',
+      'Master’s Degree',
+      'Professional Degree (MD, JD, etc)',
+      'Doctorate Degree',
+      'Other',
+    ],
+    id: '17',
+  },
+  {
+    title: 'T-shirt Size',
+    mlh: true,
+    required: false,
+    type: questionType.dropdown,
+    answerChoices: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+    id: '18',
+  },
+  {
+    title: 'Shipping Address',
+    mlh: true,
+    required: false,
+    type: questionType.address,
+    id: '19',
+  },
+  {
+    title: 'Major/Field of Study',
+    mlh: true,
+    required: false,
+    type: questionType.dropdown,
+    answerChoices: [
+      'Computer Science',
+      'Computer Engineering',
+      'Electrical Engineering',
+      'Mechanical Engineering',
+      'Information Technology',
+      'Information Systems',
+      'Cybersecurity',
+      'Other Engineering',
+    ],
+    id: '20',
+  },
 ];
 
 function FormCreator({
@@ -188,11 +335,10 @@ function FormCreator({
         ...oldQuestions,
         {
           title: '',
-          description: '',
           type: questionType.radio,
           answerChoices: [],
           required: false,
-          mlhRequired: false,
+          mlh: false,
           id: uuidv4(),
         },
       ];
@@ -216,13 +362,14 @@ function FormCreator({
       </Stack>
 
       <Accordion
+        transitionDuration={500}
         classNames={{
           label: accordionClasses.label,
           panel: accordionClasses.panel,
         }}
       >
         {includeMLH ? (
-          <Accordion.Item key='MLH' value='MLH Required Questions'>
+          <Accordion.Item key='MLH' value='MLH Questions'>
             <Accordion.Control
               icon={
                 <Image
@@ -233,18 +380,12 @@ function FormCreator({
                 />
               }
             >
-              MLH Required Questions
+              MLH Questions
             </Accordion.Control>
             <Accordion.Panel>
               <Stack gap='md' align='center' justify='flex-start'>
-                {questions.map((q: question, _) =>
-                  q.mlhRequired ? (
-                    <Question
-                      key={q.id}
-                      question={q}
-                      setQuestions={setQuestions}
-                    />
-                  ) : null
+                {questions.map((q: question) =>
+                  q.mlh ? <MLHQuestion key={q.id} question={q} /> : null
                 )}
               </Stack>
             </Accordion.Panel>
@@ -270,7 +411,7 @@ function FormCreator({
                     strategy={verticalListSortingStrategy}
                   >
                     {questions.map((q: question, _) =>
-                      !q.mlhRequired ? (
+                      !q.mlh ? (
                         <Question
                           key={q.id}
                           question={q}
@@ -308,7 +449,7 @@ function Settings({ setIncludeMLH }: { setIncludeMLH: any }) {
         <Checkbox
           defaultChecked
           onChange={() => setIncludeMLH((value: boolean) => !value)}
-          label='Include MLH Required Questions'
+          label='Include MLH Questions'
         />
       </div>
     </div>
