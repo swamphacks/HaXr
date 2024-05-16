@@ -19,10 +19,19 @@ import {
 import Question from '@/components/admin/Question';
 import classes from '@/styles/Input.module.css';
 import Droppable from '@/components/dnd/Droppable';
-import { DndContext, closestCorners } from '@dnd-kit/core';
+import {
+  DndContext,
+  closestCorners,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensors,
+  useSensor,
+} from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { v4 as uuidv4 } from 'uuid';
 import { handleDragged } from '@/components/dnd/utils';
@@ -189,6 +198,15 @@ function FormCreator({
       ];
     });
   };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   return (
     <>
       <Stack gap='md' align='center' justify='flex-start'>
@@ -241,6 +259,7 @@ function FormCreator({
           </Accordion.Control>
           <Accordion.Panel>
             <DndContext
+              sensors={sensors}
               collisionDetection={closestCorners}
               onDragEnd={(event) => handleDragged(event, setQuestions)}
             >

@@ -39,7 +39,7 @@ export default function Choice({
           ref={setNodeRef}
           {...attributes}
           style={style}
-          className='mb-2 grid grid-cols-[1.3rem_auto_1.3rem] items-center'
+          className='mb-2 grid touch-none grid-cols-[1.3rem_auto_1.3rem] items-center'
         >
           <IconGripVertical {...listeners} className='w-[1.2rem]' />
           <input
