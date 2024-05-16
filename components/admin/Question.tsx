@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { Stack, Button, Select, Switch, Divider } from '@mantine/core';
-import { DndContext, closestCorners } from '@dnd-kit/core';
+import {
+  DndContext,
+  closestCorners,
+  useSensors,
+  useSensor,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+} from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { IconGripHorizontal, IconTrash } from '@tabler/icons-react';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,7 +18,7 @@ import Droppable from '@/components/dnd/Droppable';
 import { rem } from '@mantine/core';
 
 import { CSS } from '@dnd-kit/utilities';
-import { useSortable } from '@dnd-kit/sortable';
+import { useSortable, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
 enum questionType {
   select = 'Select Answer Type',
@@ -76,9 +84,17 @@ export default function Question({
     transform: CSS.Transform.toString(transform),
   };
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   return (
     <div
-      className='cursor-default rounded-md border-2 border-[var(--mantine-color-dark-2)] bg-[var(--mantine-color-body)] p-4 pt-1'
+      className='cursor-default touch-none rounded-md border-2 border-[var(--mantine-color-dark-2)] bg-[var(--mantine-color-body)] p-4 pt-1'
       style={{ width: rem(500), ...style }}
       key={question.id}
       ref={setNodeRef}
@@ -137,6 +153,7 @@ export default function Question({
               </Button>
             </div>
             <DndContext
+              sensors={sensors}
               collisionDetection={closestCorners}
               onDragEnd={handleDragged}
             >
