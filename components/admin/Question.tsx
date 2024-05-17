@@ -219,7 +219,7 @@ export default function Question({
 
   const style = {
     transition,
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
   };
 
   const sensors = useSensors(
