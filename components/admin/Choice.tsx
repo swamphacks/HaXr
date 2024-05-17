@@ -53,7 +53,7 @@ function ChoiceInput({
         <IconGripVertical {...listeners} className='w-[1.2rem]' />
       ) : null}
 
-      <div className='flex flex-row items-center'>
+      <div className='col-start-2 flex flex-row items-center'>
         {questionType === qType.multiplechoice ? (
           <Radio disabled className='mr-2' />
         ) : null}

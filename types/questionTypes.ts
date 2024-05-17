@@ -55,9 +55,7 @@ export interface SelectionQuestion extends BaseQuestion {
   answerChoices: answerChoice[];
 }
 
-export interface Agreement extends BaseQuestion {
-  mustAgree: boolean;
-}
+export interface Agreement extends BaseQuestion {}
 
 export interface FileQuestion extends BaseQuestion {
   allowAllTypes: boolean;

@@ -37,7 +37,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { handleDragged } from '@/components/dnd/utils';
 import accordionClasses from '@/styles/CreateForm.module.css';
 import Image from 'next/image';
-import MLHQuestion from '@/components/admin/MLHQuestion';
 import { FormQuestion, questionType } from '@/types/questionTypes';
 
 const requiredQuestions: FormQuestion[] = [
@@ -171,7 +170,6 @@ const requiredQuestions: FormQuestion[] = [
     type: questionType.agreement,
     mlh: true,
     required: true,
-    mustAgree: true,
     id: '9',
   },
   {
@@ -180,7 +178,6 @@ const requiredQuestions: FormQuestion[] = [
     type: questionType.agreement,
     mlh: true,
     required: true,
-    mustAgree: true,
     id: '10',
   },
   {
@@ -188,8 +185,7 @@ const requiredQuestions: FormQuestion[] = [
       'I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.',
     type: questionType.agreement,
     mlh: true,
-    required: true,
-    mustAgree: false,
+    required: false,
     id: '0',
   },
   {
@@ -409,7 +405,7 @@ function FormCreator({
             <Accordion.Panel>
               <Stack gap='md' align='center' justify='flex-start'>
                 {questions.map((q: FormQuestion) =>
-                  q.mlh ? <MLHQuestion key={q.id} question={q} /> : null
+                  q.mlh ? <Question key={q.id} question={q} disabled /> : null
                 )}
               </Stack>
             </Accordion.Panel>
