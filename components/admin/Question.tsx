@@ -165,12 +165,12 @@ export const OtherIncludedContext = createContext({
 
 export default function Question({
   question,
-  setQuestions,
+  setQuestions = (value: any) => {},
   disabled = false,
 }: {
   question: FormQuestion;
-  setQuestions: any;
-  disabled: boolean;
+  setQuestions?: (value: any) => void;
+  disabled?: boolean;
 }) {
   const [selectedQuestionType, setQuestionType] = useState<string>(
     question.type
@@ -182,7 +182,6 @@ export default function Question({
   );
   const [required, setRequired] = useState<boolean>(question.required);
   const [title, setTitle] = useState<string>(question.title);
-  const [mustAgree, setMustAgree] = useState<boolean>(false);
   const [otherIncluded, setOther] = useState<boolean>(
     (hasAnswerChoices(question) &&
       (question as SelectionQuestion).answerChoices?.some((c) => c.other)) ||
@@ -393,10 +392,10 @@ export default function Question({
 
         {/* Question Settings */}
         <Divider />
-        <div className='flex flex-row-reverse items-center gap-4'>
+        <div className='col-start-2 flex flex-row-reverse items-center gap-4'>
           <Switch
             label='Required'
-            defaultChecked={question.required}
+            defaultChecked={required}
             onChange={() =>
               setRequired((value) => {
                 return !value;
@@ -404,6 +403,7 @@ export default function Question({
             }
             size='xs'
             labelPosition='left'
+            disabled={disabled}
           />
           <Divider orientation='vertical' />
           <Tooltip label='Delete' color='gray'>
@@ -414,6 +414,7 @@ export default function Question({
                   oldQuestions.filter((q) => q.id !== question.id)
                 )
               }
+              disabled={disabled}
             >
               <IconTrash className='w-5' stroke={1.25} />
             </button>
@@ -421,6 +422,7 @@ export default function Question({
           <Tooltip label='Duplicate' color='gray'>
             <button
               className='justify-self-end'
+              disabled={disabled}
               onClick={() => {
                 switch (selectedQuestionType) {
                   case questionType.multiplechoice:
@@ -433,18 +435,6 @@ export default function Question({
                         type: selectedQuestionType,
                         answerChoices: choices,
                         required: required,
-                        id: uuidv4(),
-                      },
-                    ]);
-                    break;
-                  case questionType.agreement:
-                    setQuestions((oldQuestions: FormQuestion[]) => [
-                      ...oldQuestions,
-                      {
-                        title: title,
-                        type: selectedQuestionType,
-                        required: required,
-                        mustAgree: mustAgree,
                         id: uuidv4(),
                       },
                     ]);
