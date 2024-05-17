@@ -1,58 +1,88 @@
 import { Stack, Select, TextInput } from '@mantine/core';
 import { PropsWithChildren } from 'react';
-import MLHChoice from '@/components/admin/MLHChoice';
 import classes from '@/styles/Input.module.css';
-import { rem } from '@mantine/core';
+import { rem, Checkbox } from '@mantine/core';
 
-import { question, questionType } from '@/types/questionTypes';
+import {
+  FormQuestion,
+  questionType,
+  answerChoice,
+  SelectionQuestion,
+  Agreement,
+} from '@/types/questionTypes';
 
-function AnswerChoiceHeader() {
-  return <h2 className='text-lg font-semibold'>Answer Choices</h2>;
+function MLHChoice({
+  choice,
+  answerType,
+}: {
+  choice: answerChoice;
+  answerType: questionType;
+}) {
+  switch (answerType) {
+    case questionType.multiplechoice:
+      return <Checkbox label={choice.value} disabled />;
+    case questionType.checkbox:
+    case questionType.agreement:
+      return <Checkbox label={choice.value} disabled />;
+    default:
+      console.error(
+        `Invalid answer type for MLHChoice: ${answerType}. Returning null.`
+      );
+      return null;
+  }
 }
 
 export default function MLHQuestion({
   question,
   title,
 }: {
-  question: question;
+  question: FormQuestion;
   title?: PropsWithChildren<any>;
 }) {
   return (
     <div
-      className='cursor-default touch-none rounded-md border-2 border-[var(--mantine-color-dark-2)] bg-[var(--mantine-color-body)] p-4 pt-1'
+      className='cursor-default touch-none rounded-md border-2 border-[var(--mantine-color-dark-2)] bg-[var(--mantine-color-body)] p-4 pt-2'
       style={{ width: rem(500) }}
     >
       <Stack>
-        <h1 className={classes.input + ' mt-2 text-lg'}>
-          {title || question.title}
-        </h1>
+        {question.type !== questionType.agreement ? (
+          <h1 className={classes.input + ' mt-2 text-lg'}>
+            {title || question.title}{' '}
+            {question.required ? <em className='text-red-500'>*</em> : null}
+          </h1>
+        ) : null}
         <h2>
           <b className='font-bold'>Question Type</b>: {question.type}
         </h2>
 
         {/* Answer Choices */}
-        {[questionType.multiplechoice, questionType.dropdown].includes(
-          question.type
-        ) ||
-        (question.type === questionType.checkbox &&
-          question.answerChoices &&
-          question.answerChoices.length > 1) ? (
+        {[
+          questionType.multiplechoice,
+          questionType.dropdown,
+          questionType.checkbox,
+        ].includes(question.type) ? (
           <>
-            <AnswerChoiceHeader />
             {question.type !== questionType.dropdown ? (
-              question?.answerChoices?.map((choice: string, i: number) => (
-                <MLHChoice key={i} choice={choice} />
-              ))
+              (question as SelectionQuestion).answerChoices.map(
+                (choice: answerChoice, i: number) => (
+                  <MLHChoice
+                    key={i}
+                    choice={choice}
+                    answerType={question.type}
+                  />
+                )
+              )
             ) : (
               <Select
-                data={
-                  question.answerChoices
-                    ? question.answerChoices.map((c) => c.value)
-                    : []
-                }
+                data={(question as SelectionQuestion).answerChoices.map(
+                  (c) => c.value
+                )}
               />
             )}
           </>
+        ) : null}
+        {question.type === questionType.agreement ? (
+          <Checkbox label={question.title} disabled />
         ) : null}
 
         {/* Address */}
@@ -72,7 +102,8 @@ export default function MLHQuestion({
 
         {/* Required */}
 
-        {question.mustAgree ? (
+        {question.type === questionType.agreement &&
+        (question as Agreement).mustAgree ? (
           <h2 className='text-lg text-red-500'>Must Agree</h2>
         ) : null}
       </Stack>
