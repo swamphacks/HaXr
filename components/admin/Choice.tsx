@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { OtherIncludedContext } from '@/components/admin/Question';
-import { CloseButton } from '@mantine/core';
+import { CloseButton, Radio, Checkbox } from '@mantine/core';
 import { IconGripVertical } from '@tabler/icons-react';
 
 import { CSS } from '@dnd-kit/utilities';
@@ -9,15 +9,20 @@ import { useSortable } from '@dnd-kit/sortable';
 import classes from '@/styles/Input.module.css';
 
 import { answerChoice } from '@/types/questionTypes';
+import { questionType as qType } from '@/types/questionTypes';
 
 function ChoiceInput({
   choice,
   setChoices,
   setOther,
+  disabled,
+  questionType,
 }: {
   choice: answerChoice;
   setChoices: any;
   setOther: any;
+  disabled: boolean;
+  questionType: qType;
 }) {
   const id = choice.id;
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -28,6 +33,14 @@ function ChoiceInput({
     transform: CSS.Transform.toString(transform),
   };
 
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    choice.value = e.target.value;
+    setChoices((choices: answerChoice[]) => {
+      const index = choices.findIndex((c: answerChoice) => c.id === choice.id);
+      return [...choices.slice(0, index), choice, ...choices.slice(index + 1)];
+    });
+  };
+
   return (
     <div
       key={choice.id}
@@ -36,60 +49,75 @@ function ChoiceInput({
       style={style}
       className='grid touch-none grid-cols-[1.3rem_auto_1.3rem] items-center'
     >
-      <IconGripVertical {...listeners} className='w-[1.2rem]' />
-      <input
-        type='text'
-        defaultValue={choice.value}
-        onChange={(e) => {
-          choice.value = e.target.value;
-          setChoices((choices: answerChoice[]) => {
-            const index = choices.findIndex(
-              (c: answerChoice) => c.id === choice.id
+      {!disabled ? (
+        <IconGripVertical {...listeners} className='w-[1.2rem]' />
+      ) : null}
+
+      <div className='flex flex-row items-center'>
+        {questionType === qType.multiplechoice ? (
+          <Radio disabled className='mr-2' />
+        ) : null}
+        {questionType === qType.checkbox ? (
+          <Checkbox disabled className='mr-2' />
+        ) : null}
+        <input
+          type='text'
+          defaultValue={choice.value}
+          onChange={(e) => handleInput(e)}
+          className={classes.input}
+          disabled={disabled}
+        />
+      </div>
+      {!disabled ? (
+        <CloseButton
+          onClick={() => {
+            setChoices((choices: answerChoice[]) =>
+              choices.filter((c: answerChoice) => c.id !== choice.id)
             );
-            return [
-              ...choices.slice(0, index),
-              choice,
-              ...choices.slice(index + 1),
-            ];
-          });
-        }}
-        className={classes.input}
-      />
-      <CloseButton
-        onClick={() => {
-          setChoices((choices: answerChoice[]) =>
-            choices.filter((c: answerChoice) => c.id !== choice.id)
-          );
-          if (choice.other) {
-            setOther(false);
-          }
-        }}
-      />
+            if (choice.other) {
+              setOther(false);
+            }
+          }}
+        />
+      ) : null}
     </div>
   );
 }
 
 export default function Choice({
   choice,
-  editable = true,
+  questionType,
+  disabled = false,
 }: {
   choice: answerChoice;
-  editable?: boolean;
+  questionType: qType;
+  disabled?: boolean;
 }) {
   const { setOther, setChoices } = useContext(OtherIncludedContext);
 
   return (
     <>
-      {editable && !choice.other ? (
+      {!choice.other ? (
         <ChoiceInput
           choice={choice}
           setChoices={setChoices}
           setOther={setOther}
+          questionType={questionType}
+          disabled={disabled}
         />
       ) : null}
-      {editable && choice.other ? (
+      {choice.other ? (
         <div className='grid grid-cols-[1.3rem_auto_1.3rem] items-center'>
-          <p className={classes.input + ' col-start-2'}>Other...</p>
+          <div />
+          <div className='flex flex-row'>
+            {questionType === qType.multiplechoice ? (
+              <Radio disabled className='mr-2' />
+            ) : null}
+            {questionType === qType.checkbox ? (
+              <Checkbox disabled className='mr-2' />
+            ) : null}
+            <p className={classes.input + ' col-start-2'}>Other...</p>
+          </div>
           <CloseButton
             onClick={() => {
               setChoices((choices: answerChoice[]) =>
@@ -102,7 +130,6 @@ export default function Choice({
           />
         </div>
       ) : null}
-      {!editable ? <p className={classes.input}>{choice.value}</p> : null}
     </>
   );
 }

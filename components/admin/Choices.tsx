@@ -2,6 +2,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { questionType } from '@/types/questionTypes';
 import Choice from '@/components/admin/Choice';
 
 type answerChoice = {
@@ -11,26 +12,25 @@ type answerChoice = {
 
 export default function Choices({
   choices,
-  editable = true,
+  questionType,
+  disabled = false,
 }: {
   choices: answerChoice[];
-  editable?: boolean;
+  questionType: questionType;
+  disabled?: boolean;
 }) {
   return (
     <div className='flex flex-col gap-2'>
-      {editable ? (
-        <SortableContext items={choices} strategy={verticalListSortingStrategy}>
-          {choices.map((choice: answerChoice) => (
-            <Choice key={choice.id} choice={choice} editable={editable} />
-          ))}
-        </SortableContext>
-      ) : (
-        <>
-          {choices.map((choice: answerChoice) => (
-            <Choice key={choice.id} choice={choice} editable={editable} />
-          ))}
-        </>
-      )}
+      <SortableContext items={choices} strategy={verticalListSortingStrategy}>
+        {choices.map((choice: answerChoice) => (
+          <Choice
+            key={choice.id}
+            choice={choice}
+            disabled={disabled}
+            questionType={questionType}
+          />
+        ))}
+      </SortableContext>
     </div>
   );
 }

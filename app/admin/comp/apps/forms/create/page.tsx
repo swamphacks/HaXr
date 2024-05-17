@@ -38,9 +38,9 @@ import { handleDragged } from '@/components/dnd/utils';
 import accordionClasses from '@/styles/CreateForm.module.css';
 import Image from 'next/image';
 import MLHQuestion from '@/components/admin/MLHQuestion';
-import { question, questionType } from '@/types/questionTypes';
+import { FormQuestion, questionType } from '@/types/questionTypes';
 
-const requiredQuestions: question[] = [
+const requiredQuestions: FormQuestion[] = [
   {
     title: 'First Name',
     type: questionType.shortResponse,
@@ -168,7 +168,7 @@ const requiredQuestions: question[] = [
   {
     title:
       'I have read and agree to the MLH Code of Conduct. (https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md)',
-    type: questionType.checkbox,
+    type: questionType.agreement,
     mlh: true,
     required: true,
     mustAgree: true,
@@ -177,7 +177,7 @@ const requiredQuestions: question[] = [
   {
     title:
       'I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the MLH Privacy Policy (https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md). I further agree to the terms of both the MLH Contest Terms and Conditions (https://github.com/MLH/mlh-policies/blob/main/contest-terms.md) and the MLH Privacy Policy (https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md).',
-    type: questionType.checkbox,
+    type: questionType.agreement,
     mlh: true,
     required: true,
     mustAgree: true,
@@ -186,7 +186,7 @@ const requiredQuestions: question[] = [
   {
     title:
       'I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.',
-    type: questionType.checkbox,
+    type: questionType.agreement,
     mlh: true,
     required: true,
     mustAgree: false,
@@ -322,6 +322,10 @@ const requiredQuestions: question[] = [
     required: false,
     type: questionType.address,
     id: '19',
+    addressLineOne: '',
+    city: '',
+    country: '',
+    pincode: '',
   },
   {
     title: 'Major/Field of Study',
@@ -347,20 +351,18 @@ function FormCreator({
   setQuestions,
   includeMLH,
 }: {
-  questions: question[];
+  questions: FormQuestion[];
   setQuestions: any;
   includeMLH: boolean;
 }) {
   const handleAddQuestions = () => {
-    setQuestions((oldQuestions: question[]) => {
+    setQuestions((oldQuestions: FormQuestion[]) => {
       return [
         ...oldQuestions,
         {
           title: '',
-          type: questionType.multiplechoice,
-          answerChoices: [],
+          type: questionType.shortResponse,
           required: false,
-          mlh: false,
           id: uuidv4(),
         },
       ];
@@ -406,7 +408,7 @@ function FormCreator({
             </Accordion.Control>
             <Accordion.Panel>
               <Stack gap='md' align='center' justify='flex-start'>
-                {questions.map((q: question) =>
+                {questions.map((q: FormQuestion) =>
                   q.mlh ? <MLHQuestion key={q.id} question={q} /> : null
                 )}
               </Stack>
@@ -432,7 +434,7 @@ function FormCreator({
                     items={questions}
                     strategy={verticalListSortingStrategy}
                   >
-                    {questions.map((q: question) =>
+                    {questions.map((q: FormQuestion) =>
                       !q.mlh ? (
                         <Question
                           key={q.id}
