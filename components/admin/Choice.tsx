@@ -30,7 +30,7 @@ function ChoiceInput({
 
   const style = {
     transition,
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
