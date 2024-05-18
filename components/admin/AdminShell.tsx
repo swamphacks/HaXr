@@ -79,6 +79,8 @@ export default function AdminShell({
     }
   }, [data]);
 
+  if (loading) return <Spinner />;
+
   return (
     <CompetitionContext.Provider
       value={{ competition: data?.find((c) => c.code === comp) }}

@@ -36,10 +36,10 @@ const Spinner = () => {
     }, 6000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [messageList]);
 
   return (
-    <div className='flex flex-col items-center justify-center gap-5 md:gap-6 lg:gap-7'>
+    <div className='flex h-screen w-screen flex-col items-center justify-center gap-5 md:gap-6 lg:gap-7'>
       <div className=' flex h-16 w-16 flex-row items-center justify-between gap-2 sm:h-20 sm:w-20 sm:gap-3 md:h-24 md:w-24'>
         <motion.div
           animate={{ height: ['66%', '100%', '66%', '66%', '66%', '66%'] }}
