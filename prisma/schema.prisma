@@ -18,8 +18,6 @@ model User {
   isAdmin       Boolean   @default(false)
   accounts      Account[]
   sessions      Session[]
-
-  applications Application[]
 }
 
 model Account {
@@ -56,55 +54,18 @@ model VerificationToken {
 }
 
 model Competition {
-  code          String @id
+  code          String   @id
   name          String
-  description   String
+  description   String?
   frontpage_url String
+  start_date    DateTime
+  end_date      DateTime
+  location      String
+  location_url  String
 
-  start_date DateTime
-  end_date   DateTime
-
-  registration_open  DateTime?
-  registration_close DateTime?
-
-  confirmation_date DateTime?
-
-  location     String?
-  location_url String        @default("")
-  questions    Json          @default("[]")
-  applications Application[]
-
-  visible  Boolean @default(false)
-  released Boolean @default(false)
-}
-
-enum Status {
-  STARTED // Save state
-
-  // After submission
-  APPLIED
-
-  // After review
-  REJECTED
-  WAITLISTED
-  ACCEPTED
-
-  // After confirmation
-  NOT_ATTENDING
-  ATTENDING
-}
-
-model Application {
-  user_id          String
-  competition_code String
-  questions        Json
-  responses        Json
-  status           Status    @default(STARTED)
-  applied_at       DateTime?
-  updated_at       DateTime  @updatedAt
-
-  user        User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  competition Competition @relation(fields: [competition_code], references: [code], onUpdate: Cascade, onDelete: Cascade)
-
-  @@id([competition_code, user_id])
+  preview          DateTime
+  apply_open       DateTime
+  apply_close      DateTime
+  decision_release DateTime
+  confirm_by       DateTime
 }
