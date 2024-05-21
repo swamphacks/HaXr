@@ -42,9 +42,10 @@ export const GET = async (
   });
 
   if (application) return NextResponse.json({ app: application, status: 200 });
-  else
+  else { 
     return NextResponse.json({
       message: 'Could not find application',
       status: 404,
     });
+  }
 };

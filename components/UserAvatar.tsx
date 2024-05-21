@@ -11,6 +11,7 @@ import {
 } from '@mantine/core';
 import { IconLogout } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
+import { serverSignOut } from '@/actions/auth';
 
 interface Props {
   session: Session;
@@ -33,7 +34,7 @@ export default function UserAvatar({ session }: Readonly<Props>) {
           <MenuItem
             color='red'
             leftSection={<IconLogout />}
-            onClick={() => router.push('/api/auth/signout')}
+            onClick={async () => await serverSignOut()}
           >
             Sign-out
           </MenuItem>

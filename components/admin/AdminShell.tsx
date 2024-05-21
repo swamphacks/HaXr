@@ -2,8 +2,8 @@
 import React, {
   createContext,
   PropsWithChildren,
-  useState,
   useEffect,
+  useState,
 } from 'react';
 import {
   AppShell,
@@ -12,9 +12,11 @@ import {
   AppShellNavbar,
   AppShellSection,
   Burger,
+  Center,
   Divider,
   Group,
   Image,
+  Loader,
   NavLink,
   ScrollArea,
   Select,
@@ -39,10 +41,11 @@ import UserProfile from '@/components/UserAvatar';
 import { Session } from 'next-auth';
 import { useDisclosure } from '@mantine/hooks';
 import { Competition } from '@prisma/client';
-import useSWR from 'swr';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Spinner from '../misc/Spinner';
+import useSWR from 'swr';
+import superjson from 'superjson';
 
 interface Props {
   session: Session;
@@ -53,7 +56,11 @@ export const CompetitionContext = createContext<{ competition?: Competition }>({
 });
 
 // @ts-ignore
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+const fetcher = (...args) =>
+  // @ts-ignore
+  fetch(...args)
+    .then((res) => res.json())
+    .then((str) => superjson.parse<Competition[]>(str));
 
 export default function AdminShell({
   session,
@@ -65,25 +72,28 @@ export default function AdminShell({
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
 
-  const { data } = useSWR<Competition[]>('/api/comp', fetcher, {
-    fallbackData: [],
-    onSuccess: () => setLoading(false),
-  });
+  const { data: competitions, isLoading } = useSWR<Competition[]>(
+    '/api/comp',
+    fetcher,
+    {
+      fallbackData: [],
+      onSuccess: () => setLoading(false)
+    },
+  );
 
   useEffect(() => {
     const selectedComp = sessionStorage.getItem('selectedComp');
 
     // Check if the selected competition still exists
-    if (selectedComp && data?.some((c) => c.code === selectedComp)) {
+    if (selectedComp && competitions?.some((c) => c.code === selectedComp))
       setComp(selectedComp);
-    }
-  }, [data]);
+  }, [competitions]);
 
   if (loading) return <Spinner />;
 
   return (
     <CompetitionContext.Provider
-      value={{ competition: data?.find((c) => c.code === comp) }}
+      value={{ competition: competitions?.find((c) => c.code === comp) }}
     >
       <AppShell
         header={{ height: 60 }}
@@ -103,14 +113,21 @@ export default function AdminShell({
                 hiddenFrom='sm'
                 size='sm'
               />
+
               <Image
-                src='/logo/swamphacks_hd.png'
+                src='/logos/swamphacks_hd.png'
                 mah={60}
                 fit='contain'
                 alt='SwampHacks logo'
                 visibleFrom='sm'
               />
-              <Title order={2}>Admin Portal</Title>
+              <Title order={2} visibleFrom='sm'>
+                Admin Portal
+              </Title>
+
+              <Title order={2} hiddenFrom='sm'>
+                Admin
+              </Title>
             </Group>
 
             <UserProfile session={session} />
@@ -120,15 +137,12 @@ export default function AdminShell({
         <AppShellNavbar p='md'>
           <Select
             placeholder='Select a competition'
-            data={data?.map((c) => ({ value: c.code, label: c.name }))}
+            data={competitions?.map((c) => ({ value: c.code, label: c.name }))}
             value={comp}
             onChange={(c) => {
               setComp(c);
-              if (c) {
-                sessionStorage.setItem('selectedComp', c);
-              } else {
-                sessionStorage.removeItem('selectedComp');
-              }
+              if (c) sessionStorage.setItem('selectedComp', c);
+              else sessionStorage.removeItem('selectedComp');
             }}
             allowDeselect={true}
           />
@@ -236,7 +250,14 @@ export default function AdminShell({
           </div>
         </AppShellNavbar>
 
-        <AppShellMain>{children}</AppShellMain>
+        <AppShellMain>
+          {isLoading && (
+            <Center>
+              <Loader />
+            </Center>
+          )}
+          {!isLoading && (comp ? children : <>Select a competition</>)}
+        </AppShellMain>
       </AppShell>
     </CompetitionContext.Provider>
   );

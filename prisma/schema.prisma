@@ -10,14 +10,13 @@ datasource db {
 }
 
 model User {
-  id            String        @id @default(cuid())
+  id            String      @id @default(cuid())
   name          String?
-  email         String        @unique
+  email         String      @unique
   emailVerified DateTime?
   image         String?
-  isAdmin       Boolean       @default(false)
+  isAdmin       Boolean     @default(false)
   accounts      Account[]
-  applications  Application[]
   sessions      Session[]
   Attendees     Attendees[]
 }
@@ -55,36 +54,21 @@ model VerificationToken {
 }
 
 model Competition {
-  code               String        @id
-  name               String
-  description        String
-  frontpage_url      String
-  start_date         DateTime
-  end_date           DateTime
-  registration_open  DateTime?
-  registration_close DateTime?
-  confirmation_date  DateTime?
-  location           String?
-  location_url       String        @default("")
-  questions          Json          @default("[]")
-  visible            Boolean       @default(false)
-  released           Boolean       @default(false)
-  applications       Application[]
-  Attendees          Attendees[]
-}
+  code          String   @id
+  name          String
+  description   String?
+  frontpage_url String
+  start_date    DateTime
+  end_date      DateTime
+  location      String
+  location_url  String
 
-model Application {
-  user_id          String
-  competition_code String
-  questions        Json
-  responses        Json
-  status           Status      @default(STARTED)
-  applied_at       DateTime?
-  updated_at       DateTime    @updatedAt
-  competition      Competition @relation(fields: [competition_code], references: [code], onDelete: Cascade)
-  user             User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@id([competition_code, user_id])
+  preview          DateTime
+  apply_open       DateTime
+  apply_close      DateTime
+  decision_release DateTime
+  confirm_by       DateTime
+  Attendees        Attendees[]
 }
 
 model Attendees {
