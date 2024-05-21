@@ -20,7 +20,7 @@ const response = await fetch('http://localhost:3000/api/user/shhewubuvduh32');
 
 export const GET = async (
   req: NextRequest,
-  { params }: { params: { code: string, id: string } }
+  { params }: { params: { code: string; id: string } }
 ) => {
   const id = params.id;
   const code = params.code;
@@ -33,15 +33,18 @@ export const GET = async (
     where: {
       competition_code_user_id: {
         competition_code: code,
-        user_id: id
-      }
+        user_id: id,
+      },
     },
     include: {
-      user: true
-    }
+      user: true,
+    },
   });
 
-  if (application) return NextResponse.json({app: application, status: 200});
-  else return NextResponse.json({message: "Could not find application", status: 404});
-  
+  if (application) return NextResponse.json({ app: application, status: 200 });
+  else
+    return NextResponse.json({
+      message: 'Could not find application',
+      status: 404,
+    });
 };

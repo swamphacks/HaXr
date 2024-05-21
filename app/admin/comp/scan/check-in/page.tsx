@@ -11,10 +11,13 @@ export default function ScanCheckIn() {
 
   const onSubmit = async () => {
     if (!search) return; // Don't do anything if the user ID is empty
-    
-    const response = await fetch(`/api/comp/${competition?.code}/checkin/${search}`, {
-      method: 'GET',
-    });
+
+    const response = await fetch(
+      `/api/comp/${competition?.code}/checkin/${search}`,
+      {
+        method: 'GET',
+      }
+    );
 
     const data = await response.json();
     console.log(data);
