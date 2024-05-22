@@ -11,6 +11,7 @@ const QrScanner = ({ onScan }: QrScannerProps) => {
 
   useEffect(() => {
     if (!videoRef.current) return;
+
     reader.current.decodeFromConstraints(
       {
         audio: false,
@@ -18,8 +19,9 @@ const QrScanner = ({ onScan }: QrScannerProps) => {
           facingMode: 'environment',
         },
       },
+
       videoRef.current,
-      (result, error) => {
+      (result) => {
         if (result) onScan(result.getText());
       }
     );
@@ -29,12 +31,7 @@ const QrScanner = ({ onScan }: QrScannerProps) => {
     };
   }, [videoRef, onScan]);
 
-  return (
-    <div className='relative flex h-[70vh] items-center justify-center'>
-      <video ref={videoRef} className='h-full w-full' />
-      <div className='absolute h-[30vh] w-[30vh] border'></div>
-    </div>
-  );
+  return <video ref={videoRef} />;
 };
 
 export default QrScanner;

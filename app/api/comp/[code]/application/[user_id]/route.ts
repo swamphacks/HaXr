@@ -20,9 +20,9 @@ const response = await fetch('http://localhost:3000/api/user/shhewubuvduh32');
 
 export const GET = async (
   req: NextRequest,
-  { params }: { params: { code: string; id: string } }
+  { params }: { params: { code: string; user_id: string } }
 ) => {
-  const id = params.id;
+  const user_id = params.user_id;
   const code = params.code;
 
   const neon = new Pool({ connectionString: process.env.POSTGRES_PRISMA_URL });
@@ -31,9 +31,9 @@ export const GET = async (
 
   const application = await prisma.application.findUnique({
     where: {
-      competition_code_user_id: {
+      userId_competition_code: {
+        userId: user_id,
         competition_code: code,
-        user_id: id,
       },
     },
     include: {
@@ -41,11 +41,10 @@ export const GET = async (
     },
   });
 
-  if (application) return NextResponse.json({ app: application, status: 200 });
-  else { 
+  if (!application || application === null) {
     return NextResponse.json({
-      message: 'Could not find application',
+      message: 'Application could not be found.',
       status: 404,
     });
-  }
+  } else return NextResponse.json({ app: application, status: 200 });
 };

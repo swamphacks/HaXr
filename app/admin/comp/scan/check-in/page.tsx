@@ -1,84 +1,154 @@
 'use client';
 import QrScanner from '@/components/admin/QrScanner';
+import { type Application, type User, type Status } from '@prisma/client';
+import {
+  Box,
+  Group,
+  LoadingOverlay,
+  Stack,
+  Modal,
+  Text,
+  Avatar,
+  Button,
+} from '@mantine/core';
 import { useCallback, useContext, useState } from 'react';
 import { CompetitionContext } from '@/components/admin/AdminShell';
+import { useDisclosure } from '@mantine/hooks';
+
+interface successResponse {
+  app: Application & { user: User };
+  status: number;
+}
+
+interface errorResponse {
+  message: string;
+  status: number;
+}
+
+type apiResponse = successResponse | errorResponse;
+
+const isSuccessfulResponse = (
+  response: apiResponse
+): response is successResponse => {
+  return response.status === 200;
+};
 
 export default function ScanCheckIn() {
-  const [result, setResult] = useState<string | null>(null);
-  const [search, setSearch] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState<boolean>(true);
+  const [response, setResponse] = useState<apiResponse | null>(null);
+  const [error, setError] = useState<boolean>(false);
+  const [visible, { toggle }] = useDisclosure(false);
+  const [opened, { open, close }] = useDisclosure(false);
+
   const { competition } = useContext(CompetitionContext);
 
-  const onSubmit = async () => {
-    if (!search) return; // Don't do anything if the user ID is empty
-
-    const response = await fetch(
-      `/api/comp/${competition?.code}/checkin/${search}`,
-      {
-        method: 'GET',
-      }
-    );
-
-    const data = await response.json();
-    console.log(data);
+  const getColor = (status: Status) => {
+    switch (status) {
+      case 'ACCEPTED':
+        return '#00ff00';
+      case 'REJECTED':
+        return '#ff0000';
+      case 'STARTED':
+        return '#ffdb58';
+      default:
+        return 'white';
+    }
   };
 
-  // const onScan = async (result: string) => {
-  //   setResult(result);
-  //   setCameraActive(false);
-  //   console.log('I was called!');
+  const onScan = async (result: string) => {
+    // Already doing something else
+    if (!cameraActive) return;
 
-  //   if (!result) return; // Don't do anything if the user ID is empty
+    // If currently scanning...
+    setCameraActive(false);
+    toggle();
 
-  //   const response = await fetch(
-  //     `http://localhost:3000/api/user/find?uid=${result}`,
-  //     {
-  //       method: 'GET',
-  //     }
-  //   );
+    const res = await (
+      await fetch(`/api/comp/${competition?.code}/application/${result}`)
+    ).json();
 
-  //   const data = await response.json();
-  //   if (data.status === 200) {
-  //     console.log('User found!');
-  //     console.log(
-  //       `User ID: ${data.user.id}\nName: ${data.user.name}\nEmail: ${data.user.email}`
-  //     );
-  //   } else if (data.status === 404) {
-  //     console.log(data.message);
-  //   }
-  // };
+    setResponse(res);
+
+    if (isSuccessfulResponse(res)) {
+      setError(false);
+      open();
+    } else {
+      setError(true);
+      open();
+    }
+  };
 
   return (
-    <div className='flex w-full flex-col items-center justify-center border'>
-      <input
-        type='text'
-        className='mb-5 h-10 w-1/3 border px-3'
-        onChange={(event) => setSearch(event.target.value)}
-      />
-      <div
-        onClick={onSubmit}
-        className='flex h-[10%] w-[10%] select-none items-center justify-center bg-purple-500 text-white hover:cursor-pointer hover:bg-purple-300'
+    <Stack gap='md' align='center' justify='flex-start'>
+      <Modal
+        opened={opened}
+        onClose={() => {
+          setCameraActive(true);
+          toggle();
+          close();
+        }}
+        title={error ? 'Error' : 'Check In'}
+        zIndex={20}
       >
-        <p className='select-none'>Submit</p>
-      </div>
-      <h1>Competition Code: {competition?.code}</h1>
-      <h1>Scanned: {result ? result : ''}</h1>
-      {/* {cameraActive ? (
-        <QrScanner onScan={onScan} />
-      ) : (
-        <h1>Camera is not active</h1>
-      )}
-      <h1>Scanned: {result ? result : ''}</h1>
-      <div className='flex w-1/3 flex-row items-center justify-center'>
-        <button
-          onClick={() => {
-            setCameraActive(true);
-            setResult(null);
-          }}
-        >
-          Reset
-        </button>
-      </div> */}
-    </div>
+        {response &&
+          (isSuccessfulResponse(response) ? (
+            <Stack justify='center' align='center' gap={20}>
+              <LoadingOverlay
+                visible={false}
+                zIndex={200}
+                overlayProps={{ blur: 2, radius: 'sm' }}
+              />
+              <Stack justify='center' align='center' gap={6}>
+                <Avatar
+                  size='35%'
+                  src={response.app.user.image}
+                  alt='User Profile'
+                />
+                <h1 className='text-3xl font-bold'>{response.app.user.name}</h1>
+                <Text>University of Florida</Text>
+              </Stack>
+              <Text
+                size='xl'
+                style={{ color: getColor(response.app.status) }}
+                td='underline'
+              >
+                {response.app.status}
+              </Text>
+              <Group>
+                <Button color='green' size='md'>
+                  Check In
+                </Button>
+                <Button variant='outline' size='md' color='gray'>
+                  Cancel
+                </Button>
+              </Group>
+            </Stack>
+          ) : (
+            <Group justify='center'>
+              <Text>{response.message}</Text>
+            </Group>
+          ))}
+      </Modal>
+      <Stack
+        align='center'
+        justify='center'
+        className='rounded-lg border border-zinc-700 p-5'
+      >
+        <Box pos='relative'>
+          <LoadingOverlay
+            visible={visible}
+            zIndex={10}
+            overlayProps={{ radius: 'sm', blur: 3 }}
+          />
+          <QrScanner onScan={onScan} />
+        </Box>
+        <Group>
+          <h1 className='text-2xl font-bold text-white'>
+            {' '}
+            Scan a QR Code to check in!{' '}
+          </h1>
+        </Group>
+      </Stack>
+    </Stack>
   );
 }

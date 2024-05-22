@@ -77,8 +77,8 @@ export default function AdminShell({
     fetcher,
     {
       fallbackData: [],
-      onSuccess: () => setLoading(false)
-    },
+      onSuccess: () => setLoading(false),
+    }
   );
 
   useEffect(() => {
