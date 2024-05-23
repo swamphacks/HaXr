@@ -78,11 +78,13 @@ export default function AdminShell({
   );
 
   useEffect(() => {
-    const selectedComp = sessionStorage.getItem('selectedComp');
+    if (competitions) {
+      const selectedComp = sessionStorage.getItem('selectedComp');
 
-    // Check if the selected competition still exists
-    if (selectedComp && competitions?.some((c) => c.code === selectedComp))
-      setComp(selectedComp);
+      // Check if the selected competition still exists
+      if (selectedComp && competitions.some((c) => c.code === selectedComp))
+        setComp(selectedComp);
+    }
   }, [competitions]);
 
   return (

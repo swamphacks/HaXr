@@ -8,7 +8,7 @@ export async function updateCompetitionConfig(
   code: string,
   config: Competition
 ) {
-  if (await competitionConfigurationSchema.isValid(config))
+  if (await competitionConfigurationSchema.isValid(config)) {
     try {
       await prisma.competition.update({
         where: {
@@ -19,6 +19,7 @@ export async function updateCompetitionConfig(
 
       return true;
     } catch {}
+  }
 
   return false;
 }
