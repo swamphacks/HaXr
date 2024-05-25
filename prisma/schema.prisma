@@ -91,7 +91,7 @@ model Competition {
 
 model Form {
   id               String      @id @default(cuid())
-  title            String
+  title            String      @default("Unititled Form")
   created_at       DateTime    @default(now())
   update_at        DateTime    @updatedAt
   competition      Competition @relation(fields: [competition_code], references: [code])
