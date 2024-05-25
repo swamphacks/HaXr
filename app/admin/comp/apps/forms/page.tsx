@@ -19,13 +19,16 @@ export default function Forms() {
 	const [selectedRows, setSelectedRows] = useState<string[]>([]);
 	const competition = useContext(CompetitionContext);
 
-	const { data } = useSWR<Form[]>(`/api/comp/${competition.competition?.code}/forms`,
-		fetcher, { fallbackData: [] });
+	const { data } = useSWR<Form[]>(
+		`/api/comp/${competition.competition?.code}/forms`,
+		fetcher,
+		{ fallbackData: [] }
+	);
 	const rows = data?.map((form: Form) => (
 		<Table.Tr
-			key={form.title}
+			key={form.id}
 			bg={
-				selectedRows.includes(form.title)
+				selectedRows.includes(form.id)
 					? 'var(--mantine-color-blue-light)'
 					: undefined
 			}
@@ -33,12 +36,12 @@ export default function Forms() {
 			<Table.Td>
 				<Checkbox
 					aria-label='Select row'
-					checked={selectedRows.includes(form.title)}
+					checked={selectedRows.includes(form.id)}
 					onChange={(event) =>
 						setSelectedRows(
 							event.currentTarget.checked
-								? [...selectedRows, form.title]
-								: selectedRows.filter((name) => name !== form.title)
+								? [...selectedRows, form.id]
+								: selectedRows.filter((id: string) => id !== form.id)
 						)
 					}
 				/>
@@ -48,8 +51,7 @@ export default function Forms() {
 			</Table.Td>
 			<Table.Td>{form.update_at.toString()}</Table.Td>
 			<Table.Td>{form.created_at.toString()}</Table.Td>
-			<Table.Td>
-			</Table.Td>
+			<Table.Td></Table.Td>
 		</Table.Tr>
 	));
 
