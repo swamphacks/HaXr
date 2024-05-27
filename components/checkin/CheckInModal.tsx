@@ -14,11 +14,17 @@ interface applicationData {
   status: number;
 }
 
-export default function CheckInModal(
-  opened: boolean,
-  application: applicationData,
-  onClose: () => void
-) {
+interface CheckInModalProps {
+  opened: boolean;
+  application: applicationData;
+  onClose: () => void;
+}
+
+export default function CheckInModal({
+  opened,
+  application,
+  onClose,
+}: CheckInModalProps) {
   const getColor = (status: Status) => {
     switch (status) {
       case 'ACCEPTED':
@@ -60,7 +66,7 @@ export default function CheckInModal(
           <Button color='green' size='md'>
             Check In
           </Button>
-          <Button variant='outline' size='md' color='gray'>
+          <Button onClick={onClose} variant='outline' size='md' color='gray'>
             Cancel
           </Button>
         </Group>

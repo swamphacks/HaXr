@@ -1,19 +1,12 @@
 'use client';
 import QrScanner from '@/components/scan/QrScanner';
+import CheckInModal from '@/components/checkin/CheckInModal';
 import { type Application, type User, type Status } from '@prisma/client';
-import {
-  Box,
-  Group,
-  LoadingOverlay,
-  Stack,
-  Modal,
-  Text,
-  Avatar,
-  Button,
-} from '@mantine/core';
+import { Box, Group, LoadingOverlay, Stack } from '@mantine/core';
 import { useContext, useState } from 'react';
 import { CompetitionContext } from '@/components/admin/AdminShell';
 import { useDisclosure } from '@mantine/hooks';
+import ErrorModal from '@/components/checkin/ErrorModal';
 
 interface successResponse {
   app: Application & { user: User };
@@ -28,8 +21,9 @@ interface errorResponse {
 type apiResponse = successResponse | errorResponse;
 
 const isSuccessfulResponse = (
-  response: apiResponse
+  response: apiResponse | null
 ): response is successResponse => {
+  if (response === null) return false;
   return response.status === 200;
 };
 
@@ -41,6 +35,14 @@ export default function ScanCheckIn() {
   const [opened, { open, close }] = useDisclosure(false);
 
   const { competition } = useContext(CompetitionContext);
+
+  const onClose = () => {
+    setCameraActive(true);
+    setError(false);
+    setResponse(null);
+    close();
+    toggle();
+  };
 
   const getColor = (status: Status) => {
     switch (status) {
@@ -81,6 +83,15 @@ export default function ScanCheckIn() {
   return (
     <Stack gap='md' align='center' justify='flex-start'>
       {/* TODO use CheckInModal Here!*/}
+      {isSuccessfulResponse(response) ? (
+        <CheckInModal
+          opened={opened}
+          onClose={onClose}
+          application={response}
+        />
+      ) : (
+        <ErrorModal opened={opened} onClose={onClose} error={response} />
+      )}
       <Stack
         align='center'
         justify='center'
