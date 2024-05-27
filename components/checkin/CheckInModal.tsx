@@ -7,7 +7,15 @@ import {
   LoadingOverlay,
   Group,
   Stack,
+  Stepper,
+  Title,
+  Box,
+  Divider,
+  Card,
 } from '@mantine/core';
+import { useState } from 'react';
+import { IconSearch, IconUserCancel, IconUserCheck } from '@tabler/icons-react';
+import { useDisclosure } from '@mantine/hooks';
 
 interface applicationData {
   app: Application & { user: User };
@@ -38,39 +46,65 @@ export default function CheckInModal({
     }
   };
 
+  const [visible, { toggle }] = useDisclosure(false);
+  const [success, setSuccess] = useState(false);
+
+  const checkIn = () => {
+    toggle();
+    console.log('Checking in!');
+  };
+
   return (
-    <Modal opened={opened} onClose={onClose}>
-      <Stack justify='center' align='center' gap={20}>
-        <LoadingOverlay
-          visible={false}
-          zIndex={200}
-          overlayProps={{ blur: 2, radius: 'sm' }}
-        />
-        <Stack justify='center' align='center' gap={6}>
-          <Avatar
-            size='35%'
-            src={application.app.user.image}
-            alt='User Profile'
+    <Modal opened={opened} onClose={onClose} size={'lg'}>
+      {success ? (
+        <Text>Check In Successfully</Text>
+      ) : (
+        <Stack justify='center' align='center' gap={20}>
+          <LoadingOverlay
+            visible={visible}
+            zIndex={200}
+            overlayProps={{ blur: 2, radius: 'sm' }}
           />
-          <h1 className='text-3xl font-bold'>{application.app.user.name}</h1>
-          <Text>University of Florida</Text>
+
+          <Stack justify='center' align='center' gap={20}>
+            <Avatar
+              size='30%'
+              src={application.app.user.image}
+              alt='User Profile'
+            />
+            <Title order={1}>{application.app.user.name}</Title>
+          </Stack>
+
+          <Divider
+            label={
+              <>
+                <IconUserCheck />
+                <Text ml={5}>Applicant Info</Text>
+              </>
+            }
+            labelPosition='left'
+            style={{ width: '80%' }}
+          />
+          <Card w={'80%'}>
+            <Text>School: University of Florida</Text>
+            <Text>Email: {application.app.user.email}</Text>
+            <Text>
+              Status:{' '}
+              <span style={{ color: getColor(application.app.status) }}>
+                {application.app.status}
+              </span>
+            </Text>
+          </Card>
+          <Group>
+            <Button color='green' size='md'>
+              Check In
+            </Button>
+            <Button onClick={onClose} variant='outline' size='md' color='gray'>
+              Cancel
+            </Button>
+          </Group>
         </Stack>
-        <Text
-          size='xl'
-          style={{ color: getColor(application.app.status) }}
-          td='underline'
-        >
-          {application.app.status}
-        </Text>
-        <Group>
-          <Button color='green' size='md'>
-            Check In
-          </Button>
-          <Button onClick={onClose} variant='outline' size='md' color='gray'>
-            Cancel
-          </Button>
-        </Group>
-      </Stack>
+      )}
     </Modal>
   );
 }

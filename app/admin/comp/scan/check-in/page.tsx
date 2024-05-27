@@ -30,7 +30,6 @@ const isSuccessfulResponse = (
 export default function ScanCheckIn() {
   const [cameraActive, setCameraActive] = useState<boolean>(true);
   const [response, setResponse] = useState<apiResponse | null>(null);
-  const [error, setError] = useState<boolean>(false);
   const [visible, { toggle }] = useDisclosure(false);
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -38,23 +37,9 @@ export default function ScanCheckIn() {
 
   const onClose = () => {
     setCameraActive(true);
-    setError(false);
     setResponse(null);
     close();
     toggle();
-  };
-
-  const getColor = (status: Status) => {
-    switch (status) {
-      case 'ACCEPTED':
-        return '#00ff00';
-      case 'REJECTED':
-        return '#ff0000';
-      case 'STARTED':
-        return '#ffdb58';
-      default:
-        return 'white';
-    }
   };
 
   const onScan = async (result: string) => {
@@ -72,17 +57,15 @@ export default function ScanCheckIn() {
     setResponse(res);
 
     if (isSuccessfulResponse(res)) {
-      setError(false);
       open();
     } else {
-      setError(true);
       open();
     }
   };
 
   return (
     <Stack gap='md' align='center' justify='flex-start'>
-      {/* TODO use CheckInModal Here!*/}
+      {/* Modal pops up based on response*/}
       {isSuccessfulResponse(response) ? (
         <CheckInModal
           opened={opened}

@@ -3,12 +3,14 @@ import { motion } from 'framer-motion';
 import { useState, useEffect, useMemo } from 'react';
 
 const Spinner = () => {
-
   const shuffleMessages = (array: string[]): string[] => {
     const shuffledArray = [...array];
     for (let i = shuffledArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+      [shuffledArray[i], shuffledArray[j]] = [
+        shuffledArray[j],
+        shuffledArray[i],
+      ];
     }
     return shuffledArray;
   };
@@ -31,7 +33,7 @@ const Spinner = () => {
   const [message, setMessage] = useState<string>();
 
   useEffect(() => {
-    setMessage(shuffledMessageArray[0])
+    setMessage(shuffledMessageArray[0]);
 
     let i = 1;
     const interval = setInterval(() => {
