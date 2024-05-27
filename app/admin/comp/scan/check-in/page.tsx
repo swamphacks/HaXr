@@ -80,7 +80,7 @@ export default function ScanCheckIn() {
 
   return (
     <Stack gap='md' align='center' justify='flex-start'>
-      // TODO use CheckInModal Here!
+      {/* TODO use CheckInModal Here!*/}
       <Stack
         align='center'
         justify='center'
