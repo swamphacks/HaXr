@@ -12,7 +12,9 @@ const QrScanner = ({ onScan }: QrScannerProps) => {
   useEffect(() => {
     if (!videoRef.current) return;
 
-    reader.current.decodeFromConstraints(
+    const current = reader.current;
+
+    current.decodeFromConstraints(
       {
         audio: false,
         video: {
@@ -27,7 +29,7 @@ const QrScanner = ({ onScan }: QrScannerProps) => {
     );
 
     return () => {
-      reader.current.reset();
+      current.reset();
     };
   }, [videoRef, onScan]);
 

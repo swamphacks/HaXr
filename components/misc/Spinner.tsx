@@ -1,42 +1,47 @@
 'use client';
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 const Spinner = () => {
-  const [message, setMessage] = useState<string>('');
-  const messageList = [
-    'Warming up the servers!',
-    'Retrieving mission critical data!',
-    'Did you know? Alligators build nests like birds!',
-    'Tip: You can earn more points by attending workshops!',
-    'Ｏ(≧∇≦)Ｏ',
-    "It's great ... to be ... a Florida Gator!",
-    'Celebrating a decade of SwampHacks!',
-    'Tip: Hackers who sleep are more productive!',
-    'Light mode attracts bugs! 🐛',
-  ];
 
-  const shuffleMessages = (array: string[]) => {
-    for (let i = array.length - 1; i > 0; i--) {
+  const shuffleMessages = (array: string[]): string[] => {
+    const shuffledArray = [...array];
+    for (let i = shuffledArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
+      [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
     }
-    return array;
+    return shuffledArray;
   };
 
+  const shuffledMessageArray = useMemo(() => {
+    const messageList = [
+      'Warming up the servers!',
+      'Retrieving mission critical data!',
+      'Did you know? Alligators build nests like birds!',
+      'Tip: You can earn more points by attending workshops!',
+      'Ｏ(≧∇≦)Ｏ',
+      "It's great ... to be ... a Florida Gator!",
+      'Celebrating a decade of SwampHacks!',
+      'Tip: Hackers who sleep are more productive!',
+      'Light mode attracts bugs! 🐛',
+    ];
+    return shuffleMessages(messageList);
+  }, []);
+
+  const [message, setMessage] = useState<string>();
+
   useEffect(() => {
-    const shuffledMessages = shuffleMessages(messageList);
-    setMessage(shuffledMessages[0]);
+    setMessage(shuffledMessageArray[0])
 
     let i = 1;
     const interval = setInterval(() => {
-      setMessage(shuffledMessages[i]);
-      i = i === shuffledMessages.length - 1 ? 0 : i + 1;
+      setMessage(shuffledMessageArray[i]);
+      i = i === shuffledMessageArray.length - 1 ? 0 : i + 1;
       console.log(i);
     }, 6000);
 
     return () => clearInterval(interval);
-  }, [messageList]);
+  }, [shuffledMessageArray]);
 
   return (
     <div className='flex h-screen w-screen flex-col items-center justify-center gap-5 md:gap-6 lg:gap-7'>
