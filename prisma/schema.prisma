@@ -9,13 +9,21 @@ generator client {
   previewFeatures = ["driverAdapters"]
 }
 
+enum Role {
+  Hacker
+  Admin
+}
+
 model User {
   id            String    @id @default(cuid())
-  name          String?
+  firstName     String
+  lastName      String
   email         String    @unique
   emailVerified DateTime?
+  phone         String?   @db.VarChar(10) // US phone number
+  school        String?
   image         String?
-  isAdmin       Boolean   @default(false)
+  role          Role      @default(Hacker)
   accounts      Account[]
   sessions      Session[]
 }
