@@ -56,11 +56,8 @@ export default function ScanCheckIn() {
 
     setResponse(res);
 
-    if (isSuccessfulResponse(res)) {
-      open();
-    } else {
-      open();
-    }
+    // Open modal after retrieving request
+    open();
   };
 
   return (

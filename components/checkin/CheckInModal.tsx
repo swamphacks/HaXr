@@ -12,6 +12,7 @@ import {
   Box,
   Divider,
   Card,
+  Fieldset,
 } from '@mantine/core';
 import { useState } from 'react';
 import { IconSearch, IconUserCancel, IconUserCheck } from '@tabler/icons-react';
@@ -48,14 +49,28 @@ export default function CheckInModal({
 
   const [visible, { toggle }] = useDisclosure(false);
   const [success, setSuccess] = useState(false);
+  const [checkInResponse, setCheckInResponse] = useState();
 
-  const checkIn = () => {
+  const checkIn = async () => {
     toggle();
-    console.log('Checking in!');
+
+    const response = await fetch(
+      `/api/comp/${application.app.competition_code}/checkin/${application.app.userId}`,
+      {
+        method: 'POST',
+      }
+    );
+
+    const data = await response.json();
+
+    console.log(data);
+
+    toggle();
+    setSuccess(true);
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} size={'lg'}>
+    <Modal opened={opened} onClose={onClose} size='lg'>
       {success ? (
         <Text>Check In Successfully</Text>
       ) : (
@@ -74,18 +89,8 @@ export default function CheckInModal({
             />
             <Title order={1}>{application.app.user.name}</Title>
           </Stack>
-
-          <Divider
-            label={
-              <>
-                <IconUserCheck />
-                <Text ml={5}>Applicant Info</Text>
-              </>
-            }
-            labelPosition='left'
-            style={{ width: '80%' }}
-          />
-          <Card w={'80%'}>
+          <Fieldset legend='Applicant Information' w='80%'>
+            {/* TODO: Make school field in database and call it here. */}
             <Text>School: University of Florida</Text>
             <Text>Email: {application.app.user.email}</Text>
             <Text>
@@ -94,9 +99,9 @@ export default function CheckInModal({
                 {application.app.status}
               </span>
             </Text>
-          </Card>
+          </Fieldset>
           <Group>
-            <Button color='green' size='md'>
+            <Button color='green' size='md' onClick={checkIn}>
               Check In
             </Button>
             <Button onClick={onClose} variant='outline' size='md' color='gray'>
