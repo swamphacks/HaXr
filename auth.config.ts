@@ -1,7 +1,6 @@
 import GitHub, { GitHubProfile } from '@auth/core/providers/github';
 import { NextAuthConfig } from 'next-auth';
 import { Role } from '@prisma/client';
-import prisma from '@/prisma';
 
 export default {
   providers: [
@@ -24,21 +23,20 @@ export default {
     jwt({ token, user }) {
       if (user) {
         // User is available during sign-in
-        token.id = user.id;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
+        token.phone = user.phone;
+        token.school = user.school;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
-      const user = await prisma.user.findUnique({
-        where: { id: token.id as string },
-      });
-      if (user) {
-        session.user.firstName = user.firstName;
-        session.user.lastName = user.lastName;
-        session.user.phone = user.phone;
-        session.user.school = user.school;
-        session.user.role = user.role;
-      }
+      session.user.firstName = token.firstName as string;
+      session.user.lastName = token.lastName as string;
+      session.user.phone = token.phone as string | null;
+      session.user.school = token.school as string | null;
+      session.user.role = token.role as Role;
       return session;
     },
   },
