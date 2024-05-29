@@ -1,4 +1,9 @@
-import { type User, type Application, type Status } from '@prisma/client';
+import {
+  type User,
+  type Application,
+  type Status,
+  Attendees,
+} from '@prisma/client';
 import {
   Modal,
   Text,
@@ -14,7 +19,7 @@ import {
   Card,
   Fieldset,
 } from '@mantine/core';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IconSearch, IconUserCancel, IconUserCheck } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 
@@ -28,6 +33,25 @@ interface CheckInModalProps {
   application: applicationData;
   onClose: () => void;
 }
+
+interface checkinSuccess {
+  attendee: Attendees;
+  status: number;
+}
+
+interface checkinError {
+  message: string;
+  status: number;
+}
+
+type checkInResponse = checkinSuccess | checkinError;
+
+const isSuccessfulResponse = (
+  response: checkInResponse | null
+): response is checkinSuccess => {
+  if (response === null) return false;
+  return response.status === 200;
+};
 
 export default function CheckInModal({
   opened,
@@ -48,32 +72,31 @@ export default function CheckInModal({
   };
 
   const [visible, { toggle }] = useDisclosure(false);
-  const [success, setSuccess] = useState(false);
-  const [checkInResponse, setCheckInResponse] = useState();
+  const [checkInData, setCheckInData] = useState<checkInResponse | null>(null);
+
+  useEffect(() => {
+    if (!opened) setCheckInData(null);
+  }, [opened]);
 
   const checkIn = async () => {
     toggle();
 
-    const response = await fetch(
-      `/api/comp/${application.app.competition_code}/checkin/${application.app.userId}`,
-      {
-        method: 'POST',
-      }
-    );
+    const response = await (
+      await fetch(
+        `/api/comp/${application.app.competition_code}/checkin/${application.app.userId}`,
+        {
+          method: 'POST',
+        }
+      )
+    ).json();
 
-    const data = await response.json();
-
-    console.log(data);
-
-    toggle();
-    setSuccess(true);
+    console.log(response);
+    setCheckInData(response);
   };
 
-  return (
-    <Modal opened={opened} onClose={onClose} size='lg'>
-      {success ? (
-        <Text>Check In Successfully</Text>
-      ) : (
+  if (checkInData === null) {
+    return (
+      <Modal opened={opened} onClose={onClose} size='lg'>
         <Stack justify='center' align='center' gap={20}>
           <LoadingOverlay
             visible={visible}
@@ -108,6 +131,39 @@ export default function CheckInModal({
               Cancel
             </Button>
           </Group>
+        </Stack>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal opened={opened} onClose={onClose} size='lg'>
+      {isSuccessfulResponse(checkInData) ? (
+        <Stack justify='center' align='center' gap={8}>
+          <Title order={1} style={{ color: 'lightgreen' }}>
+            Checked In Successfully
+          </Title>
+          <Avatar
+            size='30%'
+            src={application.app.user.image}
+            alt='User Profile'
+          />
+          <Title order={3}>{application.app.user.name}</Title>
+          <Text>Points: {checkInData.attendee.points}</Text>
+
+          <Button color='green' size='md' mt={15} onClick={onClose}>
+            Continue
+          </Button>
+        </Stack>
+      ) : (
+        <Stack justify='center' align='center' gap={16}>
+          <Title order={1} style={{ color: 'red' }}>
+            Error Checking In
+          </Title>
+          <Title order={3}>{checkInData.message}</Title>
+          <Button color='red' size='lg' onClick={onClose}>
+            Exit
+          </Button>
         </Stack>
       )}
     </Modal>

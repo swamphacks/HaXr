@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { Pool } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 /*
 @params: id - string (required) - The user ID to search for (part of dynamic route)
 @return: 
@@ -44,7 +45,9 @@ export const POST = async (
     });
 
     return NextResponse.json({ attendee: response, status: 200 });
-  } catch (e) {
-    return NextResponse.json({ message: e, status: 500 });
+  } catch (e: any) {
+    if (e instanceof PrismaClientKnownRequestError)
+      return NextResponse.json({ message: e.message, status: 500 });
+    else return NextResponse.json({ message: 'Unknown Error', status: 500 });
   }
 };
