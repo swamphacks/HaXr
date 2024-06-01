@@ -4,16 +4,18 @@ import { Pool } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 /*
-@params: id - string (required) - The user ID to search for (part of dynamic route)
+@params: 
+    - code - string (required) - the competition code to check in to. (part of dynamic route)
+    - user_id - string (required) - The user ID to check in (part of dynamic route)
 @return: 
-    - user - object - The user object (Status 200)
+    - attendee - object - The attendee object (Status 200)
     - message - string - The error message (Status 404)
     - status - number - The status code of the request (All responses)
 
-This route is used to find a user by their ID.
+This route is used to check in a user application.
 
 @example:
-const response = await fetch('http://localhost:3000/api/user/shhewubuvduh32');
+const response = await fetch('http://localhost:3000/api/comp/mycode/checkin/lksfduho38s9');
 */
 
 export const POST = async (
