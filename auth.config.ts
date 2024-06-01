@@ -1,27 +1,42 @@
-import GitHub from '@auth/core/providers/github';
+import GitHub, { GitHubProfile } from '@auth/core/providers/github';
 import { NextAuthConfig } from 'next-auth';
+import { Role } from '@prisma/client';
 
 export default {
-  providers: [GitHub],
+  providers: [
+    GitHub({
+      profile: ({ name, email, avatar_url }: GitHubProfile) => {
+        const [firstName, lastName] = name?.split(' ') ?? ['', ''];
+        return {
+          firstName,
+          lastName,
+          email,
+          phone: null,
+          school: null,
+          image: avatar_url,
+          role: Role.Hacker,
+        };
+      },
+    }),
+  ],
   callbacks: {
-    // authorized({ request, auth }) {
-    //   const { pathname } = request.nextUrl
-    //   if (pathname === "/middleware-example") return !!auth
-    //   return true
-    // },
-    // jwt({ token, trigger, session }) {
-    //   if (trigger === 'update') token.name = session?.user?.name;
-    //   return token;
-    // },
     jwt({ token, user }) {
       if (user) {
         // User is available during sign-in
-        token.isAdmin = user.isAdmin;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
+        token.phone = user.phone;
+        token.school = user.school;
+        token.role = user.role;
       }
       return token;
     },
-    session({ session, token }) {
-      session.user.isAdmin = token.isAdmin as boolean;
+    async session({ session, token }) {
+      session.user.firstName = token.firstName as string;
+      session.user.lastName = token.lastName as string;
+      session.user.phone = token.phone as string | null;
+      session.user.school = token.school as string | null;
+      session.user.role = token.role as Role;
       return session;
     },
   },

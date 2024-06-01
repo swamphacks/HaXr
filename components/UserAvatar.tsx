@@ -10,7 +10,6 @@ import {
   Text,
 } from '@mantine/core';
 import { IconLogout } from '@tabler/icons-react';
-import { useRouter } from 'next/navigation';
 import { serverSignOut } from '@/actions/auth';
 
 interface Props {
@@ -18,8 +17,6 @@ interface Props {
 }
 
 export default function UserAvatar({ session }: Readonly<Props>) {
-  const router = useRouter();
-
   if (!session?.user?.image || !session.user.name || !session.user.email)
     return null;
   const { image, name, email } = session.user;

@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import authConfig from '@/auth.config';
 import { NextRequest } from 'next/server';
+import { Role } from '@prisma/client';
 
 const { auth } = NextAuth(authConfig);
 
@@ -18,7 +19,7 @@ export default auth((req) => {
     return RedirectResponse(req, '/api/auth/signin');
 
   const { pathname } = req.nextUrl;
-  const { isAdmin } = req.auth.user;
+  const isAdmin = req.auth.user.role === Role.Admin;
 
   // Redirect if accessing unauthorized pages
   if (pathname.startsWith('/admin') && !isAdmin)
