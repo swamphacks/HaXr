@@ -12,7 +12,7 @@ import { PrismaNeon } from '@prisma/adapter-neon';
     - message - string - The error message (Status 404)
     - status - number - The status code of the request (All responses)
 
-This route is used to find a user by their ID.
+This route is used to find an application for a specific competition.
 
 @example:
 const response = await fetch('http://localhost:3000/api/comp/mycode/application/sfowo2oho2hf');
