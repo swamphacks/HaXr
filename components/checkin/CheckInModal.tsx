@@ -116,7 +116,7 @@ export default function CheckInModal({
               src={application.app.user.image}
               alt='User Profile'
             />
-            <Title order={1}>{application.app.user.name}</Title>
+            <Title order={1}>{application.app.user.firstName} {application.app.user.lastName}</Title>
           </Stack>
           <Fieldset legend='Applicant Information' w='80%'>
             {/* TODO: Make school field in database and call it here. */}
@@ -157,7 +157,7 @@ export default function CheckInModal({
           src={application.app.user.image}
           alt='User Profile'
         />
-        <Title order={3}>{application.app.user.name}</Title>
+        <Title order={3}>{application.app.user.firstName} {application.app.user.lastName}</Title>
         <Text>Points: {checkInData.attendee.points}</Text>
 
         <Button color='green' size='md' mt={15} onClick={onClose}>
