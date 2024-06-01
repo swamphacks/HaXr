@@ -1,11 +1,11 @@
 import { BrowserMultiFormatReader } from '@zxing/library';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface QrScannerProps {
   onScan: (result: string) => void;
 }
 
-const QrScanner = ({ onScan }: QrScannerProps) => {
+const QrScanner = React.memo(({ onScan }: QrScannerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const reader = useRef(new BrowserMultiFormatReader());
 
@@ -34,6 +34,8 @@ const QrScanner = ({ onScan }: QrScannerProps) => {
   }, [videoRef, onScan]);
 
   return <video ref={videoRef} />;
-};
+});
+
+QrScanner.displayName = 'QrScanner';
 
 export default QrScanner;

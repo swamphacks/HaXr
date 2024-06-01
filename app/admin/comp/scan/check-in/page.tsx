@@ -1,12 +1,20 @@
 'use client';
 import QrScanner from '@/components/scan/QrScanner';
 import CheckInModal from '@/components/checkin/CheckInModal';
-import { type Application, type User, type Status } from '@prisma/client';
-import { Box, Group, LoadingOverlay, Stack } from '@mantine/core';
-import { useContext, useState } from 'react';
+import { type Application, type User } from '@prisma/client';
+import {
+  Box,
+  Button,
+  Divider,
+  Group,
+  Input,
+  LoadingOverlay,
+  Stack,
+} from '@mantine/core';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { CompetitionContext } from '@/components/admin/AdminShell';
 import { useDisclosure } from '@mantine/hooks';
-import ErrorModal from '@/components/checkin/ErrorModal';
+import { notifications } from '@mantine/notifications';
 
 interface successResponse {
   app: Application & { user: User };
@@ -32,6 +40,7 @@ export default function ScanCheckIn() {
   const [response, setResponse] = useState<apiResponse | null>(null);
   const [visible, { toggle }] = useDisclosure(false);
   const [opened, { open, close }] = useDisclosure(false);
+  const inputRef = useRef(null);
 
   const { competition } = useContext(CompetitionContext);
 
@@ -42,7 +51,9 @@ export default function ScanCheckIn() {
     toggle();
   };
 
-  const onScan = async (result: string) => {
+  const onScan = async (result: string | null) => {
+    if (result === null || result.trim() === '') return;
+
     // Already doing something else
     if (!cameraActive) return;
 
@@ -55,13 +66,26 @@ export default function ScanCheckIn() {
     ).json();
 
     setResponse(res);
-
-    // Open modal after retrieving request
-    open();
   };
 
+  useEffect(() => {
+    if (response === null) return;
+
+    if (isSuccessfulResponse(response)) open();
+    else {
+      notifications.show({
+        title: 'Error',
+        message: response?.message,
+        color: 'red',
+        autoClose: 6000,
+      });
+      setCameraActive(true);
+      toggle();
+    }
+  }, [response, open]);
+
   return (
-    <Stack gap='md' align='center' justify='flex-start'>
+    <Stack gap='md' align='center' justify='flex-start' w='100%'>
       {/* Modal pops up based on response*/}
       {isSuccessfulResponse(response) ? (
         <CheckInModal
@@ -70,14 +94,15 @@ export default function ScanCheckIn() {
           application={response}
         />
       ) : (
-        <ErrorModal opened={opened} onClose={onClose} error={response} />
+        <></>
       )}
+
       <Stack
         align='center'
         justify='center'
         className='rounded-lg border border-zinc-700 p-5'
       >
-        <Box pos='relative'>
+        <Box pos='relative' h='100%'>
           <LoadingOverlay
             visible={visible}
             zIndex={10}
@@ -86,11 +111,37 @@ export default function ScanCheckIn() {
           <QrScanner onScan={onScan} />
         </Box>
         <Group>
-          <h1 className='text-2xl font-bold text-white'>
+          <h1 className='text-xl font-bold text-white md:text-2xl'>
             {' '}
             Scan a QR Code to check in!{' '}
           </h1>
         </Group>
+      </Stack>
+      <Divider
+        label={<p className='text-xl'>or</p>}
+        labelPosition='center'
+        size='md'
+        w='50%'
+      />
+
+      <Stack pos='relative' justify='center' align='center' w='35%'>
+        <LoadingOverlay
+          visible={visible}
+          zIndex={10}
+          overlayProps={{ radius: 'sm', blur: 3 }}
+        />
+        <Input.Wrapper label='Manual Check In' w='55%'>
+          <Input placeholder='Enter User ID' ref={inputRef} />
+        </Input.Wrapper>
+        <Button
+          onClick={() => {
+            //@ts-ignore
+            // Weird never type on inputRef.current
+            if (inputRef.current !== null) onScan(inputRef.current.value);
+          }}
+        >
+          Submit
+        </Button>
       </Stack>
     </Stack>
   );

@@ -22,6 +22,8 @@ import {
 import { useEffect, useState } from 'react';
 import { IconSearch, IconUserCancel, IconUserCheck } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
+import useCheckIn from '@/hooks/useCheckIn';
+import { notifications } from '@mantine/notifications';
 
 interface applicationData {
   app: Application & { user: User };
@@ -72,34 +74,38 @@ export default function CheckInModal({
   };
 
   const [visible, { toggle }] = useDisclosure(false);
-  const [checkInData, setCheckInData] = useState<checkInResponse | null>(null);
+
+  const {
+    checkInHacker,
+    loading,
+    checkInData,
+    checkInStatus,
+    setCheckInData,
+    okCheckInResponse,
+  } = useCheckIn(application.app.competition_code);
+
+  // This is for notifications
+  useEffect(() => {
+    if (checkInStatus === 'error' && !okCheckInResponse(checkInData)) {
+      notifications.show({
+        title: `Error ${checkInData?.status}`,
+        message: checkInData?.message,
+        color: 'red',
+        autoClose: 4000,
+      });
+    }
+  }, [checkInStatus, checkInData, okCheckInResponse]);
 
   useEffect(() => {
     if (!opened) setCheckInData(null);
-  }, [opened]);
+  }, [opened, setCheckInData]);
 
-  const checkIn = async () => {
-    toggle();
-
-    const response = await (
-      await fetch(
-        `/api/comp/${application.app.competition_code}/checkin/${application.app.userId}`,
-        {
-          method: 'POST',
-        }
-      )
-    ).json();
-
-    console.log(response);
-    setCheckInData(response);
-  };
-
-  if (checkInData === null) {
+  if (checkInData === null || !isSuccessfulResponse(checkInData)) {
     return (
       <Modal opened={opened} onClose={onClose} size='lg'>
         <Stack justify='center' align='center' gap={20}>
           <LoadingOverlay
-            visible={visible}
+            visible={loading}
             zIndex={200}
             overlayProps={{ blur: 2, radius: 'sm' }}
           />
@@ -124,7 +130,11 @@ export default function CheckInModal({
             </Text>
           </Fieldset>
           <Group>
-            <Button color='green' size='md' onClick={checkIn}>
+            <Button
+              color='green'
+              size='md'
+              onClick={() => checkInHacker(application.app.userId)}
+            >
               Check In
             </Button>
             <Button onClick={onClose} variant='outline' size='md' color='gray'>
@@ -138,34 +148,22 @@ export default function CheckInModal({
 
   return (
     <Modal opened={opened} onClose={onClose} size='lg'>
-      {isSuccessfulResponse(checkInData) ? (
-        <Stack justify='center' align='center' gap={8}>
-          <Title order={1} style={{ color: 'lightgreen' }}>
-            Checked In Successfully
-          </Title>
-          <Avatar
-            size='30%'
-            src={application.app.user.image}
-            alt='User Profile'
-          />
-          <Title order={3}>{application.app.user.name}</Title>
-          <Text>Points: {checkInData.attendee.points}</Text>
+      <Stack justify='center' align='center' gap={8}>
+        <Title order={1} style={{ color: 'lightgreen' }}>
+          Checked In Successfully
+        </Title>
+        <Avatar
+          size='30%'
+          src={application.app.user.image}
+          alt='User Profile'
+        />
+        <Title order={3}>{application.app.user.name}</Title>
+        <Text>Points: {checkInData.attendee.points}</Text>
 
-          <Button color='green' size='md' mt={15} onClick={onClose}>
-            Continue
-          </Button>
-        </Stack>
-      ) : (
-        <Stack justify='center' align='center' gap={16}>
-          <Title order={1} style={{ color: 'red' }}>
-            Error Checking In
-          </Title>
-          <Title order={3}>{checkInData.message}</Title>
-          <Button color='red' size='lg' onClick={onClose}>
-            Exit
-          </Button>
-        </Stack>
-      )}
+        <Button color='green' size='md' mt={15} onClick={onClose}>
+          Continue
+        </Button>
+      </Stack>
     </Modal>
   );
 }

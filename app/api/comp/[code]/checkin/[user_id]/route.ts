@@ -46,8 +46,11 @@ export const POST = async (
 
     return NextResponse.json({ attendee: response, status: 200 });
   } catch (e: any) {
-    if (e instanceof PrismaClientKnownRequestError)
-      return NextResponse.json({ message: e.message, status: 500 });
-    else return NextResponse.json({ message: 'Unknown Error', status: 500 });
+    if (e instanceof PrismaClientKnownRequestError) {
+      return NextResponse.json({
+        message: 'User already checked in for this competition!',
+        status: 404,
+      });
+    } else return NextResponse.json({ message: 'Unknown Error', status: 500 });
   }
 };
