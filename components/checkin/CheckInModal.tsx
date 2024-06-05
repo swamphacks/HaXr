@@ -102,7 +102,7 @@ export default function CheckInModal({
 
   if (checkInData === null || !isSuccessfulResponse(checkInData)) {
     return (
-      <Modal opened={opened} onClose={onClose} size='lg'>
+      <Modal opened={opened} onClose={onClose} size='lg' title='Check In'>
         <Stack justify='center' align='center' gap={20}>
           <LoadingOverlay
             visible={loading}
@@ -122,8 +122,25 @@ export default function CheckInModal({
           </Stack>
           <Fieldset legend='Applicant Information' w='80%'>
             {/* TODO: Make school field in database and call it here. */}
-            <Text>School: University of Florida</Text>
-            <Text>Email: {application.app.user.email}</Text>
+            <Text>
+              School:{' '}
+              {application.app.user.school
+                ? application.app.user.school
+                : 'N/A'}
+            </Text>
+            <Text>
+              Email:{' '}
+              {application.app.user.email ? application.app.user.email : 'N/A'}
+            </Text>
+            <Text>
+              Phone:{' '}
+              {application.app.user.phone
+                ? // Weird regex thing to format phone number
+                  application.app.user.phone
+                    .replace(/\D+/g, '')
+                    .replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')
+                : 'N/A'}
+            </Text>
             <Text>
               Status:{' '}
               <span style={{ color: getColor(application.app.status) }}>
@@ -152,19 +169,41 @@ export default function CheckInModal({
     <Modal opened={opened} onClose={onClose} size='lg'>
       <Stack justify='center' align='center' gap={8}>
         <Title order={1} style={{ color: 'lightgreen' }}>
-          Checked In Successfully
+          Welcome to Swamphacks X
         </Title>
         <Avatar
+          mt={10}
+          mb={10}
           size='30%'
           src={application.app.user.image}
           alt='User Profile'
         />
-        <Title order={3}>
+        <Title order={1}>
           {application.app.user.firstName} {application.app.user.lastName}
         </Title>
-        <Text>Points: {checkInData.attendee.points}</Text>
+        <Text size='lg'>Points: {checkInData.attendee.points}</Text>
 
-        <Button color='green' size='md' mt={15} onClick={onClose}>
+        <Button
+          color='cyan'
+          size='md'
+          w='30%'
+          mt={15}
+          variant='light'
+          onClick={() =>
+            alert(
+              'Printing your badge, please proceed to next station to retrieve it!'
+            )
+          }
+        >
+          Print Badge
+        </Button>
+        <Button
+          color='green'
+          variant='light'
+          size='md'
+          w='30%'
+          onClick={onClose}
+        >
           Continue
         </Button>
       </Stack>
