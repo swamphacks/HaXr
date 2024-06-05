@@ -5,17 +5,17 @@ import { PrismaNeon } from '@prisma/adapter-neon';
 
 /*
 @params: 
-    - code - string (required) - The competition code to checkin
-    - id - string (required) - The user ID to search for (part of dynamic route)
+    - code - string (required) - The competition code to find the application
+    - user_id - string (required) - The user ID to search for the application for (part of dynamic route)
 @return: 
-    - application - object - The user object (Status 200)
+    - application - object - The application object (Status 200)
     - message - string - The error message (Status 404)
     - status - number - The status code of the request (All responses)
 
-This route is used to find a user by their ID.
+This route is used to find an application for a specific competition.
 
 @example:
-const response = await fetch('http://localhost:3000/api/user/shhewubuvduh32');
+const response = await fetch('http://localhost:3000/api/comp/mycode/application/sfowo2oho2hf');
 */
 
 export const GET = async (
