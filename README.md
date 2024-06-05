@@ -1,4 +1,4 @@
-# SwampHacks System
+# HaXr
 
 This is our main system for applications and event management for SwampHacks.
 
