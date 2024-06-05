@@ -124,13 +124,18 @@ export default function ScanCheckIn() {
         w='50%'
       />
 
-      <Stack pos='relative' justify='center' align='center' w='35%'>
+      <Stack
+        pos='relative'
+        justify='center'
+        align='center'
+        className='w-5/6 md:w-3/4 lg:w-1/3'
+      >
         <LoadingOverlay
           visible={visible}
           zIndex={10}
           overlayProps={{ radius: 'sm', blur: 3 }}
         />
-        <Input.Wrapper label='Manual Check In' w='55%'>
+        <Input.Wrapper label='Manual Check In' w='100%'>
           <Input placeholder='Enter User ID' ref={inputRef} />
         </Input.Wrapper>
         <Button

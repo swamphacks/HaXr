@@ -40,7 +40,6 @@ const useCheckIn = (code: string) => {
     ).json();
 
     setCheckInData(response);
-    
 
     if (okCheckInResponse(response)) setCheckInStatus('success');
     else setCheckInStatus('error');
@@ -48,7 +47,14 @@ const useCheckIn = (code: string) => {
     setLoading(false);
   };
 
-  return { checkInHacker, loading, checkInData, checkInStatus, setCheckInData, okCheckInResponse };
+  return {
+    checkInHacker,
+    loading,
+    checkInData,
+    checkInStatus,
+    setCheckInData,
+    okCheckInResponse,
+  };
 };
 
 export default useCheckIn;
