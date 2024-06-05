@@ -38,17 +38,17 @@ const isSuccessfulResponse = (
 export default function ScanCheckIn() {
   const [cameraActive, setCameraActive] = useState<boolean>(true);
   const [response, setResponse] = useState<apiResponse | null>(null);
-  const [visible, { toggle }] = useDisclosure(false);
-  const [opened, { open, close }] = useDisclosure(false);
+  const [visible, { open: openLoading, close: closeLoading }] =
+    useDisclosure(false);
+  const [opened, { open: openModal, close: closeModal }] = useDisclosure(false);
   const inputRef = useRef(null);
-
   const { competition } = useContext(CompetitionContext);
 
   const onClose = () => {
     setCameraActive(true);
     setResponse(null);
     close();
-    toggle();
+    closeLoading();
   };
 
   const onScan = async (result: string | null) => {
@@ -59,30 +59,31 @@ export default function ScanCheckIn() {
 
     // If currently scanning...
     setCameraActive(false);
-    toggle();
+    openLoading();
 
     const res = await (
       await fetch(`/api/comp/${competition?.code}/application/${result}`)
     ).json();
 
     setResponse(res);
-  };
 
-  useEffect(() => {
-    if (response === null) return;
+    // Handling modal opening and error notifications
+    if (res === null) return;
 
-    if (isSuccessfulResponse(response)) open();
+    if (isSuccessfulResponse(res)) openModal();
     else {
       notifications.show({
         title: 'Error',
-        message: response?.message,
+        message: res?.message,
         color: 'red',
         autoClose: 6000,
       });
+
       setCameraActive(true);
-      toggle();
+      closeLoading();
     }
-  }, [response, open]);
+  };
+  open;
 
   return (
     <Stack gap='md' align='center' justify='flex-start' w='100%'>
