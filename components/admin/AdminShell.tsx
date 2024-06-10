@@ -45,6 +45,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import useSWR from 'swr';
 import superjson from 'superjson';
+import SettingsModal from '../settings/SettingsModal';
 
 interface Props {
   session: Session;
@@ -91,6 +92,7 @@ export default function AdminShell({
     <CompetitionContext.Provider
       value={{ competition: competitions?.find((c) => c.code === comp) }}
     >
+      <SettingsModal opened={true} />
       <AppShell
         header={{ height: 60 }}
         navbar={{
