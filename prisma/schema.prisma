@@ -24,10 +24,12 @@ model User {
   school        String?
   image         String?
   role          Role      @default(Hacker)
-  accounts      Account[]
-  sessions      Session[]
-  Attendees     Attendees[]
-  Application   Application[]
+
+  accounts Account[]
+  sessions Session[]
+
+  applications Application[]
+  attendees    Attendee[]
 }
 
 model Account {
@@ -77,36 +79,46 @@ model Competition {
   apply_close      DateTime
   decision_release DateTime
   confirm_by       DateTime
-  Attendees        Attendees[]
-  Application      Application[]
-}
 
-model Attendees {
-  userId          String
-  compeition_code String
-  points          Int
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  competition     Competition @relation(fields: [compeition_code], references: [code], onDelete: Cascade, onUpdate: Cascade)
-
-  @@unique([userId, compeition_code])
-}
-
-model Application {
-  userId           String
-  competition_code String
-  status           Status      @default(STARTED)
-  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  competition      Competition @relation(fields: [competition_code], references: [code], onDelete: Cascade, onUpdate: Cascade)
-
-  @@unique([userId, competition_code])
+  applications Application[]
+  attendees    Attendee[]
 }
 
 enum Status {
   STARTED
   APPLIED
+
   REJECTED
   WAITLISTED
   ACCEPTED
+
   NOT_ATTENDING
   ATTENDING
+}
+
+model Application {
+  id              String @id @default(cuid())
+  competitionCode String
+  userId          String
+  status          Status @default(STARTED)
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
+  attendee    Attendee?
+
+  @@unique([competitionCode, userId], name: "compCode_userId")
+}
+
+model Attendee {
+  competitionCode String
+  userId          String
+  applicationId   String   @unique
+  badgeId         String?  @unique
+  checkedInAt     DateTime @default(now())
+
+  competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([competitionCode, userId], name: "compCode_userId")
 }

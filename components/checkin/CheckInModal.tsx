@@ -1,212 +1,176 @@
+import { Application, User } from '@prisma/client';
 import {
-  type User,
-  type Application,
-  type Status,
-  Attendees,
-} from '@prisma/client';
-import {
-  Modal,
-  Text,
   Avatar,
   Button,
-  LoadingOverlay,
-  Group,
+  List,
+  Modal,
   Stack,
-  Stepper,
+  Text,
+  ThemeIcon,
   Title,
-  Box,
-  Divider,
-  Card,
-  Fieldset,
 } from '@mantine/core';
-import { useEffect, useState } from 'react';
-import { IconSearch, IconUserCancel, IconUserCheck } from '@tabler/icons-react';
-import { useDisclosure } from '@mantine/hooks';
-import useCheckIn from '@/hooks/useCheckIn';
+import { checkIn, getApplication, getCheckInChecks } from '@/actions/scanning';
+import { ReactNode, useEffect, useState } from 'react';
+import {
+  IconCircleCheck,
+  IconCircleDashed,
+  IconInfoCircle,
+  IconListCheck,
+} from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { Check, CheckType, SingleCheck } from '@/types/scanning';
 
-interface applicationData {
-  app: Application & { user: User };
-  status: number;
-}
-
-interface CheckInModalProps {
-  opened: boolean;
-  application: applicationData;
-  onClose: () => void;
-}
-
-interface checkinSuccess {
-  attendee: Attendees;
-  status: number;
-}
-
-interface checkinError {
-  message: string;
-  status: number;
-}
-
-type checkInResponse = checkinSuccess | checkinError;
-
-const isSuccessfulResponse = (
-  response: checkInResponse | null
-): response is checkinSuccess => {
-  if (response === null) return false;
-  return response.status === 200;
+const getCheckIcon = (check: Check): ReactNode => {
+  if (check.type === CheckType.Automated) {
+    return (
+      <ThemeIcon color={check.complete ? 'green' : 'red'} size={24} radius='xl'>
+        <IconCircleCheck size={16} />
+      </ThemeIcon>
+    );
+  } else if (check.type === CheckType.Manual) {
+    return (
+      <ThemeIcon color='gray' size={24} radius='xl'>
+        <IconCircleDashed size={16} />
+      </ThemeIcon>
+    );
+  } else if (check.type === CheckType.Info) {
+    return (
+      <ThemeIcon color='blue' size={24} radius='xl'>
+        <IconInfoCircle size={16} />
+      </ThemeIcon>
+    );
+  } else if (check.type === CheckType.Dependent) {
+    return (
+      <ThemeIcon
+        color={
+          check.dependsOn
+            .filter((c) => c.type === CheckType.Automated && c.required)
+            .every((c) => 'complete' in c && c.complete!)
+            ? 'green'
+            : 'red'
+        }
+        size={24}
+        radius='xl'
+      >
+        <IconListCheck size={16} />
+      </ThemeIcon>
+    );
+  }
 };
 
-export default function CheckInModal({
-  opened,
-  application,
-  onClose,
-}: CheckInModalProps) {
-  const getColor = (status: Status) => {
-    switch (status) {
-      case 'ACCEPTED':
-        return '#00ff00';
-      case 'REJECTED':
-        return '#ff0000';
-      case 'STARTED':
-        return '#ffdb58';
-      default:
-        return 'white';
+const renderSingleCheck = (c: SingleCheck) => {
+  if ('required' in c) {
+    if (!c.required) {
+      return (
+        <List.Item icon={getCheckIcon(c)}>
+          <b>(Optional)</b> {c.name}
+        </List.Item>
+      );
     }
-  };
+  }
+  return <List.Item icon={getCheckIcon(c)}>{c.name}</List.Item>;
+};
 
-  const [visible, { toggle }] = useDisclosure(false);
+interface Props {
+  comp: string | null;
+  user: User | null;
+  deselectUser: () => void;
+}
 
-  const {
-    checkInHacker,
-    loading,
-    checkInData,
-    checkInStatus,
-    setCheckInData,
-    okCheckInResponse,
-  } = useCheckIn(application.app.competition_code);
-
-  // This is for notifications
-  useEffect(() => {
-    if (checkInStatus === 'error' && !okCheckInResponse(checkInData)) {
-      notifications.show({
-        title: `Error ${checkInData?.status}`,
-        message: checkInData?.message,
-        color: 'red',
-        autoClose: 4000,
-      });
-    }
-  }, [checkInStatus, checkInData, okCheckInResponse]);
+export default function CheckInModal({ comp, user, deselectUser }: Props) {
+  const [application, setApplication] = useState<Application | null>(null);
+  const [checks, setChecks] = useState<Check[] | null>(null);
 
   useEffect(() => {
-    if (!opened) setCheckInData(null);
-  }, [opened, setCheckInData]);
+    if (comp && user) {
+      getApplication(comp, user.id).then((app) => setApplication(app));
+      getCheckInChecks(comp, user.id).then((tasks) => setChecks(tasks));
+    }
+  }, [comp, user]);
 
-  if (checkInData === null || !isSuccessfulResponse(checkInData)) {
-    return (
-      <Modal opened={opened} onClose={onClose} size='lg' title='Check In'>
-        <Stack justify='center' align='center' gap={20}>
-          <LoadingOverlay
-            visible={loading}
-            zIndex={200}
-            overlayProps={{ blur: 2, radius: 'sm' }}
-          />
-
+  return (
+    <Modal
+      opened={user !== null}
+      withCloseButton={false}
+      onClose={deselectUser}
+      size='auto'
+      centered={true}
+      padding='lg'
+    >
+      {user && application && checks && (
+        <>
           <Stack justify='center' align='center' gap={20}>
-            <Avatar
-              size='30%'
-              src={application.app.user.image}
-              alt='User Profile'
-            />
-            <Title order={1}>
-              {application.app.user.firstName} {application.app.user.lastName}
-            </Title>
+            <Stack align='center' gap={20}>
+              <Avatar size='xl' src={user.image} alt='Profile Picture' />
+              <Stack align='center' gap={0}>
+                <Title order={2}>
+                  {user.firstName} {user.lastName}
+                </Title>
+                <Title order={4}>University</Title>
+                <Text>({user.email})</Text>
+              </Stack>
+            </Stack>
           </Stack>
-          <Fieldset legend='Applicant Information' w='80%'>
-            {/* TODO: Make school field in database and call it here. */}
-            <Text>
-              School:{' '}
-              {application.app.user.school
-                ? application.app.user.school
-                : 'N/A'}
-            </Text>
-            <Text>
-              Email:{' '}
-              {application.app.user.email ? application.app.user.email : 'N/A'}
-            </Text>
-            <Text>
-              Phone:{' '}
-              {application.app.user.phone
-                ? // Weird regex thing to format phone number
-                  application.app.user.phone
-                    .replace(/\D+/g, '')
-                    .replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')
-                : 'N/A'}
-            </Text>
-            <Text>
-              Status:{' '}
-              <span style={{ color: getColor(application.app.status) }}>
-                {application.app.status}
-              </span>
-            </Text>
-          </Fieldset>
-          <Group>
+
+          <List spacing='xs' size='sm' center m='xs'>
+            {checks.map((c) => {
+              if (c.type === CheckType.Dependent) {
+                return (
+                  <>
+                    <List.Item icon={getCheckIcon(c)}>{c.name}</List.Item>
+                    <List.Item>
+                      <List withPadding size='sm'>
+                        {c.dependsOn.map(renderSingleCheck)}
+                      </List>
+                    </List.Item>
+                  </>
+                );
+              }
+              return renderSingleCheck(c);
+            })}
+          </List>
+
+          <Stack gap='xs' mt='sm'>
             <Button
               color='green'
               size='md'
-              onClick={() => checkInHacker(application.app.userId)}
+              fullWidth
+              onClick={async () => {
+                const r = await checkIn(application.competitionCode, user.id);
+                if ('error' in r) {
+                  if (r.checks) setChecks(r.checks);
+                  notifications.show({
+                    title: 'Failure',
+                    message: r.error,
+                    color: 'red',
+                  });
+                } else {
+                  deselectUser();
+                  notifications.show({
+                    title: 'Success',
+                    message: r.idempotent
+                      ? 'Hacker has already been checked in'
+                      : 'Hacker was successfully checked in',
+                    color: 'green',
+                  });
+                }
+              }}
             >
               Check In
             </Button>
-            <Button onClick={onClose} variant='outline' size='md' color='gray'>
-              Cancel
+
+            <Button
+              size='md'
+              fullWidth
+              color='red'
+              variant='outline'
+              onClick={deselectUser}
+            >
+              Exit
             </Button>
-          </Group>
-        </Stack>
-      </Modal>
-    );
-  }
-
-  return (
-    <Modal opened={opened} onClose={onClose} size='lg'>
-      <Stack justify='center' align='center' gap={8}>
-        <Title order={1} style={{ color: 'lightgreen' }}>
-          Welcome to Swamphacks X
-        </Title>
-        <Avatar
-          mt={10}
-          mb={10}
-          size='30%'
-          src={application.app.user.image}
-          alt='User Profile'
-        />
-        <Title order={1}>
-          {application.app.user.firstName} {application.app.user.lastName}
-        </Title>
-        <Text size='lg'>Points: {checkInData.attendee.points}</Text>
-
-        <Button
-          color='cyan'
-          size='md'
-          w='30%'
-          mt={15}
-          variant='light'
-          onClick={() =>
-            alert(
-              'Printing your badge, please proceed to next station to retrieve it!'
-            )
-          }
-        >
-          Print Badge
-        </Button>
-        <Button
-          color='green'
-          variant='light'
-          size='md'
-          w='30%'
-          onClick={onClose}
-        >
-          Continue
-        </Button>
-      </Stack>
+          </Stack>
+        </>
+      )}
     </Modal>
   );
 }

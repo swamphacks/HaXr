@@ -1,41 +1,42 @@
-import { BrowserMultiFormatReader } from '@zxing/library';
-import React, { useEffect, useRef, useState } from 'react';
+import { BrowserCodeReader, IScannerControls } from '@zxing/browser';
+import React, { useEffect, useRef } from 'react';
+import { QRCodeReader } from '@zxing/library';
+import { Paper } from '@mantine/core';
 
-interface QrScannerProps {
+interface Props {
   onScan: (result: string) => void;
 }
 
-const QrScanner = React.memo(({ onScan }: QrScannerProps) => {
+export default function QrScanner({ onScan }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const reader = useRef(new BrowserMultiFormatReader());
+
+  const reader = useRef(
+    new BrowserCodeReader(new QRCodeReader(), new Map(), {
+      delayBetweenScanSuccess: 1000,
+    })
+  );
+
+  const controls = useRef<Promise<IScannerControls>>();
 
   useEffect(() => {
     if (!videoRef.current) return;
 
-    const current = reader.current;
+    const currReader = reader.current;
 
-    current.decodeFromConstraints(
-      {
-        audio: false,
-        video: {
-          facingMode: 'environment',
-        },
-      },
+    if (!controls.current) {
+      controls.current = currReader.decodeFromVideoDevice(
+        undefined,
+        videoRef.current,
+        (r) => {
+          if (r) onScan(r.getText());
+        }
+      );
+    }
+  }, [onScan, controls]);
 
-      videoRef.current,
-      (result) => {
-        if (result) onScan(result.getText());
-      }
-    );
-
-    return () => {
-      current.reset();
-    };
-  }, [videoRef, onScan]);
-
-  return <video ref={videoRef} />;
-});
-
-QrScanner.displayName = 'QrScanner';
-
-export default QrScanner;
+  return (
+    <Paper radius='md' maw={650}>
+      <video ref={videoRef} style={{ borderRadius: 'inherit' }} />
+    </Paper>
+  );
+}
