@@ -1,39 +1,12 @@
 'use server';
 
-import { Application, Attendee, Status, User } from '@prisma/client';
+import { Status, User } from '@prisma/client';
 import prisma from '@/prisma';
 import { Check, CheckInResponse, CheckType } from '@/types/scanning';
+import { getApplication, getAttendee } from '@/actions/applications';
 
 export async function getUser(userId: string): Promise<User | null> {
   return prisma.user.findUnique({ where: { id: userId } });
-}
-
-export async function getApplication(
-  competitionCode: string,
-  userId: string
-): Promise<Application | null> {
-  return prisma.application.findUnique({
-    where: {
-      compCode_userId: {
-        competitionCode,
-        userId,
-      },
-    },
-  });
-}
-
-export async function getAttendee(
-  competitionCode: string,
-  userId: string
-): Promise<Attendee | null> {
-  return prisma.attendee.findUnique({
-    where: {
-      compCode_userId: {
-        competitionCode,
-        userId,
-      },
-    },
-  });
 }
 
 export async function getCheckInChecks(
@@ -42,6 +15,7 @@ export async function getCheckInChecks(
 ): Promise<Check[] | null> {
   const application = await getApplication(competitionCode, userId);
 
+  // TODO: integrate with forms
   if (application) {
     return [
       {
@@ -73,6 +47,11 @@ export async function getCheckInChecks(
       {
         name: "Student's ID matches information above",
         type: CheckType.Manual,
+        required: true,
+      },
+      {
+        name: 'Some info here',
+        type: CheckType.Info,
         required: true,
       },
     ];

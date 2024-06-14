@@ -43,7 +43,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { Competition } from '@prisma/client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Spinner from '../misc/Spinner';
+import Spinner from '../Spinner';
 import useSWR from 'swr';
 import superjson from 'superjson';
 

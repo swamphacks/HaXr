@@ -9,7 +9,7 @@ import {
   ThemeIcon,
   Title,
 } from '@mantine/core';
-import { checkIn, getApplication, getCheckInChecks } from '@/actions/scanning';
+import { checkIn, getCheckInChecks } from '@/actions/scanning';
 import { ReactNode, useEffect, useState } from 'react';
 import {
   IconCircleCheck,
@@ -19,6 +19,7 @@ import {
 } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import { Check, CheckType, SingleCheck } from '@/types/scanning';
+import { getApplication } from '@/actions/applications';
 
 const getCheckIcon = (check: Check): ReactNode => {
   if (check.type === CheckType.Automated) {
