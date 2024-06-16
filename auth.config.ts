@@ -28,6 +28,7 @@ export default {
         token.phone = user.phone;
         token.school = user.school;
         token.role = user.role;
+        token.id = user.id;
       }
       return token;
     },
@@ -37,6 +38,7 @@ export default {
       session.user.phone = token.phone as string | null;
       session.user.school = token.school as string | null;
       session.user.role = token.role as Role;
+      session.user.id = token.id as string;
       return session;
     },
   },
