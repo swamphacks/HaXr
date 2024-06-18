@@ -73,19 +73,13 @@ model Competition {
   forms Form[]
 }
 
-enum Group {
-  Volunteer
-  Hacker
-  All
-}
-
 model FormSettings {
   id              String    @id @default(cuid())
   form            Form?
-  schedule_open   DateTime?
-  schedule_close  DateTime?
+  opens_at        DateTime?
+  closes_at       DateTime?
   include_mlh     Boolean   @default(true)
-  form_for        Group     @default(All)
+  required        Boolean   @default(false)
   allow_anonymous Boolean   @default(false)
 }
 
