@@ -1,12 +1,12 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
 datasource db {
   provider  = "postgres"
   url       = env("POSTGRES_PRISMA_URL")
   directUrl = env("POSTGRES_URL_NON_POOLING")
-}
-
-generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
 }
 
 enum Role {
@@ -24,8 +24,12 @@ model User {
   school        String?
   image         String?
   role          Role      @default(Hacker)
-  accounts      Account[]
-  sessions      Session[]
+
+  accounts Account[]
+  sessions Session[]
+
+  applications Application[]
+  attendees    Attendee[]
 }
 
 model Account {
@@ -40,8 +44,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
 }
@@ -76,4 +79,46 @@ model Competition {
   apply_close      DateTime
   decision_release DateTime
   confirm_by       DateTime
+
+  applications Application[]
+  attendees    Attendee[]
+}
+
+enum Status {
+  STARTED
+  APPLIED
+
+  REJECTED
+  WAITLISTED
+  ACCEPTED
+
+  NOT_ATTENDING
+  ATTENDING
+}
+
+model Application {
+  id              String @id @default(cuid())
+  competitionCode String
+  userId          String
+  status          Status @default(STARTED)
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
+  attendee    Attendee?
+
+  @@unique([competitionCode, userId], name: "compCode_userId")
+}
+
+model Attendee {
+  competitionCode String
+  userId          String
+  applicationId   String   @unique
+  badgeId         String?  @unique
+  checkedInAt     DateTime @default(now())
+
+  competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([competitionCode, userId], name: "compCode_userId")
 }

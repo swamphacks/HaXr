@@ -1,3 +1,6 @@
-export default function ScanCheckIn() {
-  return <>Check in Hackers here!</>;
+import CheckIn from '@/components/checkin/CheckIn';
+import { getApplicants } from '@/actions/applications';
+
+export default async function ScanCheckIn() {
+  return <CheckIn applicants={await getApplicants('x')} />;
 }

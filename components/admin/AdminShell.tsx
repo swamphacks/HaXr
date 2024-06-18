@@ -43,6 +43,7 @@ import { useDisclosure } from '@mantine/hooks';
 import { Competition } from '@prisma/client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Spinner from '../Spinner';
 import useSWR from 'swr';
 import superjson from 'superjson';
 
@@ -65,15 +66,18 @@ export default function AdminShell({
   session,
   children,
 }: PropsWithChildren<Props>) {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [comp, setComp] = useState<string | null>(null);
+
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
-  const [comp, setComp] = useState<string | null>(null);
 
   const { data: competitions, isLoading } = useSWR<Competition[]>(
     '/api/comp',
     fetcher,
     {
       fallbackData: [],
+      onSuccess: () => setLoading(false),
     }
   );
 
@@ -86,6 +90,8 @@ export default function AdminShell({
         setComp(selectedComp);
     }
   }, [competitions]);
+
+  if (loading) return <Spinner />;
 
   return (
     <CompetitionContext.Provider
