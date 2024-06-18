@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import { createContext } from 'react';
 import {
 	Button,
@@ -54,35 +54,38 @@ import {
 function FileCheckBox({
 	question,
 	label,
-	setQuestion,
+	setQuestions,
 	acceptedTypes,
 	iconSize = 18,
 	defaultChecked = false,
 }: {
 	question: FormQuestion;
 	label: string;
-	setQuestion: any;
+	setQuestions: any;
 	acceptedTypes: string;
 	iconSize?: number;
 	defaultChecked?: boolean;
 }) {
-
 	const handleChecked = (e: any) => {
 		if (question.type !== questionType.file) return;
 		const checked = e.currentTarget.checked;
-		setQuestion((question: FormQuestion) => {
+		setQuestions((questions: FormQuestion[]) => {
+			const idx = questions.findIndex((q) => q.id === question.id);
 			const allowedFileTypes = (question as FileQuestion).allowedFileTypes;
-			let newFileTypes = []
+			let newFileTypes = [];
 			if (checked) {
 				newFileTypes = [...allowedFileTypes, label];
 			} else {
 				const index = allowedFileTypes.indexOf(label);
-				newFileTypes = [...allowedFileTypes.slice(0, index), ...allowedFileTypes.slice(index + 1)];
+				newFileTypes = [
+					...allowedFileTypes.slice(0, index),
+					...allowedFileTypes.slice(index + 1),
+				];
 			}
-			return {
-				...question,
-				allowedFileTypes: newFileTypes,
-			};
+
+			return questions.map((q) => q.id === question.id
+				? { ...q, allowedFileTypes: newFileTypes }
+				: q);
 		});
 	}
 
@@ -129,31 +132,42 @@ function getQuestionType(value: string) {
 }
 
 function hasOtherChoice(question: FormQuestion) {
-	return (hasAnswerChoices(question) && (question as SelectionQuestion).answerChoices.some((c) => c.other)) || false;
+	return (
+		(hasAnswerChoices(question) &&
+			(question as SelectionQuestion).answerChoices.some((c) => c.other)) ||
+		false
+	);
 }
 
-function AddChoice({ question, setQuestion }: any) {
+function AddChoice({ question, setQuestions }: { question: FormQuestion, setQuestions: any }) {
 	return (
 		<div className='flex flex-row gap-2'>
 			{/* Add Choice */}
 			<button
 				onClick={() => {
-					setQuestion((question: FormQuestion) => {
+					setQuestions((questions: FormQuestion[]) => {
 						const length = (question as SelectionQuestion).answerChoices.length;
-						return hasOtherChoice(question) ? {
-							...question,
-							answerChoices: [
-								...(question as SelectionQuestion).answerChoices.slice(0, -1),
-								{ value: '', id: uuidv4() },
-								(question as SelectionQuestion).answerChoices[length - 1],
-							]
-						} : {
-							...question,
-							answerChoices: [
-								...(question as SelectionQuestion).answerChoices,
-								{ value: '', id: uuidv4() },
-							]
-						}
+						const idx = questions.findIndex((q) => q.id === question.id);
+						const newQuestion = hasOtherChoice(question)
+							? {
+								...question,
+								answerChoices: [
+									...(question as SelectionQuestion).answerChoices.slice(
+										0,
+										-1
+									),
+									{ value: '', id: uuidv4() },
+									(question as SelectionQuestion).answerChoices[length - 1],
+								],
+							}
+							: {
+								...question,
+								answerChoices: [
+									...(question as SelectionQuestion).answerChoices,
+									{ value: '', id: uuidv4() },
+								],
+							};
+						return questions.map((q) => q.id === question.id ? newQuestion : q);
 					});
 				}}
 			>
@@ -166,15 +180,15 @@ function AddChoice({ question, setQuestion }: any) {
 					<p> or </p>
 					<button
 						onClick={() => {
-							setQuestion((question: FormQuestion) => {
-								return {
+							setQuestions((questions: FormQuestion[]) =>
+								questions.map((q) => q.id === question.id ? {
 									...question,
 									answerChoices: [
 										...(question as SelectionQuestion).answerChoices,
-										{ value: '', id: uuidv4(), other: true }
-									]
-								};
-							})
+										{ value: '', id: uuidv4(), other: true },
+									],
+								} : q)
+							);
 						}}
 						className='text-blue-500'
 					>
@@ -187,67 +201,47 @@ function AddChoice({ question, setQuestion }: any) {
 }
 
 export const OtherIncludedContext = createContext({
-	setQuestion: (value: FormQuestion) => { },
+	question: {} as FormQuestion,
+	setQuestions: (value: FormQuestion[]) => { },
 });
 
 export default function Question({
 	question,
-	setQuestions = (value: any) => { },
+	setQuestions = () => { },
 	disabled = false,
 }: {
-	question: FormQuestion;
+	question: FormQuestion
 	setQuestions?: (value: any) => void;
 	disabled?: boolean;
 }) {
-	const [currQuestion, setQuestion] = useState<FormQuestion>(question);
-	// const [selectedQuestionType, setQuestionType] = useState<string>(
-	// 	question.type
-	// );
-	// const [choices, setChoices] = useState<answerChoice[]>(
-	// 	hasAnswerChoices(question)
-	// 		? (question as SelectionQuestion).answerChoices
-	// 		: []
-	// );
-	// const [required, setRequired] = useState<boolean>(question.required);
-	// const [title, setTitle] = useState<string>(question.title);
-	// const [otherIncluded, setOther] = useState<boolean>(
-	// 	(hasAnswerChoices(question) &&
-	// 		(question as SelectionQuestion).answerChoices?.some((c) => c.other)) ||
-	// 	false
-	// );
-	// const [allowCertainFiles, setAllowCertainFiles] = useState<boolean>(
-	// 	question.type === questionType.file
-	// 		? !(question as FileQuestion).allowAllTypes
-	// 		: false
-	// );
-	// const [allowedFileTypes, setAllowedFileTypes] = useState<string[]>(
-	// 	question.type === questionType.file
-	// 		? (question as FileQuestion).allowedFileTypes || []
-	// 		: []
-	// );
 
 	const getChoicePos = (id: string) => {
-		if (hasAnswerChoices(currQuestion)) {
-			return (currQuestion as SelectionQuestion)
-				.answerChoices.findIndex((choice: answerChoice) => choice.id === id);
+		if (hasAnswerChoices(question)) {
+			return (question as SelectionQuestion).answerChoices.findIndex(
+				(choice: answerChoice) => choice.id === id
+			);
 		}
 
-		console.error(`Question of type ${currQuestion.type} does not have answer choices.
+		console.error(`Question of type ${question.type} does not have answer choices.
 			Returning position '-1'.`);
 		return -1;
+	};
+
+	const getIndex = (questions: FormQuestion[]) => {
+		return questions.findIndex((q) => q.id === question.id);
 	}
 	const handleDragged = (event: any) => {
 		const { active, over } = event;
 		if (active.id === over.id) return;
-		setQuestion((question: FormQuestion) => {
-			return {
+		setQuestions((questions: FormQuestion[]) => {
+			return questions.map((q) => q.id === question.id ? {
 				...question,
 				answerChoices: arrayMove(
 					(question as SelectionQuestion).answerChoices,
 					getChoicePos(active.id),
 					getChoicePos(over.id)
 				)
-			}
+			} : q);
 		});
 	};
 
@@ -267,46 +261,36 @@ export default function Question({
 			coordinateGetter: sortableKeyboardCoordinates,
 		})
 	);
-	const openRef = useRef<() => void>(null);
-	// const maxFileSize = useRef<string>(
-	// 	question.type === questionType.file
-	// 		? (question as FileQuestion).maximumFileSize
-	// 		: fileSizes[0]
-	// );
-	// const maxFiles = useRef<number>(
-	// 	question.type === questionType.file
-	// 		? (question as FileQuestion).maximumFiles
-	// 		: 1
-	// );
 
 	const handleQuestionTypeChange = (e: any) => {
 		if (!e) return;
-		setQuestion((question: FormQuestion) => {
-			switch (e) {
+		const newType = e;
+		setQuestions((questions: FormQuestion[]) => {
+			switch (newType) {
 				case questionType.multiplechoice:
 				case questionType.checkbox:
 				case questionType.dropdown:
-					return {
+					question = {
 						...question,
-						type: e,
-						answerChoices: (question as SelectionQuestion).answerChoices || [],
-					};
+						type: newType,
+						answerChoices: (question as SelectionQuestion)?.answerChoices || [],
+					}
 				case questionType.file:
-					return {
+					question = {
 						...question,
-						type: e,
+						type: newType,
 						allowAllTypes: (question as FileQuestion).allowAllTypes || false,
 						allowedFileTypes: (question as FileQuestion).allowedFileTypes || [],
-						maximumFileSize: (question as FileQuestion).maximumFileSize || fileSizes[0],
+						maximumFileSize:
+							(question as FileQuestion).maximumFileSize || fileSizes[0],
 						maximumFiles: (question as FileQuestion).maximumFiles || 1,
 					}
 				default:
-					return { ...question, type: e };
+					question = { ...question, type: newType };
 			}
-			return { ...question, type: getQuestionType(e) };
+			return questions.map((q) => q.id === question.id ? question : q);
 		});
-	}
-
+	};
 
 	return (
 		<div
@@ -333,12 +317,12 @@ export default function Question({
 					className={
 						classes.input + ' box-border h-8 resize-y overflow-y-hidden text-lg'
 					}
-					defaultValue={currQuestion.title}
+					defaultValue={question.title}
 					onChange={(e) => {
 						const title = e.currentTarget.value;
-						setQuestion((question: FormQuestion) => {
-							return { ...question, title: title };
-						})
+						setQuestions((questions: FormQuestion[]) => {
+							return questions.map((q) => q.id === question.id ? { ...question, title: title } : q);
+						});
 					}}
 					disabled={disabled}
 					required
@@ -347,15 +331,15 @@ export default function Question({
 				{/* Question Type */}
 				<Select
 					data={Object.values(questionType)}
-					value={currQuestion.type}
+					value={question.type}
 					onChange={handleQuestionTypeChange}
 					disabled={disabled}
 					required
 				/>
 
 				{/* Answer Choices */}
-				{hasAnswerChoices(currQuestion) ? (
-					<OtherIncludedContext.Provider value={{ setQuestion }}>
+				{hasAnswerChoices(question) ? (
+					<>
 						<AnswerChoiceHeader />
 						<DndContext
 							sensors={sensors}
@@ -364,38 +348,36 @@ export default function Question({
 						>
 							<Droppable id='droppable'>
 								<Choices
-									choices={(currQuestion as SelectionQuestion).answerChoices}
+									choices={(question as SelectionQuestion).answerChoices}
 									disabled={disabled}
-									questionType={currQuestion.type}
+									question={question}
+									setQuestions={setQuestions}
 								/>
 							</Droppable>
 						</DndContext>
 						{!disabled ? (
-							<AddChoice
-								question={currQuestion}
-								setQuestion={setQuestion}
-							/>
+							<AddChoice question={question} setQuestions={setQuestions} />
 						) : null}
-					</OtherIncludedContext.Provider>
+					</>
 				) : null}
 
 				{/* Address Type Question */}
-				{currQuestion.type === questionType.shortResponse ? (
+				{question.type === questionType.shortResponse ? (
 					<TextInput placeholder='Enter response' disabled />
 				) : null}
 
 				{/* Paragraph Type Question */}
-				{currQuestion.type === questionType.paragraph ? (
+				{question.type === questionType.paragraph ? (
 					<Textarea placeholder='Enter response' disabled />
 				) : null}
 
 				{/* Agreement Type Question */}
-				{currQuestion.type === questionType.agreement ? (
-					<Checkbox label={currQuestion.title} disabled />
+				{question.type === questionType.agreement ? (
+					<Checkbox label={question.title} disabled />
 				) : null}
 
 				{/* Address Type Question */}
-				{currQuestion.type === questionType.address ? (
+				{question.type === questionType.address ? (
 					<Stack>
 						<TextInput disabled label='Address Line 1' />
 						<TextInput disabled label='Address Line 2' />
@@ -407,61 +389,62 @@ export default function Question({
 				) : null}
 
 				{/* File Type Question */}
-				{currQuestion.type === questionType.file ? (
+				{question.type === questionType.file ? (
 					<>
 						<Switch
 							label='Allow only certain files'
 							labelPosition='left'
-							defaultChecked={!(currQuestion as FileQuestion).allowAllTypes}
+							defaultChecked={!(question as FileQuestion).allowAllTypes}
 							onChange={(e) => {
-								setQuestion((question: FormQuestion) => {
-									const newQuestion = { ...question } as FileQuestion;
-									newQuestion.allowAllTypes = !e.currentTarget.checked;
-									return newQuestion;
+								const checked = e.currentTarget.checked;
+								setQuestions((questions: FormQuestion[]) => {
+									(question as FileQuestion).allowAllTypes = !checked;
+									return questions.map((q) => q.id === question.id ? question : q);
 								});
 							}}
 						/>
-						{!(currQuestion as FileQuestion).allowAllTypes ? (
+						{!(question as FileQuestion).allowAllTypes ? (
 							<div className='grid grid-cols-2 gap-2'>
 								{fileTypes.map((fileType: FileType, index: number) => (
 									<FileCheckBox
-										question={currQuestion}
+										question={question}
 										key={index}
 										label={fileType.type}
-										setQuestion={setQuestion}
+										setQuestions={setQuestions}
 										acceptedTypes={fileType.extensions.join(', ')}
-										defaultChecked={(currQuestion as FileQuestion).
-											allowedFileTypes?.includes(fileType.type)}
+										defaultChecked={(
+											question as FileQuestion
+										).allowedFileTypes?.includes(fileType.type)}
 									/>
 								))}
 							</div>
 						) : null}
 						<NumberInput
 							label='Maximum number of files'
-							defaultValue={(currQuestion as FileQuestion).maximumFiles}
+							defaultValue={(question as FileQuestion).maximumFiles}
 							min={1}
 							max={10}
 							onChange={(e) =>
-								typeof e === 'number' ?
-									setQuestion((question: FormQuestion) => {
-										const newQuestion = { ...question };
-										(newQuestion as FileQuestion).maximumFiles = e;
-										return newQuestion;
+								typeof e === 'number'
+									? setQuestions((questions: FormQuestion[]) => {
+										(question as FileQuestion).maximumFiles = e;
+										return questions.map((q) => q.id === question.id ? question : q);
 									})
 									: null
 							}
 						/>
 						<Select
 							label='Maximum File Size'
-							defaultValue={(currQuestion as FileQuestion).maximumFileSize}
+							defaultValue={(question as FileQuestion).maximumFileSize}
 							data={fileSizes}
-							onChange={(e) => e ?
-								setQuestion((question: FormQuestion) => {
-									const newQuestion = { ...question };
-									(newQuestion as FileQuestion).maximumFileSize = e;
-									return newQuestion;
-								})
-								: null}
+							onChange={(e) =>
+								e
+									? setQuestions((questions: FormQuestion[]) => {
+										(question as FileQuestion).maximumFileSize = e;
+										return questions.map((q) => q.id === question.id ? question : q);
+									})
+									: null
+							}
 						/>
 						<div className='flex flex-row-reverse'>
 							<button className='flex flex-row gap-2 text-blue-500'>
@@ -469,11 +452,6 @@ export default function Question({
 								View Folder
 							</button>
 						</div>
-						<Dropzone openRef={openRef} onDrop={() => { }} />
-
-						<Group justify='center' mt='md'>
-							<Button onClick={() => openRef.current?.()}>Select files</Button>
-						</Group>
 					</>
 				) : null}
 
@@ -482,11 +460,15 @@ export default function Question({
 				<div className='col-start-2 flex flex-row-reverse items-center gap-4'>
 					<Switch
 						label='Required'
-						defaultChecked={(currQuestion as SelectionQuestion).required}
-						onChange={() =>
-							setQuestion((question: FormQuestion) => {
-								return { ...question, required: !question.required };
-							})}
+						defaultChecked={(question as SelectionQuestion).required}
+						onChange={(e) =>
+							setQuestions((questions: FormQuestion[]) =>
+								questions.map((q) => q.id === question.id ? {
+									...question,
+									required: e.target.checked
+								} : q)
+							)
+						}
 						size='xs'
 						labelPosition='left'
 						disabled={disabled}
@@ -496,9 +478,7 @@ export default function Question({
 						<button
 							className='justify-self-end'
 							onClick={() =>
-								setQuestions((oldQuestions: FormQuestion[]) => {
-									return oldQuestions.filter((q) => q.id !== question.id)
-								})
+								setQuestions((questions: FormQuestion[]) => questions.filter((q) => q.id !== question.id))
 							}
 							disabled={disabled}
 						>
@@ -510,54 +490,16 @@ export default function Question({
 							className='justify-self-end'
 							disabled={disabled}
 							onClick={() => {
-								switch (currQuestion.type) {
-									case questionType.multiplechoice:
-									case questionType.checkbox:
-									case questionType.dropdown:
-										setQuestions((oldQuestions: FormQuestion[]) => [
-											...oldQuestions,
-											{
-												title: currQuestion.title,
-												type: currQuestion.type,
-												answerChoices: (currQuestion as SelectionQuestion).answerChoices,
-												required: currQuestion.required,
-												id: uuidv4(),
-											},
-										]);
-										break;
-									case questionType.file:
-										setQuestions((oldQuestions: FormQuestion[]) => [
-											...oldQuestions,
-											{
-												title: currQuestion.title,
-												type: currQuestion.type,
-												allowedFileTypes: (currQuestion as FileQuestion).allowedFileTypes,
-												allowAllTypes: (currQuestion as FileQuestion).allowAllTypes,
-												maximumFileSize: (currQuestion as FileQuestion).maximumFileSize,
-												maximumFiles: (currQuestion as FileQuestion).maximumFiles,
-												required: currQuestion.required,
-												id: uuidv4(),
-											},
-										]);
-										break;
-									default:
-										setQuestions((oldQuestions: FormQuestion[]) => [
-											...oldQuestions,
-											{
-												title: currQuestion.title,
-												type: currQuestion.type,
-												required: currQuestion.required,
-												id: uuidv4(),
-											},
-										]);
-								}
+								setQuestions((questions: FormQuestion[]) =>
+									[...questions, { ...question, id: uuidv4() }]
+								);
 							}}
 						>
 							<IconRubberStamp className='w-5' stroke={1.25} />
 						</button>
 					</Tooltip>
 				</div>
-			</Stack>
-		</div>
+			</Stack >
+		</div >
 	);
 }

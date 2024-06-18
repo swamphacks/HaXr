@@ -89,6 +89,22 @@ model Competition {
   forms Form[]
 }
 
+enum Group {
+  Volunteer
+  Hacker
+  All
+}
+
+model FormSettings {
+  id              String    @id @default(cuid())
+  form            Form?
+  schedule_open   DateTime?
+  schedule_close  DateTime?
+  include_mlh     Boolean   @default(true)
+  form_for        Group     @default(All)
+  allow_anonymous Boolean   @default(false)
+}
+
 model Form {
   id               String      @id @default(cuid())
   title            String      @default("Unititled Form")
@@ -97,10 +113,14 @@ model Form {
   competition      Competition @relation(fields: [competition_code], references: [code])
   competition_code String
 
-  is_primary Boolean? // Need to have check constraint in the database so only one comp has primary true
+  // Need to have check constraint in the database so only one comp has primary true
+  is_primary   Boolean @default(false)
+  is_published Boolean @default(false)
 
-  questions Json
-  responses Response[]
+  questions        Json         @default("[]")
+  responses        Response[]
+  form_settings    FormSettings @relation(fields: [form_settings_id], references: [id])
+  form_settings_id String       @unique
 }
 
 model Response {

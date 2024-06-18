@@ -1,5 +1,3 @@
-import { useContext } from 'react';
-import { OtherIncludedContext } from '@/components/admin/Question';
 import { CloseButton, Radio, Checkbox } from '@mantine/core';
 import { IconGripVertical } from '@tabler/icons-react';
 
@@ -8,23 +6,18 @@ import { useSortable } from '@dnd-kit/sortable';
 
 import classes from '@/styles/Input.module.css';
 
-import { answerChoice } from '@/types/questionTypes';
-import { questionType as qType } from '@/types/questionTypes';
-
-import {
-	FormQuestion, SelectionQuestion,
-} from '@/types/questionTypes';
+import { FormQuestion, SelectionQuestion, answerChoice, questionType } from '@/types/questionTypes';
 
 function ChoiceInput({
 	choice,
-	setQuestion,
+	question,
+	setQuestions,
 	disabled,
-	questionType,
 }: {
 	choice: answerChoice;
-	setQuestion: any;
+	question: FormQuestion;
+	setQuestions: any;
 	disabled: boolean;
-	questionType: qType;
 }) {
 	const id = choice.id;
 	const { attributes, listeners, setNodeRef, transform, transition } =
@@ -37,25 +30,25 @@ function ChoiceInput({
 
 	const handleTextInput = (e: React.ChangeEvent<HTMLInputElement>) => {
 		choice.value = e.target.value;
-		setQuestion((question: FormQuestion) => {
-			const choices: answerChoice[] = (question as SelectionQuestion).answerChoices;
-			const index = choices.findIndex((c: answerChoice) => c.id === choice.id);
-			return {
+		setQuestions((questions: FormQuestion[]) => {
+			const choices: answerChoice[] = (question as SelectionQuestion)
+				.answerChoices;
+			return questions.map((q: FormQuestion) => q.id === question.id ? {
 				...question,
-				answerChoices: [...choices.slice(0, index), choice, ...choices.slice(index + 1)]
-			}
+				answerChoices: choices.map((c: answerChoice) => c.id === choice.id ? choice : c),
+			} : q);
 		});
 	};
 
 	const handleDeletion = () => {
-		setQuestion((question: FormQuestion) => {
-			return {
+		setQuestions((questions: FormQuestion[]) =>
+			questions.map((q: FormQuestion) => q.id === question.id ? {
 				...question,
 				answerChoices: (question as SelectionQuestion)
-					.answerChoices.filter((c: answerChoice) => c.id !== choice.id)
-			}
-		})
-	}
+					.answerChoices.filter((c: answerChoice) => c.id !== choice.id),
+			} : q)
+		);
+	};
 
 	return (
 		<div
@@ -71,10 +64,10 @@ function ChoiceInput({
 
 			{/* Text Input */}
 			<div className='col-start-2 flex flex-row items-center'>
-				{questionType === qType.multiplechoice ? (
+				{question.type === questionType.multiplechoice ? (
 					<Radio disabled className='mr-2' />
 				) : null}
-				{questionType === qType.checkbox ? (
+				{question.type === questionType.checkbox ? (
 					<Checkbox disabled className='mr-2' />
 				) : null}
 				<input
@@ -87,30 +80,32 @@ function ChoiceInput({
 			</div>
 
 			{/* Delete Button */}
-			{!disabled ? (<CloseButton onClick={handleDeletion} />) : null}
+			{!disabled ? <CloseButton onClick={handleDeletion} /> : null}
 		</div>
 	);
 }
 
 export default function Choice({
 	choice,
-	questionType,
+	question,
+	setQuestions,
 	disabled = false,
 }: {
 	choice: answerChoice;
-	questionType: qType;
+	question: FormQuestion;
+	setQuestions: any;
 	disabled?: boolean;
 }) {
-	const { setQuestion } = useContext(OtherIncludedContext);
 	const deleteOther = () => {
-		// @ts-ignore
-		setQuestion((question: FormQuestion) => {
-			return {
-				...question,
-				answerChoices: (question as SelectionQuestion).
-					answerChoices.filter((c: answerChoice) => c.id !== choice.id)
-			};
-		});
+		setQuestions((questions: FormQuestion[]) =>
+			questions.map((q: FormQuestion) => {
+				q.id === question.id ? {
+					...question,
+					answerChoices: (question as SelectionQuestion).answerChoices.filter(
+						(c: answerChoice) => c.id !== choice.id
+					),
+				} : q
+			}))
 	};
 
 	return (
@@ -118,8 +113,8 @@ export default function Choice({
 			{!choice.other ? (
 				<ChoiceInput
 					choice={choice}
-					setQuestion={setQuestion}
-					questionType={questionType}
+					question={question}
+					setQuestions={setQuestions}
 					disabled={disabled}
 				/>
 			) : null}
@@ -127,10 +122,10 @@ export default function Choice({
 				<div className='grid grid-cols-[1.3rem_auto_1.3rem] items-center'>
 					<div />
 					<div className='flex flex-row'>
-						{questionType === qType.multiplechoice ? (
+						{question.type === questionType.multiplechoice ? (
 							<Radio disabled className='mr-2' />
 						) : null}
-						{questionType === qType.checkbox ? (
+						{question.type === questionType.checkbox ? (
 							<Checkbox disabled className='mr-2' />
 						) : null}
 						<p className={classes.input + ' col-start-2'}>Other...</p>

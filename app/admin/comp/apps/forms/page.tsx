@@ -8,6 +8,7 @@ import { IconSearch, IconEdit } from '@tabler/icons-react';
 import { Table, Checkbox } from '@mantine/core';
 import { CompetitionContext } from '@/components/admin/AdminShell';
 import { Form } from '@prisma/client';
+import { createForm } from '@/app/actions/Forms';
 import useSWR from 'swr';
 
 // @ts-ignore
@@ -47,7 +48,7 @@ export default function Forms() {
 				/>
 			</Table.Td>
 			<Table.Td>
-				<a href='/forms/'>{form.title}</a>
+				<a href={`/admin/comp/apps/forms/edit/${form.id}`}>{form.title}</a>
 			</Table.Td>
 			<Table.Td>{form.update_at.toString()}</Table.Td>
 			<Table.Td>{form.created_at.toString()}</Table.Td>
@@ -76,16 +77,21 @@ export default function Forms() {
 						},
 					}}
 				/>
-				<Button
-					leftSection={<IconEdit size='1rem' />}
-					radius='xl'
-					onClick={(event) => {
-						event.preventDefault();
-						router.push(`${pathname}/create`);
-					}}
-				>
-					Create Form
-				</Button>
+				{competition.competition ?
+					<Button
+						leftSection={<IconEdit size='1rem' />}
+						radius='xl'
+						onClick={async () => {
+							if (!competition.competition) {
+								console.error('No competition selected');
+								return;
+							}
+							const form: Form = await createForm(competition.competition.code);
+							router.push(`${pathname}/edit/${form.id}`);
+						}}
+					>
+						Create Form
+					</Button> : null}
 			</div>
 			<div className='mb-2 grid grid-cols-[auto_40%]'>
 				<div className='self-center text-[1.4rem]'>
