@@ -36,7 +36,10 @@ export default function QrScanner({ onScan }: Props) {
 
   return (
     <Paper radius='md' maw={650}>
-      <video ref={videoRef} style={{ borderRadius: 'inherit' }} />
+      <video
+        ref={videoRef}
+        style={{ borderRadius: 'inherit', scale: '-1 1' }}
+      />
     </Paper>
   );
 }
