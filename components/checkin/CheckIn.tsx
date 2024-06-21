@@ -1,6 +1,5 @@
 'use client';
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { CompetitionContext } from '@/components/admin/AdminShell';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Application, User } from '@prisma/client';
 import { useDisclosure } from '@mantine/hooks';
 import { getUser } from '@/actions/scanning';
@@ -12,19 +11,18 @@ import { Divider, LoadingOverlay, Stack } from '@mantine/core';
 import CheckInTable from '@/components/checkin/CheckInTable';
 
 interface Props {
+  comp: string;
   applicants: (Application & { user: User })[];
 }
 
-export default function CheckIn({ applicants }: Props) {
-  const { competition } = useContext(CompetitionContext);
-
+export default function CheckIn({ comp, applicants }: Props) {
   const [visible, { open, close }] = useDisclosure(false);
   const [user, setUser] = useState<User | null>(null);
   const userRef = useRef<User | null>(null);
 
   const selectUser = useCallback(
     async (userId: string) => {
-      if (!competition || userId === userRef.current?.id) return;
+      if (userId === userRef.current?.id) return;
 
       open();
       const selectedUser = await getUser(userId);
@@ -38,7 +36,7 @@ export default function CheckIn({ applicants }: Props) {
       } else setUser(selectedUser);
       close();
     },
-    [competition, open, close]
+    [open, close]
   );
 
   useEffect(() => {
@@ -49,7 +47,7 @@ export default function CheckIn({ applicants }: Props) {
   return (
     <>
       <CheckInModal
-        comp={competition?.code ?? null}
+        comp={comp}
         user={user}
         deselectUser={() => setUser(null)}
       />

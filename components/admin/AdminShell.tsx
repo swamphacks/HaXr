@@ -49,218 +49,168 @@ import superjson from 'superjson';
 
 interface Props {
   session: Session;
+  competitions: Competition[];
+  code: string;
 }
-
-export const CompetitionContext = createContext<{ competition?: Competition }>({
-  competition: undefined,
-});
-
-// @ts-ignore
-const fetcher = (...args) =>
-  // @ts-ignore
-  fetch(...args)
-    .then((res) => res.json())
-    .then((str) => superjson.parse<Competition[]>(str));
 
 export default function AdminShell({
   session,
+  competitions,
+  code,
   children,
 }: PropsWithChildren<Props>) {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [comp, setComp] = useState<string | null>(null);
-
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
 
-  const { data: competitions, isLoading } = useSWR<Competition[]>(
-    '/api/comp',
-    fetcher,
-    {
-      fallbackData: [],
-      onSuccess: () => setLoading(false),
-    }
-  );
+  const comp = competitions.find((c) => c.code === code)!;
 
-  useEffect(() => {
-    if (competitions) {
-      const selectedComp = sessionStorage.getItem('selectedComp');
-
-      // Check if the selected competition still exists
-      if (selectedComp && competitions.some((c) => c.code === selectedComp))
-        setComp(selectedComp);
-    }
-  }, [competitions]);
-
-  if (loading) return <Spinner />;
+  const safeCode = encodeURIComponent(code);
 
   return (
-    <CompetitionContext.Provider
-      value={{ competition: competitions?.find((c) => c.code === comp) }}
+    <AppShell
+      header={{ height: 60 }}
+      navbar={{
+        width: 300,
+        breakpoint: 'sm',
+        collapsed: { mobile: !opened },
+      }}
+      padding='md'
     >
-      <AppShell
-        header={{ height: 60 }}
-        navbar={{
-          width: 300,
-          breakpoint: 'sm',
-          collapsed: { mobile: !opened },
-        }}
-        padding='md'
-      >
-        <AppShellHeader>
-          <Group h='100%' px='md' justify='space-between'>
-            <Group h='100%'>
-              <Burger
-                opened={opened}
-                onClick={toggle}
-                hiddenFrom='sm'
-                size='sm'
-              />
+      <AppShellHeader>
+        <Group h='100%' px='md' justify='space-between'>
+          <Group h='100%'>
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom='sm'
+              size='sm'
+            />
 
-              <Image
-                src='/logos/swamphacks_hd.png'
-                mah={60}
-                fit='contain'
-                alt='SwampHacks logo'
-                visibleFrom='sm'
-              />
-              <Title order={2} visibleFrom='sm'>
-                Admin Portal
-              </Title>
-
-              <Title order={2} hiddenFrom='sm'>
-                Admin
-              </Title>
-            </Group>
-
-            <UserProfile session={session} />
+            <Image
+              src='/logos/swamphacks_hd.png'
+              mah={60}
+              fit='contain'
+              alt='SwampHacks logo'
+              visibleFrom='sm'
+            />
+            <Title order={2}>{comp.name}</Title>
           </Group>
-        </AppShellHeader>
 
-        <AppShellNavbar p='md'>
-          <Select
-            placeholder='Select a competition'
-            data={competitions?.map((c) => ({ value: c.code, label: c.name }))}
-            value={comp}
-            onChange={(c) => {
-              setComp(c);
-              if (c) sessionStorage.setItem('selectedComp', c);
-              else sessionStorage.removeItem('selectedComp');
-            }}
-            allowDeselect={true}
+          <UserProfile session={session} />
+        </Group>
+      </AppShellHeader>
+
+      <AppShellNavbar p='xs'>
+        <AppShellSection grow component={ScrollArea}>
+          <NavLink
+            component={Link}
+            label='Overview'
+            leftSection={<IconInfoCircle size='1rem' />}
+            href={`/admin/comp/${safeCode}`}
+            active={pathname === `/admin/comp/${safeCode}`}
           />
 
-          <div hidden={!comp}>
-            <Divider my='xs' />
+          <NavLink
+            component={Link}
+            label='Configuration'
+            leftSection={<IconSettings size='1rem' />}
+            href={`/admin/comp/${safeCode}/configure`}
+            active={pathname === `/admin/comp/${safeCode}/configure`}
+          />
 
-            <AppShellSection grow component={ScrollArea}>
-              <NavLink
-                component={Link}
-                label='Overview'
-                leftSection={<IconInfoCircle size='1rem' />}
-                href='/admin/comp'
-                active={pathname === '/admin/comp'}
-              />
+          <NavLink
+            label='Applications'
+            leftSection={<IconInbox size='1rem' />}
+            defaultOpened={pathname.startsWith(`/admin/comp/${safeCode}/apps`)}
+          >
+            <NavLink
+              component={Link}
+              label='Edit Form'
+              leftSection={<IconEdit size='1rem' />}
+              href={`/admin/comp/${safeCode}/apps/edit-form`}
+              active={pathname === `/admin/comp/${safeCode}/apps/edit-form`}
+            />
 
-              <NavLink
-                component={Link}
-                label='Configuration'
-                leftSection={<IconSettings size='1rem' />}
-                href='/admin/comp/configure'
-                active={pathname === '/admin/comp/configure'}
-              />
+            <NavLink
+              component={Link}
+              label='Review'
+              description='75% reviewed (57 remaining)'
+              leftSection={<IconStatusChange size='1rem' />}
+              href={`/admin/comp/${safeCode}/apps`}
+              active={pathname === `/admin/comp/${safeCode}/apps`}
+            />
+          </NavLink>
 
-              <NavLink
-                label='Applications'
-                leftSection={<IconInbox size='1rem' />}
-                defaultOpened={pathname.startsWith('/admin/comp/apps')}
-              >
-                <NavLink
-                  component={Link}
-                  label='Edit Form'
-                  leftSection={<IconEdit size='1rem' />}
-                  href='/admin/comp/apps/edit-form'
-                  active={pathname === '/admin/comp/apps/edit-form'}
-                />
+          <NavLink
+            component={Link}
+            label='Redeemables & Swag'
+            leftSection={<IconCoin size='1rem' />}
+            href={`/admin/comp/${safeCode}/redeemables`}
+            active={pathname === `/admin/comp/${safeCode}/redeemables`}
+          />
 
-                <NavLink
-                  component={Link}
-                  label='Review'
-                  description='75% reviewed (57 remaining)'
-                  leftSection={<IconStatusChange size='1rem' />}
-                  href='/admin/comp/apps'
-                  active={pathname === '/admin/comp/apps'}
-                />
-              </NavLink>
+          <NavLink
+            component={Link}
+            label='Events'
+            leftSection={<IconCalendar size='1rem' />}
+            href={`/admin/comp/${safeCode}/events`}
+            active={pathname === `/admin/comp/${safeCode}/events`}
+          />
 
-              <NavLink
-                component={Link}
-                label='Redeemables & Swag'
-                leftSection={<IconCoin size='1rem' />}
-                href='/admin/comp/redeemables'
-                active={pathname === '/admin/comp/redeemables'}
-              />
+          <NavLink
+            label='Scanner'
+            leftSection={<IconQrcode size='1rem' />}
+            defaultOpened={pathname.startsWith(`/admin/comp/${safeCode}/scan`)}
+          >
+            <NavLink
+              component={Link}
+              label='Check-in'
+              description='17% checked-in (323 remaining)'
+              leftSection={<IconDoorEnter size='1rem' />}
+              href={`/admin/comp/${safeCode}/scan/check-in`}
+              active={pathname === `/admin/comp/${safeCode}/scan/check-in`}
+            />
+            <NavLink
+              component={Link}
+              label='Swag Shop'
+              leftSection={<IconLego size='1rem' />}
+              href={`/admin/comp/${safeCode}/scan/swag`}
+              active={pathname === `/admin/comp/${safeCode}/scan/swag`}
+            />
+            <NavLink
+              component={Link}
+              label='Event Attendance'
+              leftSection={<IconTicket size='1rem' />}
+              href={`/admin/comp/${safeCode}/scan/event`}
+              active={pathname === `/admin/comp/${safeCode}/scan/event`}
+            />
+            <NavLink
+              component={Link}
+              label='Item Loan'
+              description={
+                <Text inherit={true} c='red'>
+                  2 items overdue
+                </Text>
+              }
+              leftSection={<IconExchange size='1rem' />}
+              href={`/admin/comp/${safeCode}/scan/loan`}
+              active={pathname === `/admin/comp/${safeCode}/scan/loan`}
+            />
+          </NavLink>
 
-              <NavLink
-                component={Link}
-                label='Events'
-                leftSection={<IconCalendar size='1rem' />}
-                href='/admin/comp/events'
-                active={pathname === '/admin/comp/events'}
-              />
+          <NavLink
+            component={Link}
+            label='Back to Dashboard'
+            leftSection={<IconArrowLeft size='1rem' />}
+            href='/admin'
+            variant='subtle'
+            color='red'
+            active
+          />
+        </AppShellSection>
+      </AppShellNavbar>
 
-              <NavLink
-                label='Scanner'
-                leftSection={<IconQrcode size='1rem' />}
-                defaultOpened={pathname.startsWith('/admin/comp/scan')}
-              >
-                <NavLink
-                  component={Link}
-                  label='Check-in'
-                  description='17% checked-in (323 remaining)'
-                  leftSection={<IconDoorEnter size='1rem' />}
-                  href='/admin/comp/scan/check-in'
-                  active={pathname === '/admin/comp/scan/check-in'}
-                />
-                <NavLink
-                  component={Link}
-                  label='Swag Shop'
-                  leftSection={<IconLego size='1rem' />}
-                  href='/admin/comp/scan/swag'
-                  active={pathname === '/admin/comp/scan/swag'}
-                />
-                <NavLink
-                  component={Link}
-                  label='Event Attendance'
-                  leftSection={<IconTicket size='1rem' />}
-                  href='/admin/comp/scan/event'
-                  active={pathname === '/admin/comp/scan/event'}
-                />
-                <NavLink
-                  component={Link}
-                  label='Item Loan'
-                  description={
-                    <Text inherit={true} c='red'>
-                      2 items overdue
-                    </Text>
-                  }
-                  leftSection={<IconExchange size='1rem' />}
-                  href='/admin/comp/scan/loan'
-                  active={pathname === '/admin/comp/scan/loan'}
-                />
-              </NavLink>
-            </AppShellSection>
-          </div>
-        </AppShellNavbar>
-
-        <AppShellMain>
-          {isLoading && (
-            <Center>
-              <Loader />
-            </Center>
-          )}
-          {!isLoading && (comp ? children : <>Select a competition</>)}
-        </AppShellMain>
-      </AppShell>
-    </CompetitionContext.Provider>
+      <AppShellMain>{children}</AppShellMain>
+    </AppShell>
   );
 }

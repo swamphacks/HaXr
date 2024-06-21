@@ -64,6 +64,13 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
+model AdminLink {
+  id      String   @id @default(cuid())
+  name    String
+  url     String
+  addedOn DateTime @default(now())
+}
+
 model Competition {
   code          String   @id
   name          String
@@ -80,8 +87,22 @@ model Competition {
   decision_release DateTime
   confirm_by       DateTime
 
-  applications Application[]
-  attendees    Attendee[]
+  interestedPeople InterestedPerson[]
+  applications     Application[]
+  attendees        Attendee[]
+}
+
+model InterestedPerson {
+  id              String @id @default(cuid())
+  competitionCode String
+
+  name       String
+  email      String
+  signedUpAt DateTime @default(now())
+
+  competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([competitionCode, email], name: "compCode_email")
 }
 
 enum Status {
