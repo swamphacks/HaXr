@@ -147,7 +147,7 @@ function FormCreator({
                   const question: FormQuestion =
                     q as Prisma.JsonValue as unknown as FormQuestion;
                   return question.mlh ? (
-                    <Question key={question.id} question={question} disabled />
+                    <Question key={question.id} question={question} can_edit />
                   ) : null;
                 })}
               </Stack>
