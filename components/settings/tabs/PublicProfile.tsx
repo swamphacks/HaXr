@@ -38,13 +38,13 @@ export default function PublicProfile() {
       const check = await update({
         user: {
           firstName: user.firstName,
-          lastName: user.lastName
-        }
+          lastName: user.lastName,
+        },
       });
 
       console.log(check);
 
-      console.log(session)
+      console.log(session);
     } else console.log('Unsuccessful');
   };
 
