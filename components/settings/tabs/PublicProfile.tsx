@@ -31,9 +31,20 @@ export default function PublicProfile() {
       return;
     }
 
-    if (await updateUserProfile(session?.user?.id, values)) {
+    const user = await updateUserProfile(session?.user?.id, values);
+    if (user !== null) {
       console.log('Successfully updated!');
-      update();
+      console.log(user);
+      const check = await update({
+        user: {
+          firstName: user.firstName,
+          lastName: user.lastName
+        }
+      });
+
+      console.log(check);
+
+      console.log(session)
     } else console.log('Unsuccessful');
   };
 

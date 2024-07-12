@@ -6,16 +6,16 @@ import { type User } from '@prisma/client';
 const updateUserProfile = async (user_id: string, user: User) => {
   // Check validity here TODO
   try {
-    await prisma.user.update({
+    const new_user = await prisma.user.update({
       where: {
         id: user_id,
       },
       data: { ...user },
     });
 
-    return true;
+    return new_user;
   } catch {
-    return false;
+    return null;
   }
 };
 
