@@ -20,16 +20,12 @@ export default {
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        // User is available during sign-in
-        // token.firstName = user.firstName;
-        // token.lastName = user.lastName;
-        // token.phone = user.phone;
-        // token.school = user.school;
-        // token.role = user.role;
-        // token.id = user.id;
+    jwt({ token, user, session, trigger }) {
+      if (trigger == 'update' && session?.user) {
+        token.user = session.user;
+      }
 
+      if (user) {
         token.user = user;
       }
       return token;

@@ -1,4 +1,4 @@
-import { Modal, Tabs, rem } from '@mantine/core';
+import { Modal, Tabs, em, rem } from '@mantine/core';
 import {
   IconBellRinging,
   IconBrush,
@@ -10,6 +10,7 @@ import PublicProfile from './tabs/PublicProfile';
 import Account from './tabs/Account';
 import Notifications from './tabs/Notifications';
 import Appearance from './tabs/Appearance';
+import { useMediaQuery } from '@mantine/hooks';
 
 interface SettingsProps {
   opened: boolean;
@@ -17,10 +18,14 @@ interface SettingsProps {
 
 export default function SettingsModal({ opened }: SettingsProps) {
   const iconStyle = { width: rem(20), height: rem(20) };
+  const isMobile = useMediaQuery(`(max-width: ${em(750)})`);
 
   return (
     <Modal opened={opened} onClose={() => {}} size='xl'>
-      <Tabs orientation='vertical' defaultValue='public'>
+      <Tabs
+        orientation={isMobile ? 'horizontal' : 'vertical'}
+        defaultValue='public'
+      >
         <Tabs.List>
           <Tabs.Tab value='public' leftSection={<IconUser style={iconStyle} />}>
             Public Profile

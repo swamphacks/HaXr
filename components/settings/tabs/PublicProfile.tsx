@@ -26,34 +26,30 @@ export default function PublicProfile() {
     console.log(values);
 
     if (!session?.user?.id) {
-      console.log('No id');
-      console.log(session?.user?.id);
+      console.error(
+        '[ERROR] No session ID. Please contact Technical Staff for'
+      );
       return;
     }
 
     const user = await updateUserProfile(session?.user?.id, values);
+
     if (user !== null) {
       console.log('Successfully updated!');
       console.log(user);
-      const check = await update({
-        user: {
-          firstName: user.firstName,
-          lastName: user.lastName,
-        },
+
+      await update({
+        ...session,
+        user: user,
       });
-
-      console.log(check);
-
-      console.log(session);
     } else console.log('Unsuccessful');
+
+    form.reset();
   };
 
   const onDebug = () => {
     console.log('[DEBUG]');
-    console.log(session?.user?.firstName);
-    console.log(session?.user?.lastName);
-    console.log(session?.user?.id);
-    console.log(session?.user?.image);
+    console.log();
   };
 
   // Temporary -> to be replaced with loadingOverlay or skeleton from mantine
@@ -68,11 +64,11 @@ export default function PublicProfile() {
   return (
     <Stack w='100%' h='100%' pr={20} pl={20}>
       <Title order={2}>Public Profile</Title>
-      <Text>User ID: {session?.user?.id || 'N/A'}</Text>
       <Divider />
       <Form form={form} onSubmit={onSubmit}>
         <Stack>
-          <Group>
+          <Group justify='center' align='center' gap='md'>
+            <Avatar src={session?.user?.image} size='xl' />
             <TextInput
               label='First Name'
               key={form.key('firstName')}
@@ -86,26 +82,9 @@ export default function PublicProfile() {
               {...form.getInputProps('lastName')}
             />
           </Group>
+
           <Button type='submit' w='20%'>
             Submit
-          </Button>
-          <Button variant='outline' color='red' onClick={onDebug} w='20%'>
-            Debug
-          </Button>
-          <Button
-            variant='light'
-            w='30%'
-            onClick={() => {
-              console.log('[UPDATING...]');
-
-              try {
-                update();
-              } catch (error) {
-                console.log('[ERROR]: ' + { error });
-              }
-            }}
-          >
-            Update Session
           </Button>
         </Stack>
       </Form>
