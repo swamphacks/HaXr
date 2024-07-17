@@ -1,11 +1,26 @@
-import { Burger, Group, Modal, Tabs, Text, em, rem } from '@mantine/core';
 import {
+  Burger,
+  Button,
+  Drawer,
+  Group,
+  Modal,
+  NavLink,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+  em,
+  rem,
+} from '@mantine/core';
+import {
+  Icon,
   IconBellRinging,
   IconBrush,
+  IconProps,
   IconSettings,
   IconUser,
 } from '@tabler/icons-react';
-import React from 'react';
+import React, { useState } from 'react';
 import PublicProfile from './tabs/PublicProfile';
 import Account from './tabs/Account';
 import Notifications from './tabs/Notifications';
@@ -16,135 +31,115 @@ interface SettingsProps {
   opened: boolean;
 }
 
+interface TabItem {
+  value: string;
+  label: string;
+  icon: React.ForwardRefExoticComponent<IconProps & React.RefAttributes<Icon>>;
+}
+
+interface TabPanelItem {
+  value: string;
+  component: React.ComponentType;
+}
+
 export default function SettingsModal({ opened }: SettingsProps) {
   const iconStyle = { width: rem(20), height: rem(20) };
-  const [burgerOpen, { toggle }] = useDisclosure();
   const isMobile = useMediaQuery(`(max-width: 50em)`);
+  const [activeTab, setActiveTab] = useState('public');
+  const [burgerOpen, { toggle, open, close }] = useDisclosure();
 
-  if (isMobile) {
-    return (
-      <Modal
-        opened={opened}
-        onClose={() => {}}
-        fullScreen
-        title={
+  const tabs: TabItem[] = [
+    { value: 'public', label: 'Public Profile', icon: IconUser },
+    { value: 'account', label: 'Account', icon: IconSettings },
+    { value: 'notifications', label: 'Notifications', icon: IconBellRinging },
+    { value: 'appearance', label: 'Appearance', icon: IconBrush },
+  ];
+
+  const tabPanels: TabPanelItem[] = [
+    { value: 'public', component: PublicProfile },
+    { value: 'account', component: Account },
+    { value: 'notifications', component: Notifications },
+    { value: 'appearance', component: Appearance },
+  ];
+
+  const TabsList = () => (
+    <Tabs.List>
+      {tabs.map((tab) => (
+        <Tabs.Tab
+          key={tab.value}
+          value={tab.value}
+          leftSection={<tab.icon style={iconStyle} />}
+          onClick={() => {
+            setActiveTab(tab.value);
+            close();
+          }}
+        >
+          {tab.label}
+        </Tabs.Tab>
+      ))}
+    </Tabs.List>
+  );
+
+  const MobileTabsList = () => (
+    <Stack>
+      {tabs.map((tab) => (
+        <NavLink
+          key={tab.label}
+          label={tab.label}
+          leftSection={<tab.icon style={iconStyle} />}
+          active={activeTab === tab.value}
+          onClick={() => {
+            setActiveTab(tab.value);
+            close();
+          }}
+        />
+      ))}
+    </Stack>
+  );
+
+  return (
+    <Modal
+      opened={opened}
+      onClose={() => {}}
+      size='xl'
+      fullScreen={isMobile ? true : false}
+      title={
+        isMobile ? (
           <Burger
             opened={burgerOpen}
             onClick={toggle}
             aria-label='Toggle navigation'
           />
-        }
+        ) : (
+          <></>
+        )
+      }
+    >
+      <Tabs
+        orientation='vertical'
+        defaultValue='public'
+        value={activeTab}
+        variant={isMobile ? 'pills' : 'default'}
       >
-        <Tabs orientation='vertical' defaultValue='public'>
-          {burgerOpen ? (
-            <Tabs.List className='h-full w-full justify-center align-middle'>
-              <Tabs.Tab
-                value='public'
-                leftSection={<IconUser style={iconStyle} />}
-                onClick={() => toggle()}
-              >
-                Public Profile
-              </Tabs.Tab>
+        {isMobile ? (
+          <>
+            <Drawer
+              opened={burgerOpen}
+              onClose={close}
+              title={<Text size='xl'>Settings</Text>}
+            >
+              <MobileTabsList />
+            </Drawer>
+          </>
+        ) : (
+          <TabsList />
+        )}
 
-              <Tabs.Tab
-                value='account'
-                leftSection={<IconSettings style={iconStyle} />}
-                onClick={() => toggle()}
-              >
-                Account
-              </Tabs.Tab>
-
-              <Tabs.Tab
-                value='notifications'
-                leftSection={<IconBellRinging style={iconStyle} />}
-                onClick={() => toggle()}
-              >
-                Notifications
-              </Tabs.Tab>
-
-              <Tabs.Tab
-                value='appearance'
-                leftSection={<IconBrush style={iconStyle} />}
-                onClick={() => toggle()}
-              >
-                Appearance
-              </Tabs.Tab>
-            </Tabs.List>
-          ) : (
-            <></>
-          )}
-
-          {burgerOpen ? (
-            <></>
-          ) : (
-            <>
-              <Tabs.Panel value='public'>
-                <PublicProfile />
-              </Tabs.Panel>
-
-              <Tabs.Panel value='account'>
-                <Account />
-              </Tabs.Panel>
-
-              <Tabs.Panel value='notifications'>
-                <Notifications />
-              </Tabs.Panel>
-
-              <Tabs.Panel value='appearance'>
-                <Appearance />
-              </Tabs.Panel>
-            </>
-          )}
-        </Tabs>
-      </Modal>
-    );
-  }
-
-  return (
-    <Modal opened={opened} onClose={() => {}} size='xl'>
-      <Tabs orientation='vertical' defaultValue='public'>
-        <Tabs.List>
-          <Tabs.Tab value='public' leftSection={<IconUser style={iconStyle} />}>
-            Public Profile
-          </Tabs.Tab>
-
-          <Tabs.Tab
-            value='account'
-            leftSection={<IconSettings style={iconStyle} />}
-          >
-            Account
-          </Tabs.Tab>
-
-          <Tabs.Tab
-            value='notifications'
-            leftSection={<IconBellRinging style={iconStyle} />}
-          >
-            Notifications
-          </Tabs.Tab>
-
-          <Tabs.Tab
-            value='appearance'
-            leftSection={<IconBrush style={iconStyle} />}
-          >
-            Appearance
-          </Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel value='public'>
-          <PublicProfile />
-        </Tabs.Panel>
-
-        <Tabs.Panel value='account'>
-          <Account />
-        </Tabs.Panel>
-
-        <Tabs.Panel value='notifications'>
-          <Notifications />
-        </Tabs.Panel>
-
-        <Tabs.Panel value='appearance'>
-          <Appearance />
-        </Tabs.Panel>
+        {tabPanels.map((panel) => (
+          <Tabs.Panel value={panel.value} key={panel.value}>
+            <panel.component />
+          </Tabs.Panel>
+        ))}
       </Tabs>
     </Modal>
   );
