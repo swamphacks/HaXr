@@ -119,9 +119,10 @@ model Form {
 
 model Response {
   id              String   @id @default(cuid())
-  submitted_at    DateTime @default(now())
+  saved_at        DateTime @default(now())
   submitted_by    User     @relation(fields: [submitted_by_id], references: [id])
   submitted_by_id String
+  submitted       Boolean  @default(false)
 
   answers Json
 
