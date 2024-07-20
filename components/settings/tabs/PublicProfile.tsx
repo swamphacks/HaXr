@@ -2,20 +2,28 @@ import { updateUserProfile } from '@/actions/user';
 import {
   Avatar,
   Button,
+  CheckIcon,
   Divider,
+  Fieldset,
   Group,
+  LoadingOverlay,
   Stack,
   Text,
   TextInput,
+  Textarea,
   Title,
   rem,
 } from '@mantine/core';
 import { useForm, Form } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
+import { IconFileUpload } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
 import React from 'react';
 
 export default function PublicProfile() {
   const { data: session, status, update } = useSession();
+  const [ visible, { toggle, open, close }] = useDisclosure();
 
   const form = useForm({
     mode: 'uncontrolled',
@@ -45,49 +53,65 @@ export default function PublicProfile() {
     } else console.log('Unsuccessful');
 
     form.reset();
+    close();
+
+    // TODO
+
+    // notifications.show({
+    //   message: "Your profile has updated successfully!",
+    //   icon: <CheckIcon />,
+    //   autoClose: 5000
+    // })
   };
 
-  const onDebug = () => {
-    console.log('[DEBUG]');
-    console.log();
-  };
-
-  // Temporary -> to be replaced with loadingOverlay or skeleton from mantine
-  if (status === 'loading') {
-    return (
-      <Stack>
-        <Text>Loading</Text>
-      </Stack>
-    );
-  }
 
   return (
     <Stack w='100%' h='100%' pr={20} pl={20}>
-      <Title order={2}>Public Profile</Title>
-      <Divider />
-      <Form form={form} onSubmit={onSubmit}>
-        <Stack>
-          <Group justify='center' align='center' gap='md'>
-            <Avatar src={session?.user?.image} size='xl' />
-            <TextInput
-              label='First Name'
-              key={form.key('firstName')}
-              placeholder={session?.user?.firstName}
-              {...form.getInputProps('firstName')}
-            />
-            <TextInput
-              label='Last Name'
-              key={form.key('lastName')}
-              placeholder={session?.user?.lastName}
-              {...form.getInputProps('lastName')}
-            />
-          </Group>
-
-          <Button type='submit' w='20%'>
-            Submit
-          </Button>
-        </Stack>
-      </Form>
+      <Title order={2}>Account</Title>
+      <Fieldset legend='Public Profile'>
+        <Form form={form} onSubmit={onSubmit}>
+          <LoadingOverlay visible={visible || status === 'loading'} />
+          <Stack>
+            <Group>
+              <Avatar src={session?.user?.image} size='xl' />
+              <Button>
+                <IconFileUpload className='mr-1' />
+                Upload Image
+              </Button>
+            </Group>
+            <Group wrap='nowrap'>
+              <TextInput
+                label='First Name'
+                key={form.key('firstName')}
+                placeholder={session?.user?.firstName}
+                {...form.getInputProps('firstName')}
+              />
+              <TextInput
+                label='Last Name'
+                key={form.key('lastName')}
+                placeholder={session?.user?.lastName}
+                {...form.getInputProps('lastName')}
+              />
+            </Group>
+            <Stack>
+              <TextInput
+                label='School'
+                key={form.key('school')}
+                placeholder={session?.user?.school || ''}
+                {...form.getInputProps('school')}
+              />
+              <Textarea
+                label='Bio'
+                description='(optional)'
+                placeholder='I like cats and stuff...'
+              />
+            </Stack>
+            <Button type='submit' w='20%' onClick={open}>
+              Submit
+            </Button>
+          </Stack>
+        </Form>
+      </Fieldset>
     </Stack>
   );
 }

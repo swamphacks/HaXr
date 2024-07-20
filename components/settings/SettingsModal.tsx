@@ -62,7 +62,7 @@ export default function SettingsModal({ opened }: SettingsProps) {
     { value: 'appearance', component: Appearance },
   ];
 
-  const TabsList = () => (
+  const DesktopTabsList = () => (
     <Tabs.List>
       {tabs.map((tab) => (
         <Tabs.Tab
@@ -101,7 +101,7 @@ export default function SettingsModal({ opened }: SettingsProps) {
     <Modal
       opened={opened}
       onClose={() => {}}
-      size='xl'
+      size='lg'
       fullScreen={isMobile ? true : false}
       title={
         isMobile ? (
@@ -119,7 +119,6 @@ export default function SettingsModal({ opened }: SettingsProps) {
         orientation='vertical'
         defaultValue='public'
         value={activeTab}
-        variant={isMobile ? 'pills' : 'default'}
       >
         {isMobile ? (
           <>
@@ -132,7 +131,7 @@ export default function SettingsModal({ opened }: SettingsProps) {
             </Drawer>
           </>
         ) : (
-          <TabsList />
+          <DesktopTabsList />
         )}
 
         {tabPanels.map((panel) => (
