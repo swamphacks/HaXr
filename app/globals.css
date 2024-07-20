@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --react-international-phone-background-color: #2e2e2e;
+  --react-international-phone-border-color: #424242;
+  --react-international-phone-text-color: #c9c9c9;
+  --react-international-phone-selected-dropdown-item-background-color: #343a40;
+  --react-international-phone-country-selector-background-color-hover: #343a40;
+}
