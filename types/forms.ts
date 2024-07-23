@@ -15,7 +15,9 @@ export interface Agreement {
 }
 
 export interface Section {
+  key: string;
   title: string;
+  description: string;
   questions: Question[];
 }
 

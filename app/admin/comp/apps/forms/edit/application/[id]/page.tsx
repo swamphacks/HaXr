@@ -12,43 +12,73 @@ import {
   Switch,
   Divider,
   Modal,
-  TextInput,
 } from '@mantine/core';
+import { useForm, UseFormReturnType } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { DateTimePicker } from '@mantine/dates';
 import {
   IconForms,
   IconMessageCircle,
   IconSettings,
-  IconPlus,
 } from '@tabler/icons-react';
-import Question from '@/components/admin/Question';
+import QuestionEdit from '@/components/admin/Question';
 import classes from '@/styles/Input.module.css';
-import Droppable from '@/components/dnd/Droppable';
-import {
-  DndContext,
-  closestCorners,
-  PointerSensor,
-  TouchSensor,
-  KeyboardSensor,
-  useSensors,
-  useSensor,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  verticalListSortingStrategy,
-  sortableKeyboardCoordinates,
-} from '@dnd-kit/sortable';
 import { v4 as uuidv4 } from 'uuid';
 import accordionClasses from '@/styles/CreateForm.module.css';
-import Image from 'next/image';
-import { FormQuestion, questionType } from '@/types/questionTypes';
+import { questionType } from '@/types/questionTypes';
+import {
+  Question as FormQuestion,
+  Section as FormSection,
+} from '@/types/forms';
 import { updateForm } from '@/app/actions/Forms';
 import { Prisma, Form, FormSettings } from '@prisma/client';
-import { BaseQuestion, requiredQuestions } from '@/types/questionTypes';
+import { BaseQuestion } from '@/types/questionTypes';
 
-function FormCreator({
+function Section({
+  setSections,
+  section,
+}: {
+  setSections: any;
+  section: FormSection;
+}) {
+  const handleAddQuestion = () => {
+    setSections((oldSections: FormSection[]) => {
+      return oldSections.map((oldSection: FormSection) => {
+        if (oldSection.key === section.key) {
+          return {
+            ...oldSection,
+            questions: [
+              ...oldSection.questions,
+              {
+                title: '',
+                type: questionType.shortResponse,
+                required: false,
+                id: uuidv4(),
+              },
+            ],
+          };
+        }
+        return oldSection;
+      });
+    });
+  };
+  const setQuestions = () => {};
+  return (
+    <Accordion.Item key={section.key} value={section.key}>
+      <Accordion.Control>{section.title}</Accordion.Control>
+      <Accordion.Panel>
+        <Stack>
+          {section.questions.map((question: FormQuestion, index: number) => (
+            <QuestionEdit key={index} question={question} />
+          ))}
+          <Button onClick={handleAddQuestion}>Add Question</Button>
+        </Stack>
+      </Accordion.Panel>
+    </Accordion.Item>
+  );
+}
+
+function ApplicationCreator({
   form,
   setForm,
   questions,
@@ -61,6 +91,22 @@ function FormCreator({
   setQuestions: any;
   formSettings: FormSettings;
 }) {
+  const [sections, setSections] = useState<FormSection[]>([]);
+
+  const handleAddSection = () => {
+    setSections((oldSections) => {
+      return [
+        ...oldSections,
+        {
+          key: uuidv4(),
+          title: 'Unititled Section',
+          description: '',
+          questions: [],
+        },
+      ];
+    });
+  };
+
   const handleAddQuestions = () => {
     setQuestions(() => {
       return [
@@ -74,34 +120,6 @@ function FormCreator({
       ];
     });
   };
-
-  const getArrayPos = (array: any[], id: string) => {
-    return array.findIndex((el: any) => el.id === id);
-  };
-
-  const handleDragged = (event: any) => {
-    const { active, over } = event;
-    if (active.id === over.id) return;
-
-    setForm((oldForm: Form) => {
-      const questions: BaseQuestion[] =
-        oldForm.questions as Prisma.JsonArray as unknown as FormQuestion[];
-      const originalPos = getArrayPos(questions, active.id);
-      const newPos = getArrayPos(questions, over.id);
-      return {
-        ...oldForm,
-        questions: arrayMove(questions, originalPos, newPos),
-      };
-    });
-  };
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   return (
     <>
@@ -127,76 +145,25 @@ function FormCreator({
           panel: accordionClasses.panel,
         }}
       >
-        {formSettings.include_mlh ? (
-          <Accordion.Item key='MLH' value='MLH Questions'>
-            <Accordion.Control
-              icon={
-                <Image
-                  src='/logos/mlh-logo-color.svg'
-                  alt='MLH Logo'
-                  width={70}
-                  height={70}
-                />
-              }
-            >
-              MLH Questions
-            </Accordion.Control>
-            <Accordion.Panel>
-              <Stack gap='md' align='center' justify='flex-start'>
-                {(form.questions as Prisma.JsonArray).map((q) => {
-                  const question: FormQuestion =
-                    q as Prisma.JsonValue as unknown as FormQuestion;
-                  return question.mlh ? (
-                    <Question key={question.id} question={question} can_edit />
-                  ) : null;
-                })}
-              </Stack>
-            </Accordion.Panel>
-          </Accordion.Item>
-        ) : null}
-
-        <Accordion.Item key='Additional' value='Additional Questions'>
-          <Accordion.Control
-            icon={<IconPlus stroke={1} className='h-10 w-10' />}
-          >
-            Additional Questions
-          </Accordion.Control>
+        <Accordion.Item key='General' value='General Questions'>
+          <Accordion.Control>General</Accordion.Control>
           <Accordion.Panel>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCorners}
-              onDragEnd={handleDragged}
-            >
-              <Droppable id='droppable2'>
-                <Stack gap='md' align='center' justify='flex-start'>
-                  <SortableContext
-                    items={questions}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {questions.map((q: FormQuestion) =>
-                      !q.mlh ? (
-                        <Question
-                          key={q.id}
-                          question={q}
-                          setQuestions={setQuestions}
-                        />
-                      ) : null
-                    )}
-                  </SortableContext>
-                  <Button
-                    variant='light'
-                    color='gray'
-                    onClick={handleAddQuestions}
-                  >
-                    Add Question
-                  </Button>
-                </Stack>
-              </Droppable>
-            </DndContext>
+            <Stack gap='md' align='center' justify='flex-start'></Stack>
           </Accordion.Panel>
         </Accordion.Item>
+        {sections.map((section: FormSection) => {
+          return (
+            <Section
+              key={section.key}
+              setSections={setSections}
+              section={section}
+            />
+          );
+        })}
       </Accordion>
+
       <Stack gap='md' align='center' justify='flex-start' className='mt-4'>
+        <Button onClick={handleAddSection}>Add Section</Button>
         <Button
           onClick={async () => {
             const resp = await updateForm(form, questions, formSettings);
@@ -430,7 +397,11 @@ function Settings({
   );
 }
 
-export default function CreateForm({ params }: { params: { id: string } }) {
+export default function CreateApplication({
+  params,
+}: {
+  params: { id: string };
+}) {
   const iconStyle = { width: rem(12), height: rem(12) };
 
   const [formSettings, setFormSettings] = useState<FormSettings>();
@@ -479,7 +450,7 @@ export default function CreateForm({ params }: { params: { id: string } }) {
 
       <Tabs.Panel value='gallery'>
         {form ? (
-          <FormCreator
+          <ApplicationCreator
             form={form}
             setForm={setForm}
             questions={questions}

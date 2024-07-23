@@ -83,6 +83,11 @@ model FormSettings {
   allow_anonymous Boolean   @default(false)
 }
 
+enum FormType {
+  APPLICATION
+  OTHER
+}
+
 model Form {
   id               String      @id @default(cuid())
   title            String      @default("Unititled Form")
@@ -90,6 +95,7 @@ model Form {
   update_at        DateTime    @updatedAt
   competition      Competition @relation(fields: [competition_code], references: [code])
   competition_code String
+  form_type        FormType    @default(OTHER)
 
   // Need to have check constraint in the database so only one comp has primary true
   is_primary   Boolean @default(false)
