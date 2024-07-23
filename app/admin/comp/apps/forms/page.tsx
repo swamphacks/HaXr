@@ -3,12 +3,21 @@
 import { useContext } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button, TextInput, rem } from '@mantine/core';
+import {
+  Button,
+  TextInput,
+  Table,
+  Checkbox,
+  Modal,
+  Select,
+  rem,
+} from '@mantine/core';
+import { useField } from '@mantine/form';
 import { IconSearch, IconEdit } from '@tabler/icons-react';
-import { Table, Checkbox } from '@mantine/core';
 import { CompetitionContext } from '@/components/admin/AdminShell';
-import { Form } from '@prisma/client';
+import { Form, FormType } from '@prisma/client';
 import { createForm } from '@/app/actions/Forms';
+import { useDisclosure } from '@mantine/hooks';
 import useSWR from 'swr';
 
 // @ts-ignore
@@ -18,6 +27,7 @@ export default function Forms() {
   const router = useRouter();
   const pathname = usePathname();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [opened, { open, close }] = useDisclosure(false);
   const competition = useContext(CompetitionContext);
 
   const { data } = useSWR<Form[]>(
@@ -25,6 +35,34 @@ export default function Forms() {
     fetcher,
     { fallbackData: [] }
   );
+
+  // The type of form to create
+  const formType = useField({
+    initialValue: '',
+    validate: (value) => value.length > 0,
+  });
+
+  const handleCreateForm = async () => {
+    if (!competition.competition) {
+      console.error('No competition selected');
+      return;
+    }
+
+    if (formType.getValue() === 'Application') {
+      const form: Form = await createForm(
+        competition.competition.code,
+        FormType.APPLICATION
+      );
+      router.push(`${pathname}/edit/application/${form.id}`);
+    } else if (formType.getValue() === 'Other') {
+      const form: Form = await createForm(
+        competition.competition.code,
+        FormType.OTHER
+      );
+      router.push(`${pathname}/edit/general/${form.id}`);
+    }
+  };
+
   const rows = data?.map((form: Form) => (
     <Table.Tr
       key={form.id}
@@ -48,7 +86,9 @@ export default function Forms() {
         />
       </Table.Td>
       <Table.Td>
-        <a href={`/admin/comp/apps/forms/edit/${form.id}`}>{form.title}</a>
+        <a href={`/admin/comp/apps/forms/edit/other/${form.id}`}>
+          {form.title}
+        </a>
       </Table.Td>
       <Table.Td>{form.update_at.toString()}</Table.Td>
       <Table.Td>{form.created_at.toString()}</Table.Td>
@@ -57,7 +97,19 @@ export default function Forms() {
   ));
 
   return (
-    <div>
+    <>
+      <Modal opened={opened} onClose={close} title='Form Selection' centered>
+        <div className='flex flex-col gap-8'>
+          <Select
+            {...formType.getInputProps()}
+            label='Form Type'
+            placeholder='Select form type'
+            data={['Application', 'Other']}
+          />
+          <Button onClick={handleCreateForm}>Create Form</Button>
+        </div>
+      </Modal>
+
       <div className='mb-4 flex flex-row items-center'>
         <TextInput
           radius='xl'
@@ -81,14 +133,7 @@ export default function Forms() {
           <Button
             leftSection={<IconEdit size='1rem' />}
             radius='xl'
-            onClick={async () => {
-              if (!competition.competition) {
-                console.error('No competition selected');
-                return;
-              }
-              const form: Form = await createForm(competition.competition.code);
-              router.push(`${pathname}/edit/${form.id}`);
-            }}
+            onClick={open}
           >
             Create Form
           </Button>
@@ -115,6 +160,6 @@ export default function Forms() {
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>
       </Table>
-    </div>
+    </>
   );
 }
