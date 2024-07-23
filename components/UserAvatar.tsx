@@ -9,9 +9,10 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
-import { IconLogout } from '@tabler/icons-react';
+import { IconLogout, IconSettings } from '@tabler/icons-react';
 import { serverSignOut } from '@/actions/auth';
-import { useMediaQuery } from '@mantine/hooks';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import SettingsModal from './settings/SettingsModal';
 
 interface Props {
   session: Session;
@@ -26,14 +27,22 @@ export default function UserAvatar({ session }: Readonly<Props>) {
   }
 
   const { image, name, email } = session.user;
+  const [ settingsModalOpen, { open, close }] = useDisclosure();
 
   return (
     <Group justify='center'>
+      <SettingsModal opened={settingsModalOpen} close={close} />
       <Menu trigger='click-hover' shadow='md' withArrow>
         <MenuTarget>
           <Avatar src={image} radius='xl' />
         </MenuTarget>
         <MenuDropdown>
+          <MenuItem
+          leftSection={<IconSettings />}
+          onClick={open}
+          >
+          Settings
+          </MenuItem>
           <MenuItem
             color='red'
             leftSection={<IconLogout />}

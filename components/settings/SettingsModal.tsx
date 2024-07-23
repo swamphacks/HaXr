@@ -28,6 +28,7 @@ import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 
 interface SettingsProps {
   opened: boolean;
+  close: () => void;
 }
 
 interface TabItem {
@@ -41,11 +42,11 @@ interface TabPanelItem {
   component: React.ComponentType;
 }
 
-export default function SettingsModal({ opened }: SettingsProps) {
+export default function SettingsModal({ opened, close }: SettingsProps) {
   const iconStyle = { width: rem(20), height: rem(20) };
   const isMobile = useMediaQuery(`(max-width: 50em)`);
   const [activeTab, setActiveTab] = useState('account');
-  const [burgerOpen, { toggle, open, close }] = useDisclosure();
+  const [burgerOpen, { toggle }] = useDisclosure();
 
   const tabs: TabItem[] = [
     { value: 'account', label: 'Account', icon: IconSettings },
@@ -97,7 +98,7 @@ export default function SettingsModal({ opened }: SettingsProps) {
   return (
     <Modal
       opened={opened}
-      onClose={() => {}}
+      onClose={close}
       size='lg'
       fullScreen={isMobile ? true : false}
       title={

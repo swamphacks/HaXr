@@ -45,7 +45,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import useSWR from 'swr';
 import superjson from 'superjson';
-import { useSession } from 'next-auth/react';
 
 interface Props {
   session: Session;
