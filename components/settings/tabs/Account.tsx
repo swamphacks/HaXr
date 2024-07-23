@@ -51,24 +51,23 @@ export default function Account() {
 
       form.reset();
       notifications.show({
-        message: "Your profile has updated successfully!",
-        icon: <IconCheck/>,
+        message: 'Your profile has updated successfully!',
+        icon: <IconCheck />,
         color: 'green',
         title: 'Public Profile Updated',
-        autoClose: 3000
-      })
+        autoClose: 3000,
+      });
     } else {
       notifications.show({
-        message: "Your profile has not been updated successfully!",
+        message: 'Your profile has not been updated successfully!',
         icon: <IconX />,
         color: 'red',
         title: 'Public Profile Update Failed',
-        autoClose: 3000
-      })
-    };
+        autoClose: 3000,
+      });
+    }
 
     close();
-
   };
 
   return (

@@ -3,7 +3,7 @@ import * as yup from 'yup';
 export const profileConfigurationScheme = yup.object().shape({
   firstName: yup.string().required('Must have a first name'),
   lastName: yup.string(),
-  school: yup.string()
+  school: yup.string(),
 });
 
 export const competitionConfigurationSchema = yup.object().shape({

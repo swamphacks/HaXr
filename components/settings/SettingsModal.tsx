@@ -21,7 +21,7 @@ import {
   IconUser,
 } from '@tabler/icons-react';
 import React, { useState } from 'react';
-import Account from './tabs/Account'
+import Account from './tabs/Account';
 import Notifications from './tabs/Notifications';
 import Appearance from './tabs/Appearance';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
