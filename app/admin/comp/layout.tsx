@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, useEffect } from 'react';
 import AdminShell from '@/components/admin/AdminShell';
 import { auth } from '@/auth';
 

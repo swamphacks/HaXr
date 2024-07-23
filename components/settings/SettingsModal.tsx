@@ -21,8 +21,7 @@ import {
   IconUser,
 } from '@tabler/icons-react';
 import React, { useState } from 'react';
-import PublicProfile from './tabs/PublicProfile';
-import Account from './tabs/Account';
+import Account from './tabs/Account'
 import Notifications from './tabs/Notifications';
 import Appearance from './tabs/Appearance';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
@@ -45,18 +44,16 @@ interface TabPanelItem {
 export default function SettingsModal({ opened }: SettingsProps) {
   const iconStyle = { width: rem(20), height: rem(20) };
   const isMobile = useMediaQuery(`(max-width: 50em)`);
-  const [activeTab, setActiveTab] = useState('public');
+  const [activeTab, setActiveTab] = useState('account');
   const [burgerOpen, { toggle, open, close }] = useDisclosure();
 
   const tabs: TabItem[] = [
-    { value: 'public', label: 'Public Profile', icon: IconUser },
     { value: 'account', label: 'Account', icon: IconSettings },
     { value: 'notifications', label: 'Notifications', icon: IconBellRinging },
     { value: 'appearance', label: 'Appearance', icon: IconBrush },
   ];
 
   const tabPanels: TabPanelItem[] = [
-    { value: 'public', component: PublicProfile },
     { value: 'account', component: Account },
     { value: 'notifications', component: Notifications },
     { value: 'appearance', component: Appearance },
@@ -115,11 +112,7 @@ export default function SettingsModal({ opened }: SettingsProps) {
         )
       }
     >
-      <Tabs
-        orientation='vertical'
-        defaultValue='public'
-        value={activeTab}
-      >
+      <Tabs orientation='vertical' value={activeTab}>
         {isMobile ? (
           <>
             <Drawer
