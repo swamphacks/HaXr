@@ -28,7 +28,7 @@ import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 
 interface SettingsProps {
   opened: boolean;
-  close: () => void;
+  closeModal: () => void;
 }
 
 interface TabItem {
@@ -42,11 +42,12 @@ interface TabPanelItem {
   component: React.ComponentType;
 }
 
-export default function SettingsModal({ opened, close }: SettingsProps) {
+export default function SettingsModal({ opened, closeModal }: SettingsProps) {
   const iconStyle = { width: rem(20), height: rem(20) };
   const isMobile = useMediaQuery(`(max-width: 50em)`);
   const [activeTab, setActiveTab] = useState('account');
-  const [burgerOpen, { toggle }] = useDisclosure();
+  const [burgerOpen, { toggle, open: openBurger, close: closeBurger }] =
+    useDisclosure();
 
   const tabs: TabItem[] = [
     { value: 'account', label: 'Account', icon: IconSettings },
@@ -69,7 +70,6 @@ export default function SettingsModal({ opened, close }: SettingsProps) {
           leftSection={<tab.icon style={iconStyle} />}
           onClick={() => {
             setActiveTab(tab.value);
-            close();
           }}
         >
           {tab.label}
@@ -88,7 +88,7 @@ export default function SettingsModal({ opened, close }: SettingsProps) {
           active={activeTab === tab.value}
           onClick={() => {
             setActiveTab(tab.value);
-            close();
+            closeBurger();
           }}
         />
       ))}
@@ -98,18 +98,26 @@ export default function SettingsModal({ opened, close }: SettingsProps) {
   return (
     <Modal
       opened={opened}
-      onClose={close}
+      onClose={() => {
+        closeModal();
+        setActiveTab('account');
+      }}
       size='lg'
       fullScreen={isMobile ? true : false}
       title={
         isMobile ? (
-          <Burger
-            opened={burgerOpen}
-            onClick={toggle}
-            aria-label='Toggle navigation'
-          />
+          <Group>
+            <Burger
+              opened={burgerOpen}
+              onClick={toggle}
+              aria-label='Toggle navigation'
+            />
+            <Title order={3}>
+              {tabs.find((tab) => tab.value === activeTab)?.label}
+            </Title>
+          </Group>
         ) : (
-          <></>
+          <Text>Settings</Text>
         )
       }
     >
@@ -118,7 +126,7 @@ export default function SettingsModal({ opened, close }: SettingsProps) {
           <>
             <Drawer
               opened={burgerOpen}
-              onClose={close}
+              onClose={closeBurger}
               title={<Text size='xl'>Settings</Text>}
             >
               <MobileTabsList />

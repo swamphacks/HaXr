@@ -1,9 +1,13 @@
 import * as yup from 'yup';
+const phoneRegExp =
+  /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
 
 export const profileConfigurationScheme = yup.object().shape({
-  firstName: yup.string().required('Must have a first name'),
+  firstName: yup.string(),
   lastName: yup.string(),
   school: yup.string(),
+  email: yup.string().email(),
+  phone: yup.string().matches(phoneRegExp, 'Phone number does not match'),
 });
 
 export const competitionConfigurationSchema = yup.object().shape({

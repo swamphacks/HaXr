@@ -20,7 +20,8 @@ interface Props {
 
 export default function UserAvatar({ session }: Readonly<Props>) {
   const isMobile = useMediaQuery(`(max-width: 50em)`);
-  const [settingsModalOpen, { open, close }] = useDisclosure();
+  const [settingsModalOpen, { open: openModal, close: closeModal }] =
+    useDisclosure();
   if (!session?.user) {
     console.log(session);
     console.log('NULL');
@@ -31,13 +32,13 @@ export default function UserAvatar({ session }: Readonly<Props>) {
 
   return (
     <Group justify='center'>
-      <SettingsModal opened={settingsModalOpen} close={close} />
+      <SettingsModal opened={settingsModalOpen} closeModal={closeModal} />
       <Menu trigger='click-hover' shadow='md' withArrow>
         <MenuTarget>
           <Avatar src={image} radius='xl' />
         </MenuTarget>
         <MenuDropdown>
-          <MenuItem leftSection={<IconSettings />} onClick={open}>
+          <MenuItem leftSection={<IconSettings />} onClick={openModal}>
             Settings
           </MenuItem>
           <MenuItem

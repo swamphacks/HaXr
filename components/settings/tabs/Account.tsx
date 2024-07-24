@@ -1,18 +1,21 @@
 import { updateUserProfile } from '@/actions/user';
 import { profileConfigurationScheme } from '@/schemas';
 import {
+  Anchor,
   Avatar,
   Button,
   Fieldset,
   Group,
   LoadingOverlay,
   Stack,
+  Text,
   TextInput,
   Textarea,
   Title,
+  Tooltip,
 } from '@mantine/core';
 import { useForm, Form, yupResolver } from '@mantine/form';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconFileUpload, IconX } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
@@ -21,19 +24,21 @@ import React from 'react';
 export default function Account() {
   const { data: session, status, update } = useSession();
   const [visible, { toggle, open, close }] = useDisclosure();
+  const isMobile = useMediaQuery(`(max-width: 50em)`);
 
   const form = useForm({
     mode: 'uncontrolled',
+    initialValues: {},
     validate: yupResolver(profileConfigurationScheme),
-    initialValues: session?.user,
+    onValuesChange: (values: any) => {
+      console.log(values);
+    },
   });
 
   const onSubmit = async (values: any) => {
-    console.log(values);
-
     if (!session?.user?.id) {
       console.error(
-        '[ERROR] No session ID. Please contact Technical Staff for'
+        '[ERROR] No session ID. Please contact Technical Staff for help'
       );
       return;
     }
@@ -50,6 +55,7 @@ export default function Account() {
       });
 
       form.reset();
+
       notifications.show({
         message: 'Your profile has updated successfully!',
         icon: <IconCheck />,
@@ -72,51 +78,84 @@ export default function Account() {
 
   return (
     <Stack w='100%' h='100%' pr={20} pl={20}>
-      <Title order={2}>Account</Title>
-      <Fieldset legend='Public Profile'>
-        <Form form={form} onSubmit={onSubmit}>
-          <LoadingOverlay visible={visible || status === 'loading'} />
-          <Stack>
-            <Group>
-              <Avatar src={session?.user?.image} size='xl' />
-              <Button>
-                <IconFileUpload className='mr-1' />
-                Upload Image
-              </Button>
-            </Group>
-            <Group wrap='nowrap'>
-              <TextInput
-                label='First Name'
-                key={form.key('firstName')}
-                placeholder={session?.user?.firstName}
-                {...form.getInputProps('firstName')}
-              />
-              <TextInput
-                label='Last Name'
-                key={form.key('lastName')}
-                placeholder={session?.user?.lastName}
-                {...form.getInputProps('lastName')}
-              />
-            </Group>
+      <Form form={form} onSubmit={onSubmit}>
+        <Stack justify='center' align='center'>
+          <Fieldset legend='Public Profile'>
+            <LoadingOverlay visible={visible || status === 'loading'} />
             <Stack>
+              <Group>
+                <Avatar src={session?.user?.image} size='xl' />
+                <Button>
+                  <IconFileUpload className='mr-1' />
+                  Upload Image
+                </Button>
+              </Group>
+              <Group wrap='nowrap'>
+                <TextInput
+                  label='First Name'
+                  key={form.key('firstName')}
+                  placeholder={session?.user?.firstName}
+                  {...form.getInputProps('firstName')}
+                />
+                <TextInput
+                  label='Last Name'
+                  key={form.key('lastName')}
+                  placeholder={session?.user?.lastName}
+                  {...form.getInputProps('lastName')}
+                />
+              </Group>
+              <Stack>
+                <TextInput
+                  label='School'
+                  key={form.key('school')}
+                  placeholder={session?.user?.school || ''}
+                  {...form.getInputProps('school')}
+                />
+                <Textarea
+                  label='Bio'
+                  description='(optional)'
+                  placeholder='I like cats and stuff...'
+                />
+              </Stack>
+            </Stack>
+          </Fieldset>
+
+          <Fieldset legend='Account' w='100%'>
+            <Stack>
+              <Tooltip
+                label='You cannot change your email.'
+                color='gray'
+                position='top-start'
+              >
+                <TextInput
+                  label='Email'
+                  key={form.key('email')}
+                  placeholder={session?.user?.email || ''}
+                  {...form.getInputProps('email')}
+                  disabled
+                />
+              </Tooltip>
               <TextInput
-                label='School'
-                key={form.key('school')}
-                placeholder={session?.user?.school || ''}
-                {...form.getInputProps('school')}
-              />
-              <Textarea
-                label='Bio'
-                description='(optional)'
-                placeholder='I like cats and stuff...'
+                label='Phone'
+                key={form.key('phone')}
+                placeholder={session?.user?.phone || 'Ex. (314)-000-0101'}
+                {...form.getInputProps('phone')}
               />
             </Stack>
-            <Button type='submit' w='20%' onClick={open}>
+          </Fieldset>
+          <Stack w='95%' gap={10}>
+            <Text size='xs'>
+              By clicking submit, you agree to Swamphacks&apos;s{' '}
+              <Anchor>Term&apos;s of Service</Anchor>,{' '}
+              <Anchor>Privacy Policy</Anchor>, and{' '}
+              <Anchor>Community Guidelines</Anchor>.
+            </Text>
+            <Button fullWidth type='submit'>
               Submit
             </Button>
           </Stack>
-        </Form>
-      </Fieldset>
+        </Stack>
+      </Form>
     </Stack>
   );
 }
