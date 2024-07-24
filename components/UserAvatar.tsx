@@ -18,9 +18,10 @@ interface Props {
 }
 
 export default function UserAvatar({ session }: Readonly<Props>) {
-  if (!session?.user) return null;
-  const { image, name, email } = session.user;
   const isMobile = useMediaQuery('(max-width: 50em)');
+
+  if (!session?.user) return null;
+  const { image, firstName, lastName, email } = session.user;
 
   return (
     <Group justify='center'>
@@ -39,17 +40,19 @@ export default function UserAvatar({ session }: Readonly<Props>) {
         </MenuDropdown>
       </Menu>
       <Stack gap={5}>
-        <Text size='sm' fw={700} style={{ lineHeight: 1 }}>
-          {name}
-        </Text>
-
-        {/* Mobile only shows avatar, no email or too cluttered */}
+        
+        {/* Mobile only shows avatar, no email or name */}
         {isMobile ? (
           <></>
         ) : (
-          <Text c='dimmed' size='xs' style={{ lineHeight: 1 }}>
-            {email}
-          </Text>
+          <>
+            <Text size='sm' fw={700} style={{ lineHeight: 1 }}>
+              {firstName} {lastName}
+            </Text>
+            <Text c='dimmed' size='xs' style={{ lineHeight: 1 }}>
+              {email}
+            </Text>
+          </>
         )}
       </Stack>
     </Group>
