@@ -40,7 +40,6 @@ export default function UserAvatar({ session }: Readonly<Props>) {
         </MenuDropdown>
       </Menu>
       <Stack gap={5}>
-        
         {/* Mobile only shows avatar, no email or name */}
         {isMobile ? (
           <></>
