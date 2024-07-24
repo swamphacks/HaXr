@@ -17,6 +17,7 @@ export default {
           role: Role.Hacker,
         };
       },
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   callbacks: {
