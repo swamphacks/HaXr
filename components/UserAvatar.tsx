@@ -20,14 +20,14 @@ interface Props {
 
 export default function UserAvatar({ session }: Readonly<Props>) {
   const isMobile = useMediaQuery(`(max-width: 50em)`);
+  const [settingsModalOpen, { open, close }] = useDisclosure();
   if (!session?.user) {
     console.log(session);
     console.log('NULL');
     return null;
   }
 
-  const { image, name, email } = session.user;
-  const [ settingsModalOpen, { open, close }] = useDisclosure();
+  const { image, firstName, lastName, email } = session.user;
 
   return (
     <Group justify='center'>
@@ -37,11 +37,8 @@ export default function UserAvatar({ session }: Readonly<Props>) {
           <Avatar src={image} radius='xl' />
         </MenuTarget>
         <MenuDropdown>
-          <MenuItem
-          leftSection={<IconSettings />}
-          onClick={open}
-          >
-          Settings
+          <MenuItem leftSection={<IconSettings />} onClick={open}>
+            Settings
           </MenuItem>
           <MenuItem
             color='red'
@@ -53,15 +50,17 @@ export default function UserAvatar({ session }: Readonly<Props>) {
         </MenuDropdown>
       </Menu>
       <Stack gap={5}>
-        <Text size='sm' fw={700} style={{ lineHeight: 1 }}>
-          {name}
-        </Text>
         {isMobile ? (
           <></>
         ) : (
-          <Text c='dimmed' size='xs' style={{ lineHeight: 1 }}>
-            {email}
-          </Text>
+          <>
+            <Text size='sm' fw={700} style={{ lineHeight: 1 }}>
+              {firstName} {lastName}
+            </Text>
+            <Text c='dimmed' size='xs' style={{ lineHeight: 1 }}>
+              {email}
+            </Text>
+          </>
         )}
       </Stack>
     </Group>
