@@ -1,35 +1,37 @@
 import { createContext } from 'react';
+import { useForm } from '@mantine/form';
 import {
-  Stack,
-  Select,
-  Switch,
-  Divider,
-  Tooltip,
-  Checkbox,
-  NumberInput,
-  Textarea,
-  TextInput,
-  Title,
+	Stack,
+	Select,
+	Switch,
+	Divider,
+	Tooltip,
+	Checkbox,
+	NumberInput,
+	Textarea,
+	TextInput,
+	Title,
+	Button,
 } from '@mantine/core';
 import {
-  DndContext,
-  closestCorners,
-  useSensors,
-  useSensor,
-  PointerSensor,
-  TouchSensor,
-  KeyboardSensor,
+	DndContext,
+	closestCorners,
+	useSensors,
+	useSensor,
+	PointerSensor,
+	TouchSensor,
+	KeyboardSensor,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import {
-  IconGripHorizontal,
-  IconTrash,
-  IconRubberStamp,
-  IconInfoCircle,
-  IconFolder,
+	IconGripHorizontal,
+	IconTrash,
+	IconRubberStamp,
+	IconInfoCircle,
+	IconFolder,
 } from '@tabler/icons-react';
 import { v4 as uuidv4 } from 'uuid';
-import Choices from '@/components/admin/Choices';
+// import Choices from '@/components/admin/Choices';
 import classes from '@/styles/Input.module.css';
 import Droppable from '@/components/dnd/Droppable';
 import { rem } from '@mantine/core';
@@ -37,190 +39,223 @@ import { rem } from '@mantine/core';
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import {
-  questionType,
-  answerChoice,
-  SelectionQuestion,
-  fileTypes,
-  FileType,
-  FileQuestion,
-  hasAnswerChoices,
-  fileSizes,
+	questionType,
+	answerChoice,
+	SelectionQuestion,
+	fileTypes,
+	FileType,
+	FileQuestion,
+	hasAnswerChoices,
+	fileSizes,
 } from '@/types/questionTypes';
 import { Question as FormQuestion } from '@/types/forms';
 
 function FileCheckBox({
-  question,
-  label,
-  setQuestions,
-  acceptedTypes,
-  iconSize = 18,
-  defaultChecked = false,
+	question,
+	label,
+	setQuestions,
+	acceptedTypes,
+	iconSize = 18,
+	defaultChecked = false,
 }: {
-  question: FormQuestion;
-  label: string;
-  setQuestions: any;
-  acceptedTypes: string;
-  iconSize?: number;
-  defaultChecked?: boolean;
+	question: FormQuestion;
+	label: string;
+	setQuestions: any;
+	acceptedTypes: string;
+	iconSize?: number;
+	defaultChecked?: boolean;
 }) {
-  const handleChecked = (e: any) => {
-    if (question.type !== questionType.file) return;
-    const checked = e.currentTarget.checked;
-    setQuestions((questions: FormQuestion[]) => {
-      const idx = questions.findIndex((q) => q.id === question.id);
-      const allowedFileTypes = (question as FileQuestion).allowedFileTypes;
-      let newFileTypes = [];
-      if (checked) {
-        newFileTypes = [...allowedFileTypes, label];
-      } else {
-        const index = allowedFileTypes.indexOf(label);
-        newFileTypes = [
-          ...allowedFileTypes.slice(0, index),
-          ...allowedFileTypes.slice(index + 1),
-        ];
-      }
+	const handleChecked = (e: any) => {
+		if (question.type !== questionType.file) return;
+		const checked = e.currentTarget.checked;
+		setQuestions((questions: FormQuestion[]) => {
+			const idx = questions.findIndex((q) => q.id === question.id);
+			const allowedFileTypes = (question as FileQuestion).allowedFileTypes;
+			let newFileTypes = [];
+			if (checked) {
+				newFileTypes = [...allowedFileTypes, label];
+			} else {
+				const index = allowedFileTypes.indexOf(label);
+				newFileTypes = [
+					...allowedFileTypes.slice(0, index),
+					...allowedFileTypes.slice(index + 1),
+				];
+			}
 
-      return questions.map((q) =>
-        q.id === question.id ? { ...q, allowedFileTypes: newFileTypes } : q
-      );
-    });
-  };
+			return questions.map((q) =>
+				q.id === question.id ? { ...q, allowedFileTypes: newFileTypes } : q
+			);
+		});
+	};
 
-  return (
-    <div className='flex flex-row items-center gap-2'>
-      <Checkbox
-        label={label}
-        defaultChecked={defaultChecked}
-        onChange={handleChecked}
-      />
-      <Tooltip label={acceptedTypes}>
-        <IconInfoCircle width={iconSize} />
-      </Tooltip>
-    </div>
-  );
+	return (
+		<div className='flex flex-row items-center gap-2'>
+			<Checkbox
+				label={label}
+				defaultChecked={defaultChecked}
+				onChange={handleChecked}
+			/>
+			<Tooltip label={acceptedTypes}>
+				<IconInfoCircle width={iconSize} />
+			</Tooltip>
+		</div>
+	);
 }
 
 function AnswerChoiceHeader() {
-  return <h2 className='text-lg font-semibold'>Answer Choices</h2>;
+	return <h2 className='text-lg font-semibold'>Answer Choices</h2>;
 }
 
 function getQuestionType(value: string) {
-  switch (value) {
-    case 'Multiple Choice':
-      return questionType.multiplechoice;
-    case 'Checkbox':
-      return questionType.checkbox;
-    case 'Dropdown':
-      return questionType.dropdown;
-    case 'Short Answer':
-      return questionType.shortResponse;
-    case 'Paragraph':
-      return questionType.paragraph;
-    case 'Address':
-      return questionType.address;
-    case 'File Upload':
-      return questionType.file;
-    default:
-      console.error(
-        `Invalid question type '{value}'. Defaulting to 'Paragraph'`
-      );
-      return questionType.paragraph;
-  }
+	switch (value) {
+		case 'Multiple Choice':
+			return questionType.multiplechoice;
+		case 'Checkbox':
+			return questionType.checkbox;
+		case 'Dropdown':
+			return questionType.dropdown;
+		case 'Short Answer':
+			return questionType.shortResponse;
+		case 'Paragraph':
+			return questionType.paragraph;
+		case 'Address':
+			return questionType.address;
+		case 'File Upload':
+			return questionType.file;
+		default:
+			console.error(
+				`Invalid question type '{value}'. Defaulting to 'Paragraph'`
+			);
+			return questionType.paragraph;
+	}
 }
 
 function hasOtherChoice(question: FormQuestion) {
-  return (
-    (hasAnswerChoices(question) &&
-      (question as SelectionQuestion).answerChoices.some((c) => c.other)) ||
-    false
-  );
+	return (
+		(hasAnswerChoices(question) &&
+			(question as SelectionQuestion).answerChoices.some((c) => c.other)) ||
+		false
+	);
 }
 
 function AddChoice({
-  question,
-  setQuestions,
+	question,
+	setQuestion,
 }: {
-  question: FormQuestion;
-  setQuestions: any;
+	question: FormQuestion;
+	setQuestion: (value: FormQuestion) => void;
 }) {
-  return (
-    <div className='flex flex-row gap-2'>
-      {/* Add Choice */}
-      <button
-        onClick={() => {
-          setQuestions((questions: FormQuestion[]) => {
-            const length = (question as SelectionQuestion).answerChoices.length;
-            const idx = questions.findIndex((q) => q.id === question.id);
-            const newQuestion = hasOtherChoice(question)
-              ? {
-                  ...question,
-                  answerChoices: [
-                    ...(question as SelectionQuestion).answerChoices.slice(
-                      0,
-                      -1
-                    ),
-                    { value: '', id: uuidv4() },
-                    (question as SelectionQuestion).answerChoices[length - 1],
-                  ],
-                }
-              : {
-                  ...question,
-                  answerChoices: [
-                    ...(question as SelectionQuestion).answerChoices,
-                    { value: '', id: uuidv4() },
-                  ],
-                };
-            return questions.map((q) =>
-              q.id === question.id ? newQuestion : q
-            );
-          });
-        }}
-      >
-        Add Choice
-      </button>
 
-      {/* Add Other */}
-      {!hasOtherChoice(question) ? (
-        <>
-          <p> or </p>
-          <button
-            onClick={() => {
-              setQuestions((questions: FormQuestion[]) =>
-                questions.map((q) =>
-                  q.id === question.id
-                    ? {
-                        ...question,
-                        answerChoices: [
-                          ...(question as SelectionQuestion).answerChoices,
-                          { value: '', id: uuidv4(), other: true },
-                        ],
-                      }
-                    : q
-                )
-              );
-            }}
-            className='text-blue-500'
-          >
-            add &quot;Other&quot;
-          </button>
-        </>
-      ) : null}
-    </div>
-  );
+	const handleAddChoice = () => { }
+
+	return (
+		<div className='flex flex-row gap-2'>
+			{/* Add Choice */}
+			<button
+				onClick={handleAddChoice}
+			>
+				Add Choice
+			</button>
+		</div>
+	);
 }
 
 export const OtherIncludedContext = createContext({
-  question: {} as FormQuestion,
-  setQuestions: (value: FormQuestion[]) => {},
+	question: {} as FormQuestion,
+	setQuestions: (value: FormQuestion[]) => { },
 });
 
-export default function QuestionEdit({ question }: { question: FormQuestion }) {
-  return (
-    <div className='rounded border border-white'>
-      <TextInput label='Question Title' defaultValue={question.title} />
-      <Select label='Question Type' data={Object.values(questionType)} />
-    </div>
-  );
+function QuestionSettings({ question, setQuestion }: { question: FormQuestion, setQuestion: (value: FormQuestion) => void }) {
+	const handleRequiredChange = (e: any) => {
+		setQuestion({ ...question, settings: { ...question.settings, required: e.target.checked } });
+	}
+
+	const handleMaxWordsChange = (e: any) => {
+		debugger;
+		const value = e;
+		if (typeof value !== 'number') return;
+		setQuestion({ ...question, settings: { ...question.settings, maxChars: value } });
+	}
+
+	return (
+		<Stack>
+
+			{/* Paragraph and Short Response Settings */}
+			{(question.type === questionType.paragraph || question.type === questionType.shortResponse) ? (
+				<NumberInput
+					label='Maximum Characters'
+					defaultValue={question.settings.maxChars ?? 1}
+					min={1}
+					max={10000}
+					onChange={handleMaxWordsChange}
+				/>
+			) : null}
+
+			<Switch
+				label='Required'
+				defaultChecked={question.settings.required}
+				onChange={handleRequiredChange}
+				labelPosition='left'
+			/>
+		</Stack>
+	);
+}
+
+function Choices({ question, setQuestion }: { question: FormQuestion, setQuestion: (value: FormQuestion) => void }) {
+
+	const handleAddChoice = () => {
+		setQuestion({ ...question, choices: [...question.choices ?? [], ''] });
+	}
+
+	const handleChoiceChange = (index: number, value: string) => {
+		setQuestion({ ...question, choices: question.choices?.map((choice, i) => i === index ? value : choice) });
+	}
+
+	if (question.type === questionType.multiplechoice || question.type === questionType.checkbox || question.type === questionType.dropdown) {
+		return (
+			<>
+				<Title order={3}>Answer Choices</Title>
+				{question.choices?.map((choice: string, index: number) => {
+					return (
+						<div key={index} className='flex flex-row items-center gap-2'>
+							<TextInput defaultValue={choice} onChange={(e) => handleChoiceChange(index, e.target.value)} />
+						</div>
+					)
+				})}
+				<Button onClick={handleAddChoice}>
+					Add Choice
+				</Button>
+			</>
+		)
+	}
+
+	return null
+	// return (
+	// 	{
+	// 		 ? (
+	// 			question.answerChoices.map((choice: answerChoice, index: number) => (
+	// 			))) : null
+	// 	}
+	// )
+}
+
+export default function QuestionEdit({ question, setQuestion }: { question: FormQuestion, setQuestion: (value: FormQuestion) => void }) {
+
+	const handleQuestionTypeChange = (e: any) => {
+		if (!e) return;
+		const newType = getQuestionType(e);
+		setQuestion({ ...question, type: newType });
+	}
+
+	return (
+		<div className='rounded border border-white'>
+			<TextInput label='Question Title' defaultValue={question.title} />
+			<TextInput label='Question Description' defaultValue={question.description} />
+			<Select label='Question Type' data={Object.values(questionType)} onChange={handleQuestionTypeChange} />
+			<Choices question={question} setQuestion={setQuestion} />
+			<QuestionSettings question={question} setQuestion={setQuestion} />
+		</div>
+	);
 }
 
 // export default function Question({
