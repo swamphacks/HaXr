@@ -110,6 +110,7 @@ function QuestionSettings({
             placeholder='Pick file types'
             data={fileTypes}
             onChange={handleAcceptedFilesChange}
+            clearable
           />
           <Select
             label='Max File Size'
@@ -155,20 +156,21 @@ function Choices({
     question.type === questionType.dropdown
   ) {
     return (
-      <>
-        <Title order={3}>Answer Choices</Title>
+      <Stack align='left'>
+        <Divider my='md' label='Choices' />
         {question.choices?.map((choice: string, index: number) => {
           return (
-            <div key={index} className='flex flex-row items-center gap-2'>
-              <TextInput
-                defaultValue={choice}
-                onChange={(e) => handleChoiceChange(index, e.target.value)}
-              />
-            </div>
+            <TextInput
+              key={index}
+              defaultValue={choice}
+              onChange={(e) => handleChoiceChange(index, e.target.value)}
+            />
           );
         })}
-        <Button onClick={handleAddChoice}>Add Choice</Button>
-      </>
+        <Button variant='light' onClick={handleAddChoice}>
+          Add Choice
+        </Button>
+      </Stack>
     );
   }
 
@@ -189,18 +191,25 @@ export default function QuestionEdit({
   };
 
   return (
-    <div className='rounded border border-white'>
-      <TextInput label='Question Title' defaultValue={question.title} />
+    <div className='w-[48rem] rounded border border-[var(--mantine-color-dark-4)] p-4'>
       <TextInput
-        label='Question Description'
+        label='Title'
+        placeholder='Enter title'
+        defaultValue={question.title}
+      />
+      <TextInput
+        label='Description'
+        placeholder='Enter description'
         defaultValue={question.description}
       />
       <Select
-        label='Question Type'
+        label='Type'
         data={Object.values(questionType)}
+        defaultValue={question.type}
         onChange={handleQuestionTypeChange}
       />
       <Choices question={question} setQuestion={setQuestion} />
+      <Divider my='md' label='Settings' />
       <QuestionSettings question={question} setQuestion={setQuestion} />
     </div>
   );

@@ -12,6 +12,7 @@ import {
   Switch,
   Divider,
   Modal,
+  TextInput,
 } from '@mantine/core';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
@@ -32,7 +33,6 @@ import {
 } from '@/types/forms';
 import { updateForm } from '@/app/actions/Forms';
 import { Prisma, Form, FormSettings } from '@prisma/client';
-import { BaseQuestion } from '@/types/questionTypes';
 
 function Section({
   setSections,
@@ -68,11 +68,47 @@ function Section({
 
   const setQuestions = () => {};
 
+  const handleSectionTitleChange = (e: any) => {
+    setSections((oldSections: FormSection[]) => {
+      return oldSections.map((oldSection: FormSection) => {
+        if (oldSection.key === section.key) {
+          return { ...oldSection, title: e.target.value };
+        }
+        return oldSection;
+      });
+    });
+  };
+
+  const handleSectionDescriptionChange = (e: any) => {
+    setSections((oldSections: FormSection[]) => {
+      return oldSections.map((oldSection: FormSection) => {
+        if (oldSection.key === section.key) {
+          return { ...oldSection, description: e.target.value };
+        }
+        return oldSection;
+      });
+    });
+  };
+
   return (
     <Accordion.Item key={section.key} value={section.key}>
       <Accordion.Control>{section.title}</Accordion.Control>
       <Accordion.Panel>
-        <Stack>
+        <Stack align='center'>
+          <TextInput
+            onChange={handleSectionTitleChange}
+            className='w-[48rem]'
+            label='Section	Title'
+            defaultValue={section.title}
+            placeholder='Untitled Section'
+          />
+          <TextInput
+            onChange={handleSectionDescriptionChange}
+            className='w-[48rem]'
+            label='Section	Description'
+            defaultValue={section.description}
+            placeholder='Enter Description'
+          />
           {section.questions.map((question: FormQuestion, index: number) => (
             <QuestionEdit
               key={index}
