@@ -1,8 +1,15 @@
 import { questionType } from '@/types/questionTypes';
 
 export enum FileType {
-	PDF = '.pdf',
+	PDF = 'PDF',
+	IMG = 'Image',
+	VIDEO = 'Video'
 }
+export const fileTypes: FileType[] = [
+	FileType.PDF,
+	FileType.IMG,
+	FileType.VIDEO
+]
 
 export interface Settings {
 	maxChars?: number;

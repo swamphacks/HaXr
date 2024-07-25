@@ -52,7 +52,7 @@ export const fileTypes: FileType[] = [
 	{ type: 'Audio', extensions: ['.MP3', '.WAV', '.MPEG', '.ogg', '.opus'] },
 ];
 
-export const fileSizes = ['1MB', '10MB', '100MB'];
+export const fileSizes = ['1MB', '10MB', '100MB', '1GB'];
 
 export interface BaseQuestion {
 	title: string;
