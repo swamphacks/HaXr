@@ -12,6 +12,7 @@ import {
 	TextInput,
 	Title,
 	Button,
+	MultiSelect
 } from '@mantine/core';
 import {
 	DndContext,
@@ -42,13 +43,11 @@ import {
 	questionType,
 	answerChoice,
 	SelectionQuestion,
-	fileTypes,
-	FileType,
 	FileQuestion,
 	hasAnswerChoices,
 	fileSizes,
 } from '@/types/questionTypes';
-import { Question as FormQuestion } from '@/types/forms';
+import { Question as FormQuestion, fileTypes } from '@/types/forms';
 
 function FileCheckBox({
 	question,
@@ -118,10 +117,14 @@ function getQuestionType(value: string) {
 			return questionType.shortResponse;
 		case 'Paragraph':
 			return questionType.paragraph;
-		case 'Address':
-			return questionType.address;
 		case 'File Upload':
 			return questionType.file;
+		case 'Agreement':
+			return questionType.agreement;
+		case 'Phone':
+			return questionType.phone;
+		case 'Email':
+			return questionType.email;
 		default:
 			console.error(
 				`Invalid question type '{value}'. Defaulting to 'Paragraph'`
@@ -190,6 +193,13 @@ function QuestionSettings({ question, setQuestion }: { question: FormQuestion, s
 					onChange={handleMaxWordsChange}
 				/>
 			) : null}
+			{(question.type === questionType.file) ?
+				(
+					<>
+						<MultiSelect label="File Types" placeholder="Pick file types" data={fileTypes} />
+						<Select label="Max File Size" data={fileSizes} />
+					</>
+				) : null}
 
 			<Switch
 				label='Required'
