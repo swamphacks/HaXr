@@ -73,15 +73,15 @@ model Competition {
   forms Form[]
 }
 
-model FormSettings {
-  id              String    @id @default(cuid())
-  form            Form?
-  opens_at        DateTime?
-  closes_at       DateTime?
-  include_mlh     Boolean   @default(true)
-  required        Boolean   @default(false)
-  allow_anonymous Boolean   @default(false)
-}
+// model FormSettings {
+//   id              String    @id @default(cuid())
+//   form            Form?
+//   opens_at        DateTime?
+//   closes_at       DateTime?
+//   include_mlh     Boolean   @default(true)
+//   required        Boolean   @default(false)
+//   allow_anonymous Boolean   @default(false)
+// }
 
 enum FormType {
   APPLICATION
@@ -100,11 +100,13 @@ model Form {
   // Need to have check constraint in the database so only one comp has primary true
   is_primary   Boolean @default(false)
   is_published Boolean @default(false)
+  is_mlh       Boolean @default(false)
 
-  questions        Json         @default("[]")
-  responses        Response[]
-  form_settings    FormSettings @relation(fields: [form_settings_id], references: [id])
-  form_settings_id String       @unique
+  schema    Json       @default("{}")
+  responses Response[]
+  settings  Json       @default("{}")
+  // form_settings FormSettings @relation(fields: [form_settings_id], references: [id])
+  // form_settings_id String       @unique
 }
 
 model Response {

@@ -85,7 +85,7 @@ export default function AdminShell({
                 size='sm'
               />
               <Image
-                src='logos/swamphacks_hd.png'
+                src='/logos/swamphacks_hd.png'
                 mah={60}
                 fit='contain'
                 alt='SwampHacks logo'

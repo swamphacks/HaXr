@@ -64,7 +64,6 @@ function QuestionSettings({
   };
 
   const handleMaxWordsChange = (e: any) => {
-    debugger;
     const value = e;
     if (typeof value !== 'number') return;
     setQuestion({
