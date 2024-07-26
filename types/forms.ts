@@ -13,7 +13,7 @@ export const fileTypes: FileType[] = [
 
 export const fileSizes = ['1MB', '10MB', '100MB', '1GB'];
 
-export interface Settings {
+export interface QuestionSettings {
   maxChars?: number;
   acceptedFiles?: FileType[];
   maxFileSize?: string;
@@ -26,7 +26,7 @@ export interface Question {
   type: questionType;
   key: string;
   choices?: string[];
-  settings: Settings;
+  settings: QuestionSettings;
 }
 
 export interface Agreement {
@@ -35,7 +35,7 @@ export interface Agreement {
   key: string;
 }
 
-export interface Section {
+export interface FormSection {
   key: string;
   title: string;
   description: string;
@@ -43,9 +43,9 @@ export interface Section {
 }
 
 export interface Application {
-  general: Section;
+  general: FormSection;
   agreements: Agreement[];
-  sections: Record<string, Section>;
+  sections: Record<string, FormSection>;
 }
 
 export interface Response {

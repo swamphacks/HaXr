@@ -1,37 +1,52 @@
 'use server';
 
-import { Question as FormQuestion } from '@/types/forms';
-import { Prisma, PrismaClient } from '@prisma/client';
+import {
+  Prisma,
+  PrismaClient,
+  Form,
+  FormType,
+  FormSettings,
+} from '@prisma/client';
 import { Pool } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
-import { Form, FormType } from '@prisma/client';
-import { requiredQuestions } from '@/types/questionTypes';
-import {
-  ApplicationResponse,
-  Section,
-  Settings as FormSettings,
-} from '@/types/forms'; // Edge connection
+import { ApplicationResponse, FormSection } from '@/types/forms';
+
 const neon = new Pool({
   connectionString: process.env.POSTGRES_PRISMA_URL,
 });
 const adapter = new PrismaNeon(neon);
 const prisma = new PrismaClient({ adapter });
 
+export async function getForm(formId: string) {
+  const form = await prisma.form.findFirst({
+    where: {
+      id: formId,
+    },
+    include: {
+      settings: true,
+    },
+  });
+  return form;
+}
+
 export async function createForm(competitionCode: string, formType: FormType) {
-  const data = {
-    competition_code: competitionCode,
-    form_type: formType,
-  };
+  const settings = await prisma.formSettings.create({
+    data: {},
+  });
 
   return await prisma.form.create({
-    data: data,
+    data: {
+      competition_code: competitionCode,
+      settings_id: settings.id,
+      form_type: formType,
+    },
   });
 }
 
 export async function updateForm(
   form: Form,
-  schema: Section[],
-  formSettings: FormSettings
+  settings: FormSettings,
+  sections: FormSection[]
 ) {
   const resp = await prisma.form.update({
     where: {
@@ -41,11 +56,9 @@ export async function updateForm(
       title: form.title,
       is_primary: form.is_primary,
       is_published: form.is_published,
-      schema: (schema as unknown as Prisma.JsonArray) ?? form.schema ?? {},
+      sections: sections as unknown as Prisma.JsonArray,
       settings: {
-        update: {
-          ...formSettings,
-        },
+        update: settings,
       },
     },
   });

@@ -108,12 +108,14 @@ function QuestionSettings({
             label='File Types'
             placeholder='Pick file types'
             data={fileTypes}
+            defaultValue={question.settings.acceptedFiles}
             onChange={handleAcceptedFilesChange}
             clearable
           />
           <Select
             label='Max File Size'
             data={fileSizes}
+            defaultValue={question.settings.maxFileSize}
             onChange={handleMaxFileSizeChange}
           />
         </>
@@ -183,6 +185,14 @@ export default function QuestionEdit({
   question: FormQuestion;
   setQuestion: (value: FormQuestion) => void;
 }) {
+  const handleTitleChange = (e: any) => {
+    setQuestion({ ...question, title: e.target.value });
+  };
+
+  const handleDescriptionChange = (e: any) => {
+    setQuestion({ ...question, description: e.target.value });
+  };
+
   const handleQuestionTypeChange = (e: any) => {
     if (!e) return;
     const newType = getQuestionType(e);
@@ -194,11 +204,13 @@ export default function QuestionEdit({
       <TextInput
         label='Title'
         placeholder='Enter title'
+        onChange={handleTitleChange}
         defaultValue={question.title}
       />
       <TextInput
         label='Description'
         placeholder='Enter description'
+        onChange={handleDescriptionChange}
         defaultValue={question.description}
       />
       <Select
