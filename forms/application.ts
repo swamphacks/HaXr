@@ -1,26 +1,35 @@
 import { questionType } from '@/types/questionTypes';
-import { Application, ApplicationResponse } from '@/types/forms';
+import { MLHApplication, ApplicationResponse } from '@/types/forms';
 
-export const application: Application = {
+export const mlhQuestions: MLHApplication = {
   general: {
     title: 'General',
+    description:
+      'Note that your responses to these questions will not affect your application.',
+    key: 'swamphacks-x-general',
     questions: [
       {
         title: 'First Name',
         type: questionType.shortResponse,
-        required: true,
         key: '1',
+        settings: {
+          required: true,
+          maxChars: 100,
+        },
       },
       {
         title: 'Last Name',
         type: questionType.shortResponse,
-        required: true,
         key: '2',
+        settings: {
+          required: true,
+          maxChars: 100,
+        },
       },
       {
         title: 'Age',
         type: questionType.dropdown,
-        required: true,
+        key: '3',
         choices: [
           'Under 18',
           '18-24',
@@ -30,24 +39,30 @@ export const application: Application = {
           '55-64',
           '65+',
         ],
-        key: '3',
+        settings: {
+          required: true,
+        },
       },
       {
         title: 'Email',
         type: questionType.email,
-        required: true,
         key: '4',
+        settings: {
+          required: true,
+        },
       },
       {
         title: 'Phone Number',
         type: questionType.phone,
-        required: true,
         key: '19',
+        settings: {
+          required: true,
+        },
       },
       {
         title: 'School',
         type: questionType.dropdown,
-        required: true,
+        key: '5',
         choices: [
           'University of Florida',
           'University of South Florida',
@@ -64,12 +79,14 @@ export const application: Application = {
           'Florida Institute of Technology',
           'Other',
         ],
-        key: '5',
+        settings: {
+          required: true,
+        },
       },
       {
         title: 'Level of Studies',
         type: questionType.dropdown,
-        required: true,
+        settings: { required: true },
         choices: [
           'Less than Secondary / High School',
           'Secondary / High School',
@@ -88,7 +105,7 @@ export const application: Application = {
       {
         title: 'Major/Field of Study',
         type: questionType.dropdown,
-        required: false,
+        settings: { required: false },
         choices: [
           'Computer Science',
           'Information Technology',
@@ -104,7 +121,7 @@ export const application: Application = {
       {
         title: 'Residence',
         type: questionType.dropdown,
-        required: true,
+        settings: { required: true },
         choices: [
           'Florida',
           'Georgia',
@@ -120,14 +137,14 @@ export const application: Application = {
         title:
           'Do you identify as part of an underrepresented group in the technology industry?',
         type: questionType.dropdown,
-        required: false,
+        settings: { required: false },
         choices: ['Yes', 'No', 'Prefer not to answer'],
         key: '9',
       },
       {
         title: 'Gender',
         type: questionType.dropdown,
-        required: false,
+        settings: { required: false },
         choices: [
           'Man',
           'Woman',
@@ -140,7 +157,7 @@ export const application: Application = {
       {
         title: 'Pronouns',
         type: questionType.dropdown,
-        required: false,
+        settings: { required: false },
         choices: [
           'He/Him',
           'She/Her',
@@ -155,7 +172,7 @@ export const application: Application = {
       {
         title: 'Race',
         type: questionType.dropdown,
-        required: false,
+        settings: { required: false },
         choices: [
           'American Indian or Alaska Native',
           'Asian',
@@ -170,50 +187,38 @@ export const application: Application = {
       },
     ],
   },
-  agreements: [
-    {
-      label:
-        'I agree to the MLH Code of Conduct ("https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md")',
-      required: true,
-      key: '13',
-    },
-    {
-      label:
-        'I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the MLH Privacy Policy ("https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md"). I further agree to the terms of both the MLH Contest Terms and Conditions ("https://github.com/MLH/mlh-policies/blob/main/contest-terms.md") and the MLH Privacy Policy ("https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md").',
-      required: true,
-      key: '14',
-    },
-    {
-      label:
-        'I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.',
-      required: false,
-      key: '15',
-    },
-  ],
-  sections: {
-    shortAnswer: {
-      title: 'Short Answer',
-      questions: [
-        {
-          title: 'What are you most excited for at this hackathon?',
+  agreements: {
+    title: 'Agreements',
+    key: 'swamphacks-x-agreements',
+    questions: [
+      {
+        title:
+          'I agree to the MLH Code of Conduct ("https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md")',
+        type: questionType.agreement,
+        settings: {
           required: true,
-          type: questionType.paragraph,
-          key: '16',
         },
-        {
-          title: 'What is a project you are proud of and why?',
+        key: '13',
+      },
+      {
+        title:
+          'I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the MLH Privacy Policy ("https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md"). I further agree to the terms of both the MLH Contest Terms and Conditions ("https://github.com/MLH/mlh-policies/blob/main/contest-terms.md") and the MLH Privacy Policy ("https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md").',
+        key: '14',
+        type: questionType.agreement,
+        settings: {
           required: true,
-          type: questionType.paragraph,
-          key: '17',
         },
-        {
-          title: 'What would you like to accomplish with your career?',
-          required: true,
-          type: questionType.paragraph,
-          key: '18',
+      },
+      {
+        title:
+          'I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.',
+        key: '15',
+        type: questionType.agreement,
+        settings: {
+          required: false,
         },
-      ],
-    },
+      },
+    ],
   },
 };
 
