@@ -30,9 +30,10 @@ import { questionType } from '@/types/questionTypes';
 import {
   Question as FormQuestion,
   Section as FormSection,
+  Settings as FormSettings,
 } from '@/types/forms';
 import { updateForm } from '@/app/actions/Forms';
-import { Prisma, Form, FormSettings } from '@prisma/client';
+import { Prisma, Form } from '@prisma/client';
 
 function Section({
   setSections,
@@ -65,8 +66,6 @@ function Section({
       });
     });
   };
-
-  const setQuestions = () => {};
 
   const handleSectionTitleChange = (e: any) => {
     setSections((oldSections: FormSection[]) => {
@@ -135,7 +134,14 @@ function Section({
               }}
             />
           ))}
-          <Button onClick={handleAddQuestion}>Add Question</Button>
+          <Button
+            style={{ width: '48rem' }}
+            variant='light'
+            color='orange'
+            onClick={handleAddQuestion}
+          >
+            Add Question
+          </Button>
         </Stack>
       </Accordion.Panel>
     </Accordion.Item>
@@ -145,14 +151,10 @@ function Section({
 function ApplicationCreator({
   form,
   setForm,
-  questions,
-  setQuestions,
   formSettings,
 }: {
   form: Form;
   setForm: any;
-  questions: FormQuestion[];
-  setQuestions: any;
   formSettings: FormSettings;
 }) {
   const [sections, setSections] = useState<FormSection[]>([]);
@@ -171,20 +173,10 @@ function ApplicationCreator({
     });
   };
 
-  const handleAddQuestions = () => {
-    setQuestions(() => {
-      return [
-        ...questions,
-        {
-          title: '',
-          type: questionType.shortResponse,
-          required: false,
-          id: uuidv4(),
-        },
-      ];
-    });
+  const handleSaveForm = async () => {
+    const resp = await updateForm(form, sections, formSettings);
+    console.log(resp);
   };
-
   return (
     <>
       <Stack gap='md' align='center' justify='flex-start'>
@@ -209,12 +201,6 @@ function ApplicationCreator({
           panel: accordionClasses.panel,
         }}
       >
-        <Accordion.Item key='General' value='General Questions'>
-          <Accordion.Control>General</Accordion.Control>
-          <Accordion.Panel>
-            <Stack gap='md' align='center' justify='flex-start'></Stack>
-          </Accordion.Panel>
-        </Accordion.Item>
         {sections.map((section: FormSection) => {
           return (
             <Section
@@ -227,15 +213,15 @@ function ApplicationCreator({
       </Accordion>
 
       <Stack gap='md' align='center' justify='flex-start' className='mt-4'>
-        <Button onClick={handleAddSection}>Add Section</Button>
         <Button
-          onClick={async () => {
-            const resp = await updateForm(form, questions, formSettings);
-            console.log(resp);
-          }}
+          variant='light'
+          color='teal'
+          style={{ width: '48rem' }}
+          onClick={handleAddSection}
         >
-          Save Form
+          Add Section
         </Button>
+        <Button onClick={handleSaveForm}>Save Form</Button>
       </Stack>
     </>
   );
@@ -468,9 +454,10 @@ export default function CreateApplication({
 }) {
   const iconStyle = { width: rem(12), height: rem(12) };
 
-  const [formSettings, setFormSettings] = useState<FormSettings>();
+  const [formSettings, setFormSettings] = useState<FormSettings>({
+    required: false,
+  });
   const [form, setForm] = useState<Form>();
-  const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [loadingStatus, setLoadingStatus] = useState('loading');
 
   useEffect(() => {
@@ -478,9 +465,6 @@ export default function CreateApplication({
       if (res.ok) {
         res.json().then((data) => {
           setForm(data);
-          setQuestions(
-            data.questions as Prisma.JsonArray as unknown as FormQuestion[]
-          );
           setFormSettings(data.form_settings);
           setLoadingStatus('loaded');
         });
@@ -517,8 +501,6 @@ export default function CreateApplication({
           <ApplicationCreator
             form={form}
             setForm={setForm}
-            questions={questions}
-            setQuestions={setQuestions}
             formSettings={formSettings}
           />
         ) : (
@@ -530,18 +512,20 @@ export default function CreateApplication({
         {form ? <h1> Responses tab content </h1> : <h1>{loadingStatus}</h1>}
       </Tabs.Panel>
 
-      <Tabs.Panel value='settings'>
-        {form ? (
-          <Settings
-            form={form}
-            setForm={setForm}
-            settings={formSettings}
-            setSettings={setFormSettings}
-          />
-        ) : (
-          <h1>{loadingStatus}</h1>
-        )}
-      </Tabs.Panel>
+      {/*
+			<Tabs.Panel value='settings'>
+				{form ? (
+					<Settings
+						form={form}
+						setForm={setForm}
+						settings={formSettings}
+						setSettings={setFormSettings}
+					/>
+				) : (
+					<h1>{loadingStatus}</h1>
+				)}
+		</Tabs.Panel>
+		*/}
     </Tabs>
   );
 }

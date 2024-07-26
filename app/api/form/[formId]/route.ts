@@ -15,9 +15,6 @@ export async function GET(
     where: {
       id: params.formId,
     },
-    include: {
-      form_settings: true,
-    },
   });
 
   if (!form) {
