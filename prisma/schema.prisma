@@ -85,8 +85,10 @@ model Competition {
   apply_close      DateTime
   decision_release DateTime
   confirm_by       DateTime
+  application      Form?    @relation(name: "CompetitionApplication", fields: [application_id], references: [id])
+  application_id   String?  @unique
 
-  forms Form[]
+  forms Form[] @relation(name: "CompetitionForms")
 }
 
 model FormSettings {
@@ -105,16 +107,16 @@ enum FormType {
 }
 
 model Form {
-  id               String      @id @default(cuid())
-  title            String      @default("Unititled Form")
-  created_at       DateTime    @default(now())
-  update_at        DateTime    @updatedAt
-  competition      Competition @relation(fields: [competition_code], references: [code])
+  id               String       @id @default(cuid())
+  title            String       @default("Unititled Form")
+  created_at       DateTime     @default(now())
+  update_at        DateTime     @updatedAt
+  competition      Competition  @relation(name: "CompetitionForms", fields: [competition_code], references: [code])
+  competitionApp   Competition? @relation(name: "CompetitionApplication")
   competition_code String
-  form_type        FormType    @default(OTHER)
+  form_type        FormType     @default(OTHER)
 
   // Need to have check constraint in the database so only one comp has primary true
-  is_primary   Boolean @default(false)
   is_published Boolean @default(false)
   is_mlh       Boolean @default(false)
 
