@@ -22,7 +22,8 @@ export interface QuestionSettings {
 
 export interface Question {
   title: string;
-  description: string;
+  description?: string;
+  placeholder?: string;
   type: questionType;
   key: string;
   choices?: string[];
@@ -38,8 +39,13 @@ export interface Agreement {
 export interface FormSection {
   key: string;
   title: string;
-  description: string;
+  description?: string;
   questions: Question[];
+}
+
+export interface MLHApplication {
+  general: FormSection;
+  agreements: FormSection;
 }
 
 export interface Application {
