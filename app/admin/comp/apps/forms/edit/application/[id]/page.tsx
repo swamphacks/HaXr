@@ -29,11 +29,12 @@ import accordionClasses from '@/styles/CreateForm.module.css';
 import { questionType } from '@/types/questionTypes';
 import {
   Question as FormQuestion,
-  Section as FormSection,
-  Settings as FormSettings,
+  FormSection as FormSection,
+  QuestionSettings,
 } from '@/types/forms';
-import { updateForm } from '@/app/actions/Forms';
-import { Prisma, Form } from '@prisma/client';
+import { getForm, updateForm } from '@/app/actions/Forms';
+import { Prisma, Form, FormSettings } from '@prisma/client';
+import { JsonArray, JsonObject } from '@prisma/client/runtime/library';
 
 function Section({
   setSections,
@@ -151,30 +152,30 @@ function Section({
 function ApplicationCreator({
   form,
   setForm,
-  formSettings,
+  sections,
+  setSections,
+  settings,
 }: {
   form: Form;
   setForm: any;
-  formSettings: FormSettings;
+  sections: FormSection[];
+  setSections: any;
+  settings: FormSettings;
 }) {
-  const [sections, setSections] = useState<FormSection[]>([]);
-
   const handleAddSection = () => {
-    setSections((oldSections) => {
-      return [
-        ...oldSections,
-        {
-          key: uuidv4(),
-          title: 'Unititled Section',
-          description: '',
-          questions: [],
-        },
-      ];
-    });
+    setSections([
+      ...((form.sections as JsonArray) ?? []),
+      {
+        key: uuidv4(),
+        title: 'Unititled Section',
+        description: '',
+        questions: [],
+      },
+    ] as unknown as FormSection[]);
   };
 
   const handleSaveForm = async () => {
-    const resp = await updateForm(form, sections, formSettings);
+    const resp = await updateForm(form, settings, sections);
     console.log(resp);
   };
   return (
@@ -453,25 +454,21 @@ export default function CreateApplication({
   params: { id: string };
 }) {
   const iconStyle = { width: rem(12), height: rem(12) };
-
-  const [formSettings, setFormSettings] = useState<FormSettings>({
-    required: false,
-  });
   const [form, setForm] = useState<Form>();
+  const [sections, setSections] = useState<FormSection[]>([]);
+  const [formSettings, setFormSettings] = useState<FormSettings>();
   const [loadingStatus, setLoadingStatus] = useState('loading');
 
   useEffect(() => {
-    fetch(`/api/form/${params.id}`).then((res) => {
-      if (res.ok) {
-        res.json().then((data) => {
-          setForm(data);
-          setFormSettings(data.form_settings);
-          setLoadingStatus('loaded');
-        });
-      } else if (res.status === 404) {
-        setLoadingStatus('not found');
+    getForm(params.id).then((res) => {
+      if (res) {
+        setForm(res);
+        setFormSettings(res.settings);
+        setSections(res.sections as unknown as FormSection[]);
+        setLoadingStatus('loaded');
+        console.log(res);
       } else {
-        setLoadingStatus('error');
+        setLoadingStatus('not found');
       }
     });
   }, [params.id]);
@@ -497,11 +494,13 @@ export default function CreateApplication({
       </Tabs.List>
 
       <Tabs.Panel value='gallery'>
-        {form ? (
+        {form && formSettings ? (
           <ApplicationCreator
             form={form}
             setForm={setForm}
-            formSettings={formSettings}
+            sections={sections}
+            setSections={setSections}
+            settings={formSettings}
           />
         ) : (
           <h1>{loadingStatus}</h1>

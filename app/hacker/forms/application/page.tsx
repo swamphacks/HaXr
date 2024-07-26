@@ -26,7 +26,7 @@ import { getResponse, saveResponse, submitResponse } from '@/app/actions/Forms';
 import {
   Question,
   Agreement,
-  Section,
+  FormSection,
   Application,
   ApplicationResponse,
 } from '@/types/forms';

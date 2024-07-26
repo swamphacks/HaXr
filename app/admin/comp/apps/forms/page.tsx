@@ -86,7 +86,7 @@ export default function Forms() {
         />
       </Table.Td>
       <Table.Td>
-        <a href={`/admin/comp/apps/forms/edit/other/${form.id}`}>
+        <a href={`/admin/comp/apps/forms/edit/application/${form.id}`}>
           {form.title}
         </a>
       </Table.Td>
