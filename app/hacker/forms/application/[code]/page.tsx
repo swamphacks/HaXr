@@ -218,20 +218,21 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 	const [formSections, setFormSections] = useState<FormSection[]>([]);
 	const formValues = useRef<Record<string, any>>({});
 	const responseId = useRef<string>('');
+	const autosaveTimer = useRef<NodeJS.Timeout | null>(null);
 	const [phone, setPhone] = useState('');
 	const userId = 'test-user';
 
 	const form = useForm<Record<string, any>>({
 		mode: 'uncontrolled',
 		initialValues: {},
-		onValuesChange: async (values: Record<string, any>) => {
-			formValues.current = { ...formValues.current, ...values };
-			try {
-				await saveResponse(responseId.current, formValues.current);
-			} catch (error) {
-				console.log(error);
-			}
-		},
+		// onValuesChange: async (values: Record<string, any>) => {
+		// 	formValues.current = { ...formValues.current, ...values };
+		// 	try {
+		// 		await saveResponse(responseId.current, formValues.current);
+		// 	} catch (error) {
+		// 		console.log(error);
+		// 	}
+		// },
 	});
 
 	useEffect(() => {
@@ -256,7 +257,23 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 				form.setValues(values);
 				console.log(values);
 			});
+
+			// Autosave every second
+			autosaveTimer.current = setInterval(async () => {
+				try {
+					await saveResponse(responseId.current, form.getValues());
+					console.log('Autosaved');
+				} catch (error) {
+					console.log(error);
+				}
+			}, 3000);
 		});
+
+		return () => {
+			if (autosaveTimer.current) {
+				clearInterval(autosaveTimer.current);
+			}
+		}
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const isPhoneValid = (phone: string) => {
