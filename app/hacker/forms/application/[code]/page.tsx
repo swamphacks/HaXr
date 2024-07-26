@@ -13,7 +13,7 @@ import {
 	Text,
 	Title,
 	Radio,
-	FileButton,
+	FileInput,
 } from '@mantine/core';
 import { useForm, UseFormReturnType, isEmail, isNotEmpty, } from '@mantine/form';
 import {
@@ -45,6 +45,7 @@ function Question({ question, form }: { question: QuestionInterface, form: UseFo
 			return (
 				<TextInput
 					label={question.title}
+					description={question.description}
 					required={question.settings.required}
 					key={form.key(question.key)}
 					{...form.getInputProps(question.key)}
@@ -54,6 +55,7 @@ function Question({ question, form }: { question: QuestionInterface, form: UseFo
 			return (
 				<Textarea
 					label={question.title}
+					description={question.description}
 					required={question.settings.required}
 					resize="vertical"
 					key={form.key(question.key)}
@@ -64,11 +66,12 @@ function Question({ question, form }: { question: QuestionInterface, form: UseFo
 			return (
 				<Radio.Group
 					label={question.title}
+					description={question.description}
 					required={question.settings.required}
 					key={form.key(question.key)}
 					{...form.getInputProps(question.key)}
 				>
-					<Stack>
+					<Stack className="mt-2">
 						{question.choices?.map((choice: string, index: number) => {
 							return (
 								<Radio key={index} label={choice} value={choice} />
@@ -82,11 +85,12 @@ function Question({ question, form }: { question: QuestionInterface, form: UseFo
 			return (
 				<Checkbox.Group
 					label={question.title}
+					description={question.description}
 					required={question.settings.required}
 					key={form.key(question.key)}
 					{...form.getInputProps(question.key)}
 				>
-					<Stack>
+					<Stack className="mt-2">
 						{question.choices?.map((choice: string, index: number) => {
 							return (
 								<Checkbox key={index} label={choice} value={choice} />
@@ -100,6 +104,7 @@ function Question({ question, form }: { question: QuestionInterface, form: UseFo
 			return (
 				<Select
 					label={question.title}
+					description={question.description}
 					required={question.settings.required}
 					data={question.choices}
 					key={form.key(question.key)}
@@ -112,6 +117,7 @@ function Question({ question, form }: { question: QuestionInterface, form: UseFo
 			return (
 				<Checkbox
 					label={question.title}
+					description={question.description}
 					required={question.settings.required}
 					key={form.key(question.key)}
 					{...form.getInputProps(question.key)}
@@ -135,19 +141,14 @@ function Question({ question, form }: { question: QuestionInterface, form: UseFo
 			);
 		case questionType.file:
 			return (
-				<>
-					<Group justify="center">
-						<FileButton onChange={setFile} accept="image/png,image/jpeg">
-							{(props) => <Button {...props}>Upload image</Button>}
-						</FileButton>
-					</Group>
-
+				<Stack gap="sm">
+					<FileInput accept="image/png,image/jpeg" label={question.title} description={question.description} required={question.settings.required} placeholder="Upload files" value={file} onChange={setFile} />
 					{file && (
-						<Text size="sm" ta="center" mt="sm">
+						<Text size="sm" ta="center">
 							Picked file: {file.name}
 						</Text>
 					)}
-				</>
+				</Stack>
 			)
 		default:
 			return (
@@ -248,11 +249,13 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 								<Divider my="md" />
 
 								{/* Questions */}
-								{section.questions.map((question: QuestionInterface) => {
-									return (
-										<Question key={question.key} question={question} form={form} />
-									)
-								})}
+								<Stack>
+									{section.questions.map((question: QuestionInterface) => {
+										return (
+											<Question key={question.key} question={question} form={form} />
+										)
+									})}
+								</Stack>
 							</div>
 						)
 					})}
