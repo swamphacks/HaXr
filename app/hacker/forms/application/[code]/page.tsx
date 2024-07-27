@@ -38,9 +38,11 @@ import {
   FormSection,
   Application,
   ApplicationResponse,
+  StatusIndicator,
 } from '@/types/forms';
 import { mlhQuestions, mantineForm, MantineForm } from '@/forms/application';
 import { Form, Competition } from '@prisma/client';
+import Status from '@/components/status';
 
 function Question({
   question,
@@ -244,6 +246,9 @@ function recordEquals(a: Record<string, any>, b: Record<string, any>) {
 export default function ViewForm({ params }: { params: { formId: string } }) {
   const phoneUtil = PhoneNumberUtil.getInstance();
   const [isValid, setIsValid] = useState(false);
+  const [status, setStatus] = useState<StatusIndicator>(
+    StatusIndicator.LOADING
+  );
   const [formSections, setFormSections] = useState<FormSection[]>([]);
   const prevValues = useRef<Record<string, any>>({});
   const responseId = useRef<string>('');
@@ -272,6 +277,7 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
         prevValues.current = values;
         form.setValues(values);
         console.log(values);
+        setStatus(StatusIndicator.SUCCESS);
       });
 
       // Autosave every 3 seconds
@@ -281,12 +287,14 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
           if (!recordEquals(prevValues.current, currentValues)) {
             await saveResponse(responseId.current, currentValues);
             prevValues.current = currentValues;
+            setStatus(StatusIndicator.SUCCESS);
             console.log('Autosaved');
           } else {
             console.log('no changes - not saved');
           }
         } catch (error) {
           console.log(error);
+          setStatus(StatusIndicator.FAILED);
         }
       }, 3000);
     });
@@ -319,6 +327,11 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
     <form onSubmit={handleSubmit}>
       <div className='flex flex-col items-center'>
         <div className='m-[5rem] grid w-[40rem] grid-cols-1 gap-4'>
+          {/* Form status */}
+          <div className='justify-self-end'>
+            <Status status={status} />
+          </div>
+
           {/* Form sections */}
           <Section section={mlhQuestions.general} form={form} />
           {formSections.map((section: FormSection) => {
