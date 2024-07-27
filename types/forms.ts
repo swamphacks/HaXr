@@ -1,5 +1,11 @@
 import { questionType } from '@/types/questionTypes';
 
+export enum StatusIndicator {
+  SUCCESS = 'Success',
+  FAILED = 'Failed',
+  LOADING = 'Loading',
+}
+
 export enum FileType {
   PDF = 'PDF',
   IMG = 'Image',
