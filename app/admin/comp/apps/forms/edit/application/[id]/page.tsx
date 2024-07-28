@@ -35,6 +35,10 @@ import {
 import { getForm, updateForm } from '@/app/actions/Forms';
 import { Prisma, Form, FormSettings } from '@prisma/client';
 import { JsonArray, JsonObject } from '@prisma/client/runtime/library';
+import { StatusIndicator } from '@/types/forms';
+import Status from '@/components/status';
+import { sectionEquals, recordEquals } from '@/utils/saveUtils';
+import useStateWithRef from '@/utils/stateWithRef';
 
 function Section({
   setSections,
@@ -154,13 +158,11 @@ function ApplicationCreator({
   setForm,
   sections,
   setSections,
-  settings,
 }: {
   form: Form;
   setForm: any;
   sections: FormSection[];
   setSections: any;
-  settings: FormSettings;
 }) {
   const handleAddSection = () => {
     setSections([
@@ -174,10 +176,6 @@ function ApplicationCreator({
     ] as unknown as FormSection[]);
   };
 
-  const handleSaveForm = async () => {
-    const resp = await updateForm(form, settings, sections);
-    console.log(resp);
-  };
   return (
     <>
       <Stack gap='md' align='center' justify='flex-start'>
@@ -222,7 +220,6 @@ function ApplicationCreator({
         >
           Add Section
         </Button>
-        <Button onClick={handleSaveForm}>Save Form</Button>
       </Stack>
     </>
   );
@@ -454,10 +451,27 @@ export default function CreateApplication({
   params: { id: string };
 }) {
   const iconStyle = { width: rem(12), height: rem(12) };
-  const [form, setForm] = useState<Form>();
-  const [sections, setSections] = useState<FormSection[]>([]);
-  const [formSettings, setFormSettings] = useState<FormSettings>();
-  const [loadingStatus, setLoadingStatus] = useState('loading');
+  const [form, setForm, formRef] = useStateWithRef<Form>();
+  const [sections, setSections, sectionsRef] = useStateWithRef<FormSection[]>(
+    []
+  );
+  const [formSettings, setFormSettings, formSettingsRef] =
+    useStateWithRef<FormSettings>();
+  const [status, setStatus] = useState<StatusIndicator>(
+    StatusIndicator.LOADING
+  );
+
+  const autosaveTimer = useRef<NodeJS.Timeout>();
+  const prevSettings = useRef<FormSettings>();
+  const prevForm = useRef<Form>();
+  const prevSections = useRef<FormSection[]>([]);
+
+  const sectionsEqual = (section: FormSection[]) => {
+    if (section.length !== prevSections.current.length) return false;
+    return section.every((section: FormSection, index: number) => {
+      return sectionEquals(section, prevSections.current[index]);
+    });
+  };
 
   useEffect(() => {
     getForm(params.id).then((res) => {
@@ -465,53 +479,101 @@ export default function CreateApplication({
         setForm(res);
         setFormSettings(res.settings);
         setSections(res.sections as unknown as FormSection[]);
-        setLoadingStatus('loaded');
+        setStatus(StatusIndicator.SUCCESS);
         console.log(res);
+        autosaveTimer.current = setInterval(async () => {
+          try {
+            if (
+              formRef.current &&
+              formSettingsRef.current &&
+              sectionsRef.current
+            ) {
+              if (
+                !recordEquals(
+                  { ...formRef.current, sections: undefined },
+                  { ...prevForm.current, sections: undefined }
+                ) ||
+                !recordEquals(
+                  formSettingsRef.current,
+                  prevSettings.current ?? {}
+                ) ||
+                !sectionsEqual(sectionsRef.current)
+              ) {
+                prevForm.current = formRef.current;
+                prevSettings.current = formSettingsRef.current;
+                prevSections.current = sectionsRef.current;
+                await updateForm(
+                  formRef.current,
+                  formSettingsRef.current,
+                  sectionsRef.current
+                );
+                setStatus(StatusIndicator.SUCCESS);
+                console.log('saved');
+              } else {
+                console.log('no changes');
+              }
+            }
+          } catch (e) {
+            setStatus(StatusIndicator.FAILED);
+            console.log(e);
+          }
+        }, 3000);
       } else {
-        setLoadingStatus('not found');
+        setStatus(StatusIndicator.FAILED);
       }
     });
+
+    return () => {
+      const timer = autosaveTimer.current;
+      if (autosaveTimer.current) {
+        clearInterval(autosaveTimer.current);
+      }
+    };
   }, [params.id]);
 
   return (
-    <Tabs defaultValue='gallery'>
-      <Tabs.List justify='center'>
-        <Tabs.Tab value='gallery' leftSection={<IconForms style={iconStyle} />}>
-          Questions
-        </Tabs.Tab>
-        <Tabs.Tab
-          value='messages'
-          leftSection={<IconMessageCircle style={iconStyle} />}
-        >
-          Responses
-        </Tabs.Tab>{' '}
-        <Tabs.Tab
-          value='settings'
-          leftSection={<IconSettings style={iconStyle} />}
-        >
-          Settings
-        </Tabs.Tab>
-      </Tabs.List>
+    <>
+      <div className='flex flex-row-reverse'>
+        <Status status={status} />
+      </div>
+      <Tabs defaultValue='gallery'>
+        <Tabs.List justify='center'>
+          <Tabs.Tab
+            value='gallery'
+            leftSection={<IconForms style={iconStyle} />}
+          >
+            Questions
+          </Tabs.Tab>
+          <Tabs.Tab
+            value='messages'
+            leftSection={<IconMessageCircle style={iconStyle} />}
+          >
+            Responses
+          </Tabs.Tab>{' '}
+          <Tabs.Tab
+            value='settings'
+            leftSection={<IconSettings style={iconStyle} />}
+          >
+            Settings
+          </Tabs.Tab>
+        </Tabs.List>
 
-      <Tabs.Panel value='gallery'>
-        {form && formSettings ? (
-          <ApplicationCreator
-            form={form}
-            setForm={setForm}
-            sections={sections}
-            setSections={setSections}
-            settings={formSettings}
-          />
-        ) : (
-          <h1>{loadingStatus}</h1>
-        )}
-      </Tabs.Panel>
+        <Tabs.Panel value='gallery'>
+          {form && formSettings ? (
+            <ApplicationCreator
+              form={form}
+              setForm={setForm}
+              sections={sections}
+              setSections={setSections}
+            />
+          ) : null}
+        </Tabs.Panel>
 
-      <Tabs.Panel value='messages'>
-        {form ? <h1> Responses tab content </h1> : <h1>{loadingStatus}</h1>}
-      </Tabs.Panel>
+        <Tabs.Panel value='messages'>
+          {form ? <h1> Responses tab content </h1> : null}
+        </Tabs.Panel>
 
-      {/*
+        {/*
 			<Tabs.Panel value='settings'>
 				{form ? (
 					<Settings
@@ -525,6 +587,7 @@ export default function CreateApplication({
 				)}
 		</Tabs.Panel>
 		*/}
-    </Tabs>
+      </Tabs>
+    </>
   );
 }

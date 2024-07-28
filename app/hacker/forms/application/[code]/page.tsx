@@ -198,23 +198,6 @@ function Section({
   );
 }
 
-function initializeValues(
-  questions: QuestionInterface[],
-  values: React.MutableRefObject<Record<string, any>>
-) {
-  questions.forEach((question: QuestionInterface) => {
-    switch (question.type) {
-      case questionType.checkbox:
-      case questionType.agreement:
-        values.current[question.key] = [];
-        break;
-      default:
-        values.current[question.key] = '';
-        break;
-    }
-  });
-}
-
 function arrayEquals(a: string[], b: string[]) {
   if (a === b) return true;
   if (a == null || b == null) return false;
