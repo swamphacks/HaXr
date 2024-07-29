@@ -2,25 +2,27 @@
 
 import { useState, useEffect, useRef } from 'react';
 import {
-  Box,
-  Button,
-  Stack,
-  Tabs,
-  rem,
-  Accordion,
-  Checkbox,
-  Switch,
-  Divider,
-  Modal,
-  TextInput,
+	Box,
+	Button,
+	Stack,
+	Tabs,
+	rem,
+	Text,
+	Accordion,
+	Checkbox,
+	Switch,
+	Divider,
+	Modal,
+	Select,
+	TextInput,
 } from '@mantine/core';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { DateTimePicker } from '@mantine/dates';
 import {
-  IconForms,
-  IconMessageCircle,
-  IconSettings,
+	IconForms,
+	IconMessageCircle,
+	IconSettings,
 } from '@tabler/icons-react';
 import QuestionEdit from '@/components/admin/Question';
 import classes from '@/styles/Input.module.css';
@@ -28,12 +30,12 @@ import { v4 as uuidv4 } from 'uuid';
 import accordionClasses from '@/styles/CreateForm.module.css';
 import { questionType } from '@/types/questionTypes';
 import {
-  Question as FormQuestion,
-  FormSection as FormSection,
-  QuestionSettings,
+	Question as FormQuestion,
+	FormSection as FormSection,
+	QuestionSettings,
 } from '@/types/forms';
-import { getForm, updateForm } from '@/app/actions/Forms';
-import { Prisma, Form, FormSettings } from '@prisma/client';
+import { getForm, updateForm, updateFormSettings, publishForm } from '@/app/actions/Forms';
+import { Form } from '@prisma/client';
 import { JsonArray, JsonObject } from '@prisma/client/runtime/library';
 import { StatusIndicator } from '@/types/forms';
 import Status from '@/components/status';
@@ -41,555 +43,461 @@ import { sectionEquals, recordEquals } from '@/utils/saveUtils';
 import useStateWithRef from '@/utils/stateWithRef';
 
 function Section({
-  setSections,
-  section,
+	setSections,
+	section,
+	published,
 }: {
-  setSections: React.Dispatch<React.SetStateAction<FormSection[]>>;
-  section: FormSection;
+	setSections: React.Dispatch<React.SetStateAction<FormSection[]>>;
+	section: FormSection;
+	published: boolean;
 }) {
-  const handleAddQuestion = () => {
-    setSections((oldSections: FormSection[]) => {
-      return oldSections.map((oldSection: FormSection) => {
-        if (oldSection.key === section.key) {
-          return {
-            ...oldSection,
-            questions: [
-              ...oldSection.questions,
-              {
-                title: '',
-                description: '',
-                type: questionType.shortResponse,
-                settings: {
-                  required: false,
-                },
-                key: uuidv4(),
-              },
-            ],
-          };
-        }
-        return oldSection;
-      });
-    });
-  };
+	const handleAddQuestion = () => {
+		setSections((oldSections: FormSection[]) => {
+			return oldSections.map((oldSection: FormSection) => {
+				if (oldSection.key === section.key) {
+					return {
+						...oldSection,
+						questions: [
+							...oldSection.questions,
+							{
+								title: '',
+								description: '',
+								type: questionType.shortResponse,
+								settings: {
+									required: false,
+								},
+								key: uuidv4(),
+							},
+						],
+					};
+				}
+				return oldSection;
+			});
+		});
+	};
 
-  const handleSectionTitleChange = (e: any) => {
-    setSections((oldSections: FormSection[]) => {
-      return oldSections.map((oldSection: FormSection) => {
-        if (oldSection.key === section.key) {
-          return { ...oldSection, title: e.target.value };
-        }
-        return oldSection;
-      });
-    });
-  };
+	const handleSectionTitleChange = (e: any) => {
+		setSections((oldSections: FormSection[]) => {
+			return oldSections.map((oldSection: FormSection) => {
+				if (oldSection.key === section.key) {
+					return { ...oldSection, title: e.target.value };
+				}
+				return oldSection;
+			});
+		});
+	};
 
-  const handleSectionDescriptionChange = (e: any) => {
-    setSections((oldSections: FormSection[]) => {
-      return oldSections.map((oldSection: FormSection) => {
-        if (oldSection.key === section.key) {
-          return { ...oldSection, description: e.target.value };
-        }
-        return oldSection;
-      });
-    });
-  };
+	const handleSectionDescriptionChange = (e: any) => {
+		setSections((oldSections: FormSection[]) => {
+			return oldSections.map((oldSection: FormSection) => {
+				if (oldSection.key === section.key) {
+					return { ...oldSection, description: e.target.value };
+				}
+				return oldSection;
+			});
+		});
+	};
 
-  return (
-    <Accordion.Item key={section.key} value={section.key}>
-      <Accordion.Control>{section.title}</Accordion.Control>
-      <Accordion.Panel>
-        <Stack align='center'>
-          <TextInput
-            onChange={handleSectionTitleChange}
-            className='w-[48rem]'
-            label='Section	Title'
-            defaultValue={section.title}
-            placeholder='Untitled Section'
-          />
-          <TextInput
-            onChange={handleSectionDescriptionChange}
-            className='w-[48rem]'
-            label='Section	Description'
-            defaultValue={section.description}
-            placeholder='Enter Description'
-          />
-          {section.questions.map((question: FormQuestion, index: number) => (
-            <QuestionEdit
-              key={index}
-              question={question}
-              setQuestion={(newQuestion: FormQuestion) => {
-                setSections((oldSections: FormSection[]) => {
-                  return oldSections.map((oldSection: FormSection) => {
-                    if (oldSection.key === section.key) {
-                      return {
-                        ...oldSection,
-                        questions: oldSection.questions.map(
-                          (oldQuestion: FormQuestion) => {
-                            if (oldQuestion.key === question.key) {
-                              return newQuestion;
-                            }
-                            return oldQuestion;
-                          }
-                        ),
-                      };
-                    }
-                    return oldSection;
-                  });
-                });
-              }}
-            />
-          ))}
-          <Button
-            style={{ width: '48rem' }}
-            variant='light'
-            color='orange'
-            onClick={handleAddQuestion}
-          >
-            Add Question
-          </Button>
-        </Stack>
-      </Accordion.Panel>
-    </Accordion.Item>
-  );
+	return (
+		<Accordion.Item key={section.key} value={section.key}>
+			<Accordion.Control>{section.title}</Accordion.Control>
+			<Accordion.Panel>
+				<Stack align='center'>
+					<TextInput
+						onChange={handleSectionTitleChange}
+						className='w-[48rem]'
+						label='Section	Title'
+						defaultValue={section.title}
+						placeholder='Untitled Section'
+						disabled={published}
+					/>
+					<TextInput
+						onChange={handleSectionDescriptionChange}
+						className='w-[48rem]'
+						label='Section	Description'
+						defaultValue={section.description}
+						placeholder='Enter Description'
+						disabled={published}
+					/>
+					{section.questions.map((question: FormQuestion, index: number) => (
+						<QuestionEdit
+							disabled={published}
+							key={index}
+							question={question}
+							setQuestion={(newQuestion: FormQuestion) => {
+								setSections((oldSections: FormSection[]) => {
+									return oldSections.map((oldSection: FormSection) => {
+										if (oldSection.key === section.key) {
+											return {
+												...oldSection,
+												questions: oldSection.questions.map(
+													(oldQuestion: FormQuestion) => {
+														if (oldQuestion.key === question.key) {
+															return newQuestion;
+														}
+														return oldQuestion;
+													}
+												),
+											};
+										}
+										return oldSection;
+									});
+								});
+							}}
+						/>
+					))}
+					<Button
+						disabled={published}
+						style={{ width: '48rem' }}
+						variant='light'
+						color='orange'
+						onClick={handleAddQuestion}
+					>
+						Add Question
+					</Button>
+				</Stack>
+			</Accordion.Panel>
+		</Accordion.Item>
+	);
 }
 
 function ApplicationCreator({
-  form,
-  setForm,
-  sections,
-  setSections,
+	form,
+	setForm,
+	sections,
+	setSections,
 }: {
-  form: Form;
-  setForm: any;
-  sections: FormSection[];
-  setSections: any;
+	form: Form;
+	setForm: any;
+	sections: FormSection[];
+	setSections: any;
 }) {
-  const handleAddSection = () => {
-    setSections([
-      ...((form.sections as JsonArray) ?? []),
-      {
-        key: uuidv4(),
-        title: 'Unititled Section',
-        description: '',
-        questions: [],
-      },
-    ] as unknown as FormSection[]);
-  };
+	const handleAddSection = () => {
+		setSections([
+			...((form.sections as JsonArray) ?? []),
+			{
+				key: uuidv4(),
+				title: 'Unititled Section',
+				description: '',
+				questions: [],
+			},
+		] as unknown as FormSection[]);
+	};
 
-  return (
-    <>
-      <Stack gap='md' align='center' justify='flex-start'>
-        <Box w={rem(500)}>
-          <input
-            placeholder='Untitled Form'
-            defaultValue={form.title}
-            onChange={(e) =>
-              setForm((oldForm: Form) => {
-                return { ...oldForm, title: e.target.value };
-              })
-            }
-            className={classes.title}
-          />
-        </Box>
-      </Stack>
+	return (
+		<>
+			<Stack gap='md' align='center' justify='flex-start'>
+				<Box w={rem(500)}>
+					<input
+						placeholder='Untitled Form'
+						defaultValue={form.title}
+						onChange={(e) =>
+							setForm((oldForm: Form) => {
+								return { ...oldForm, title: e.target.value };
+							})
+						}
+						disabled={form.is_published}
+						className={classes.title}
+					/>
+				</Box>
+			</Stack>
 
-      <Accordion
-        transitionDuration={500}
-        classNames={{
-          label: accordionClasses.label,
-          panel: accordionClasses.panel,
-        }}
-      >
-        {sections.map((section: FormSection) => {
-          return (
-            <Section
-              key={section.key}
-              setSections={setSections}
-              section={section}
-            />
-          );
-        })}
-      </Accordion>
+			<Accordion
+				transitionDuration={500}
+				classNames={{
+					label: accordionClasses.label,
+					panel: accordionClasses.panel,
+				}}
+			>
+				{sections.map((section: FormSection) => {
+					return (
+						<Section
+							published={form.is_published}
+							key={section.key}
+							setSections={setSections}
+							section={section}
+						/>
+					);
+				})}
+			</Accordion>
 
-      <Stack gap='md' align='center' justify='flex-start' className='mt-4'>
-        <Button
-          variant='light'
-          color='teal'
-          style={{ width: '48rem' }}
-          onClick={handleAddSection}
-        >
-          Add Section
-        </Button>
-      </Stack>
-    </>
-  );
+			<Stack gap='md' align='center' justify='flex-start' className='mt-4'>
+				<Button
+					variant='light'
+					color='teal'
+					style={{ width: '48rem' }}
+					onClick={handleAddSection}
+					disabled={form.is_published}
+				>
+					Add Section
+				</Button>
+			</Stack>
+		</>
+	);
 }
 
 function Settings({
-  form,
-  setForm,
-  questions,
-  settings,
-  setSettings,
+	form,
+	setForm,
+	sections,
+	autosaveTimer,
+	save,
 }: {
-  form: Form;
-  setForm: any;
-  questions: FormQuestion[];
-  settings: FormSettings;
-  setSettings: any;
+	form: Form;
+	setForm: any;
+	sections: FormSection[];
+	autosaveTimer: React.MutableRefObject<NodeJS.Timeout | undefined>;
+	save: () => void;
 }) {
-  const open_time = useRef(
-    settings.opens_at ? new Date(settings.opens_at) : new Date()
-  );
-  const close_time = useRef(
-    settings.closes_at ? new Date(settings.closes_at) : new Date()
-  );
-  const [is_unpublish_open, { open: open_unpublish, close: close_unpublish }] =
-    useDisclosure(false);
-  const [is_publish_open, { open: open_publish, close: close_publish }] =
-    useDisclosure(false);
-  const [canUpdatePublish, setUpdatePublish] = useState(false);
 
-  const handleScheduleChoice = (e: any, timeRef: any) => {
-    if (!e.target.checked) {
-      timeRef.current = settings.opens_at || timeRef.current;
-    }
-  };
+	const [opened, { open, close }] = useDisclosure(false);
+	const handleIncludeMLH = (e: any) => {
+		setForm({ ...form, is_mlh: e.target.checked });
+	}
 
-  return (
-    <div className='mt-8 grid grid-cols-[0.5fr_1fr_0.5fr]'>
-      <div></div>
-      <div className='flex flex-col gap-4'>
-        <Checkbox
-          defaultChecked={settings.include_mlh}
-          onChange={(e) =>
-            setSettings((oldSettings: FormSettings) => {
-              return { ...oldSettings, include_mlh: e.target.checked };
-            })
-          }
-          label='Include MLH Questions'
-        />
+	const handleRequireSubmission = (e: any) => {
+		setForm({ ...form, required: e.target.checked });
+	}
 
-        <Divider />
+	const handleFormSettingsChange = async () => {
+		close();
+		const resp = await publishForm(form, sections);
+		console.log(resp);
+	}
 
-        <div>
-          <Switch
-            defaultChecked={settings.opens_at ? true : false}
-            onChange={(e) => {
-              handleScheduleChoice(e, open_time);
-              setSettings((oldSettings: FormSettings) => {
-                return {
-                  ...oldSettings,
-                  opens_at: e.target.checked ? open_time.current : null,
-                };
-              });
-            }}
-            label='Schedule form open time'
-          />
-          <DateTimePicker
-            className='mt-2'
-            valueFormat='MM/DD/YYYY hh:mm A'
-            defaultValue={open_time.current}
-            placeholder='Select date and time to open the form'
-            disabled={settings.opens_at ? false : true}
-            onChange={(e) =>
-              setSettings((oldSettings: FormSettings) => {
-                return { ...oldSettings, opens_at: e };
-              })
-            }
-          />
-        </div>
+	const handleUnpublish = async () => {
+		if (autosaveTimer.current) {
+			clearInterval(autosaveTimer.current);
+		}
 
-        <Divider />
+		const resp = await updateFormSettings({ ...form, is_published: false });
+		console.log(resp);
+		// DO NOT CHANGE THE ORDER OF UPDATE OTHERWISE IT BREAKS
+		setForm({ ...form, is_published: false });
 
-        <div>
-          <Switch
-            defaultChecked={settings.closes_at ? true : false}
-            onChange={(e) => {
-              handleScheduleChoice(e, close_time);
-              setSettings((oldSettings: FormSettings) => {
-                return {
-                  ...oldSettings,
-                  closes_at: e.target.checked ? close_time.current : null,
-                };
-              });
-            }}
-            label='Schedule form close time'
-          />
-          <DateTimePicker
-            className='mt-2'
-            valueFormat='MM/DD/YYYY hh:mm A'
-            defaultValue={close_time.current}
-            placeholder='Select date and time to close the form'
-            disabled={settings.closes_at ? false : true}
-            onChange={(e) =>
-              setSettings((oldSettings: FormSettings) => {
-                return { ...oldSettings, closes_at: e };
-              })
-            }
-          />
-        </div>
+		autosaveTimer.current = setInterval(save, 1000);
+		close();
+	}
 
-        <Divider />
+	return (
+		<div className='flex flex-col items-center'>
 
-        <Switch
-          label='Required'
-          defaultChecked={settings.required}
-          onChange={(e) =>
-            setSettings((oldSettings: FormSettings) => {
-              return { ...oldSettings, required: e.target.checked };
-            })
-          }
-        />
-        <Switch
-          label='Allow anyonymous responses'
-          defaultChecked={settings.allow_anonymous}
-          onChange={(e) =>
-            setSettings((oldSettings: FormSettings) => {
-              return { ...oldSettings, allow_anonymous: e.target.checked };
-            })
-          }
-        />
+			<Modal opened={opened} onClose={close} centered>
+				{form.is_published ? (
+					<>
+						<Text size='md'>Are you sure you want to unpublish the form? <br /><br />Unpublishing the form will make it unavailable to the public. You can still edit the form settings and questions. </Text>
+						<Button onClick={handleUnpublish} style={{ width: '100%', marginTop: '1rem' }} variant='light' color='red'>Unpublish Form</Button>
+					</>) : (
+					<>
+						<Text size='md'>Are you sure you want to publish the form? <br /><br />Publishing the form will make it available to the public on its release date. Note that you <Text span fw={700} fs='italic'>cannot edit the questions</Text> or any settings that affect the questions once the form is published but can still edit the form settings.
+						</Text>
+						<Button onClick={handleFormSettingsChange} style={{ width: '100%', marginTop: '1rem' }} variant='light' color='green'>Publish</Button>
+					</>
+				)}
+			</Modal>
 
-        <Divider />
+			<div className='flex flex-col w-[30rem] gap-4'>
+				<div className='flex flex-col gap-2'>
+					<Switch
+						defaultChecked={form.is_mlh}
+						label='Include MLH Questions'
+						description='MLH Questions are required for any registration forms such as the application.'
+						onChange={handleIncludeMLH}
+					/>
+					<Switch
+						defaultChecked={form.required}
+						label='Require Submission'
+						description='Require submission of this form to complete registration.'
+						onChange={handleRequireSubmission}
+					/>
+				</div>
 
-        {form.is_published ? (
-          <Button variant='light' color='red' onClick={open_unpublish}>
-            Unpublish
-          </Button>
-        ) : (
-          <Button variant='light' color='green' onClick={open_publish}>
-            Publish
-          </Button>
-        )}
+				<div className='flex flex-col gap-2'>
+					<Divider label='Release Settings' />
+					<DateTimePicker
+						description='The date and time the form will be released. If no date is set, the form will be released immediately upon its publishing.'
+						defaultValue={form.opens_at}
+						valueFormat="MMM DD YYYY hh:mm A"
+						placeholder='Select a date and time'
+						label='Release Date'
+					/>
+					<DateTimePicker
+						description='The date and time the form will be closed.'
+						defaultValue={form.closes_at}
+						valueFormat="MMM DD YYYY hh:mm A"
+						placeholder='Select a date and time'
+						label='Close Date'
+						required
+					/>
+				</div>
 
-        <Modal opened={is_publish_open} onClose={close_publish}>
-          <div className='flex flex-col justify-center'>
-            <h1>Are you sure you want to unpublish this form?</h1>
-            <h1 className='font-bold'>
-              To confirm, type &quot;{form.title}&quot; in the box below to
-              confirm
-            </h1>
-            <input
-              type='text'
-              className='mt-4 h-8 w-full rounded-lg border border-green-600 bg-transparent pl-2 text-white'
-              onInput={(e) => {
-                setUpdatePublish(e.target.value === form.title);
-              }}
-              required
-            />
-            <Button
-              variant='light'
-              color='green'
-              className='mt-4'
-              disabled={!canUpdatePublish}
-              onClick={async () => {
-                const resp = await updateForm(
-                  { ...form, is_published: true },
-                  questions,
-                  settings
-                );
-                console.log(resp);
-                setForm({ ...form, is_published: true });
-                close_publish();
-                setUpdatePublish(false);
-              }}
-            >
-              Publish
-            </Button>
-          </div>
-        </Modal>
-
-        <Modal opened={is_unpublish_open} onClose={close_unpublish}>
-          <div className='flex flex-col justify-center'>
-            <h1>
-              Are you sure you want to unpublish this form? There are 0
-              responses that will be deleted.
-            </h1>
-            <h1 className='font-bold'>
-              To confirm, type &quot;{form.title}&quot; in the box below to
-              confirm
-            </h1>
-            <input
-              type='text'
-              className='mt-4 h-8 w-full rounded-lg border border-red-600 bg-transparent pl-2 text-white'
-              onInput={(e) => {
-                setUpdatePublish(e.target.value === form.title);
-              }}
-              required
-            />
-            <Button
-              variant='light'
-              color='red'
-              className='mt-4'
-              disabled={!canUpdatePublish}
-              onClick={async () => {
-                const resp = await updateForm(
-                  { ...form, is_published: false },
-                  questions,
-                  settings
-                );
-                console.log(resp);
-                setForm({ ...form, is_published: false });
-                close_unpublish();
-                setUpdatePublish(false);
-              }}
-            >
-              Unpublish
-            </Button>
-          </div>
-        </Modal>
-      </div>
-      <div></div>
-    </div>
-  );
+				<div>
+					{form.is_published ?
+						<>
+							<Button onClick={open} style={{ width: '100%', marginBottom: '0.5rem' }} color='red' variant='light'>Unpublish Form</Button>
+							<p className='text-[var(--mantine-color-dimmed)] text-xs'>
+								Unpublishing the form will make it unavailable to the public. You can still edit the form settings and questions.
+							</p>
+						</>
+						: (
+							<>
+								<Button onClick={open} style={{ width: '100%', marginBottom: '0.5rem' }} color='green' variant='light'>Publish Form</Button>
+								<p className='text-[var(--mantine-color-dimmed)] text-xs'>Publishing the form will make it available to the public on its release date. Note that you cannot edit the questions or any settings that affect the questions once the form is published but can still edit the form settings.</p></>)}
+				</div>
+			</div>
+		</div>
+	)
 }
 
 export default function CreateApplication({
-  params,
+	params,
 }: {
-  params: { id: string };
+	params: { id: string };
 }) {
-  const iconStyle = { width: rem(12), height: rem(12) };
-  const [form, setForm, formRef] = useStateWithRef<Form>();
-  const [sections, setSections, sectionsRef] = useStateWithRef<FormSection[]>(
-    []
-  );
-  const [formSettings, setFormSettings, formSettingsRef] =
-    useStateWithRef<FormSettings>();
-  const [status, setStatus] = useState<StatusIndicator>(
-    StatusIndicator.LOADING
-  );
+	const iconStyle = { width: rem(12), height: rem(12) };
+	const [form, setForm, formRef] = useStateWithRef<Form>();
+	const [sections, setSections, sectionsRef] = useStateWithRef<FormSection[]>(
+		[]
+	);
+	const [status, setStatus] = useState<StatusIndicator>(
+		StatusIndicator.LOADING
+	);
 
-  const autosaveTimer = useRef<NodeJS.Timeout>();
-  const prevSettings = useRef<FormSettings>();
-  const prevForm = useRef<Form>();
-  const prevSections = useRef<FormSection[]>([]);
+	const autosaveTimer = useRef<NodeJS.Timeout>();
+	const prevForm = useRef<Form>();
+	const prevSections = useRef<FormSection[]>([]);
 
-  const sectionsEqual = (section: FormSection[]) => {
-    if (section.length !== prevSections.current.length) return false;
-    return section.every((section: FormSection, index: number) => {
-      return sectionEquals(section, prevSections.current[index]);
-    });
-  };
+	const sectionsEqual = (section: FormSection[]) => {
+		if (section.length !== prevSections.current.length) return false;
+		return section.every((section: FormSection, index: number) => {
+			return sectionEquals(section, prevSections.current[index]);
+		});
+	};
 
-  useEffect(() => {
-    getForm(params.id).then((res) => {
-      if (res) {
-        setForm(res);
-        setFormSettings(res.settings);
-        setSections(res.sections as unknown as FormSection[]);
-        setStatus(StatusIndicator.SUCCESS);
-        console.log(res);
-        autosaveTimer.current = setInterval(async () => {
-          try {
-            if (
-              formRef.current &&
-              formSettingsRef.current &&
-              sectionsRef.current
-            ) {
-              // Update the form if there are changes
-              if (
-                !recordEquals(
-                  { ...formRef.current, sections: undefined },
-                  { ...prevForm.current, sections: undefined }
-                ) ||
-                !recordEquals(
-                  formSettingsRef.current,
-                  prevSettings.current ?? {}
-                ) ||
-                !sectionsEqual(sectionsRef.current)
-              ) {
-                // update refs
-                prevForm.current = formRef.current;
-                prevSettings.current = formSettingsRef.current;
-                prevSections.current = sectionsRef.current;
-                await updateForm(
-                  formRef.current,
-                  formSettingsRef.current,
-                  sectionsRef.current
-                );
-                setStatus(StatusIndicator.SUCCESS);
-                console.log('saved');
-              } else {
-                console.log('no changes');
-              }
-            }
-          } catch (e) {
-            setStatus(StatusIndicator.FAILED);
-            console.log(e);
-          }
-        }, 1000);
-      } else {
-        setStatus(StatusIndicator.FAILED);
-      }
-    });
+	const save = async () => {
+		try {
+			if (
+				formRef.current &&
+				sectionsRef.current
+			) {
+				// Update the form if there are changes
+				if (!formRef.current.is_published) {
+					if (
+						!recordEquals(
+							{ ...formRef.current, sections: undefined },
+							{ ...prevForm.current, sections: undefined }
+						) ||
+						!sectionsEqual(sectionsRef.current)
+					) {
+						// update refs
+						prevForm.current = formRef.current;
+						prevSections.current = sectionsRef.current;
+						await updateForm(
+							formRef.current,
+							sectionsRef.current
+						);
+						setStatus(StatusIndicator.SUCCESS);
+						console.log('saved');
+					}
+				} else {
+					if (
+						!recordEquals(
+							{ ...formRef.current, sections: undefined },
+							{ ...prevForm.current, sections: undefined }
+						)
+					) {
+						prevForm.current = formRef.current;
+						await updateFormSettings(formRef.current);
+						setStatus(StatusIndicator.SUCCESS);
+						console.log('saved settings')
+					}
+				}
 
-    return () => {
-      const timer = autosaveTimer.current;
-      if (autosaveTimer.current) {
-        clearInterval(autosaveTimer.current);
-      }
-    };
-  }, [params.id]);
+			}
+		} catch (e) {
+			setStatus(StatusIndicator.FAILED);
+			console.log(e);
+		}
+	}
 
-  return (
-    <>
-      <div className='flex flex-row-reverse'>
-        <Status status={status} />
-      </div>
-      <Tabs defaultValue='gallery'>
-        <Tabs.List justify='center'>
-          <Tabs.Tab
-            value='gallery'
-            leftSection={<IconForms style={iconStyle} />}
-          >
-            Questions
-          </Tabs.Tab>
-          <Tabs.Tab
-            value='messages'
-            leftSection={<IconMessageCircle style={iconStyle} />}
-          >
-            Responses
-          </Tabs.Tab>{' '}
-          <Tabs.Tab
-            value='settings'
-            leftSection={<IconSettings style={iconStyle} />}
-          >
-            Settings
-          </Tabs.Tab>
-        </Tabs.List>
+	useEffect(() => {
+		getForm(params.id).then((res) => {
+			if (res) {
+				setForm(res);
+				setSections(res.sections as unknown as FormSection[]);
+				setStatus(StatusIndicator.SUCCESS);
+				console.log(res);
 
-        <Tabs.Panel value='gallery'>
-          {form && formSettings ? (
-            <ApplicationCreator
-              form={form}
-              setForm={setForm}
-              sections={sections}
-              setSections={setSections}
-            />
-          ) : null}
-        </Tabs.Panel>
+				autosaveTimer.current = setInterval(save, 1000);
 
-        <Tabs.Panel value='messages'>
-          {form ? <h1> Responses tab content </h1> : null}
-        </Tabs.Panel>
+			} else {
+				setStatus(StatusIndicator.FAILED);
+			}
+		});
 
-        {/*
-			<Tabs.Panel value='settings'>
-				{form ? (
-					<Settings
-						form={form}
-						setForm={setForm}
-						settings={formSettings}
-						setSettings={setFormSettings}
-					/>
-				) : (
-					<h1>{loadingStatus}</h1>
-				)}
-		</Tabs.Panel>
-		*/}
-      </Tabs>
-    </>
-  );
+		return () => {
+			if (autosaveTimer.current) {
+				clearInterval(autosaveTimer.current);
+			}
+		};
+	}, [params.id]);
+
+	return (
+		<>
+			<div className='flex flex-row-reverse'>
+				<Status status={status} />
+			</div>
+			<Tabs defaultValue='gallery'>
+				<Tabs.List justify='center' style={{ marginBottom: '2rem' }}>
+					<Tabs.Tab
+						value='gallery'
+						leftSection={<IconForms style={iconStyle} />}
+					>
+						Questions
+					</Tabs.Tab>
+					<Tabs.Tab
+						value='messages'
+						leftSection={<IconMessageCircle style={iconStyle} />}
+					>
+						Responses
+					</Tabs.Tab>{' '}
+					<Tabs.Tab
+						value='settings'
+						leftSection={<IconSettings style={iconStyle} />}
+					>
+						Settings
+					</Tabs.Tab>
+				</Tabs.List>
+
+				<Tabs.Panel value='gallery'>
+					{form && sections ? (
+						<ApplicationCreator
+							form={form}
+							setForm={setForm}
+							sections={sections}
+							setSections={setSections}
+						/>
+					) : null}
+				</Tabs.Panel>
+
+				<Tabs.Panel value='messages'>
+					{form ? <h1> Responses tab content </h1> : null}
+				</Tabs.Panel>
+
+				<Tabs.Panel value='settings'>
+					{form && sections ? (
+						<Settings
+							form={form}
+							setForm={setForm}
+							sections={sections}
+							autosaveTimer={autosaveTimer}
+							save={save}
+						/>
+					) : (
+						null
+					)}
+				</Tabs.Panel>
+			</Tabs>
+		</>
+	);
 }
