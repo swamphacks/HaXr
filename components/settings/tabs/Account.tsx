@@ -1,10 +1,14 @@
 import { updateUserProfile } from '@/actions/user';
 import { profileConfigurationScheme } from '@/schemas';
+import { createHash, hash } from 'crypto';
 import {
   Anchor,
   Avatar,
+  Box,
   Button,
+  Center,
   Fieldset,
+  Flex,
   Group,
   LoadingOverlay,
   Stack,
@@ -17,14 +21,23 @@ import {
 import { useForm, Form, yupResolver } from '@mantine/form';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { IconCheck, IconFileUpload, IconX } from '@tabler/icons-react';
+import {
+  IconBrandGravatar,
+  IconCheck,
+  IconFileUpload,
+  IconFlagQuestion,
+  IconQuestionMark,
+  IconX,
+} from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
-import React from 'react';
+import Image from 'next/image';
+import React, { useState } from 'react';
 
 export default function Account() {
   const { data: session, status, update } = useSession();
   const [visible, { toggle, open, close }] = useDisclosure();
   const isMobile = useMediaQuery(`(max-width: 50em)`);
+  const [isHovered, setIsHovered] = useState(false);
 
   const form = useForm({
     mode: 'uncontrolled',
@@ -34,6 +47,17 @@ export default function Account() {
       console.log(values);
     },
   });
+
+  const hashEmail = (email: string) => {
+    if (!email) return;
+    let preEmail = email.trim();
+    preEmail = preEmail.toLowerCase();
+
+    const hashedEmail = createHash('sha256').update(preEmail).digest('hex');
+
+    console.log(hashedEmail);
+    return `https://gravatar.com/avatar/${hashedEmail}`;
+  };
 
   const onSubmit = async (values: any) => {
     if (!session?.user?.id) {
@@ -82,13 +106,47 @@ export default function Account() {
         <Stack justify='center' align='center'>
           <Fieldset legend='Public Profile'>
             <LoadingOverlay visible={visible || status === 'loading'} />
-            <Stack>
-              <Group>
-                <Avatar src={session?.user?.image} size='xl' />
-                <Button>
-                  <IconFileUpload className='mr-1' />
-                  Upload Image
-                </Button>
+            <Stack align='center'>
+              <Group
+                className='relative h-fit w-fit rounded-full hover:cursor-pointer'
+                justify='center'
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                onClick={() => window.open('https://gravatar.com', '_blank')}
+              >
+                <Avatar
+                  src={hashEmail(session?.user?.email!)}
+                  size={100}
+                  className={isHovered ? 'opacity-30' : ''}
+                />
+                <Tooltip
+                  bg='dark'
+                  color='white'
+                  label={
+                    <Text size='xs'>
+                      Gravatar is a universal avatar hosting service.<br></br>
+                      Please sign up with your Swamphacks account&apos;s email.
+                    </Text>
+                  }
+                >
+                  <Box
+                    bg='dark'
+                    className='absolute bottom-0 right-0 rounded-full p-1'
+                  >
+                    <IconFlagQuestion size={20} />
+                  </Box>
+                </Tooltip>
+                {isHovered ? (
+                  <Tooltip
+                    bg='dark'
+                    color='white'
+                    label='Click to upload Avatar using Gravatar'
+                  >
+                    <IconBrandGravatar size='50%' className='absolute' />
+                  </Tooltip>
+                ) : (
+                  <></>
+                )}
               </Group>
               <Group wrap='nowrap'>
                 <TextInput
@@ -104,19 +162,19 @@ export default function Account() {
                   {...form.getInputProps('lastName')}
                 />
               </Group>
-              <Stack>
-                <TextInput
-                  label='School'
-                  key={form.key('school')}
-                  placeholder={session?.user?.school || ''}
-                  {...form.getInputProps('school')}
-                />
-                <Textarea
-                  label='Bio'
-                  description='(optional)'
-                  placeholder='I like cats and stuff...'
-                />
-              </Stack>
+              <TextInput
+                label='School'
+                key={form.key('school')}
+                placeholder={session?.user?.school || ''}
+                {...form.getInputProps('school')}
+                w='100%'
+              />
+              <Textarea
+                label='Bio'
+                description='(optional)'
+                placeholder='I like cats and stuff...'
+                w='100%'
+              />
             </Stack>
           </Fieldset>
 

@@ -7,7 +7,11 @@ export const profileConfigurationScheme = yup.object().shape({
   lastName: yup.string(),
   school: yup.string(),
   email: yup.string().email(),
-  phone: yup.string().matches(phoneRegExp, 'Phone number does not match'),
+  phone: yup
+    .string()
+    .min(10, 'Phone number is too short.')
+    .max(10, 'Phone number is too long.')
+    .matches(phoneRegExp, 'Please use only 10 numbers'),
 });
 
 export const competitionConfigurationSchema = yup.object().shape({
