@@ -11,19 +11,21 @@ import {
 } from '@mantine/core';
 import { IconLogout } from '@tabler/icons-react';
 import { serverSignOut } from '@/actions/auth';
+import { useMediaQuery } from '@mantine/hooks';
 
 interface Props {
   session: Session;
 }
 
 export default function UserAvatar({ session }: Readonly<Props>) {
-  if (!session?.user?.image || !session.user.name || !session.user.email)
-    return null;
-  const { image, name, email } = session.user;
+  const isMobile = useMediaQuery('(max-width: 50em)');
+
+  if (!session?.user) return null;
+  const { image, firstName, lastName, email } = session.user;
 
   return (
     <Group justify='center'>
-      <Menu trigger='hover' shadow='md' withArrow>
+      <Menu trigger='click-hover' shadow='md' withArrow>
         <MenuTarget>
           <Avatar src={image} radius='xl' />
         </MenuTarget>
@@ -38,12 +40,19 @@ export default function UserAvatar({ session }: Readonly<Props>) {
         </MenuDropdown>
       </Menu>
       <Stack gap={5}>
-        <Text size='sm' fw={700} style={{ lineHeight: 1 }}>
-          {name}
-        </Text>
-        <Text c='dimmed' size='xs' style={{ lineHeight: 1 }}>
-          {email}
-        </Text>
+        {/* Mobile only shows avatar, no email or name */}
+        {isMobile ? (
+          <></>
+        ) : (
+          <>
+            <Text size='sm' fw={700} style={{ lineHeight: 1 }}>
+              {firstName} {lastName}
+            </Text>
+            <Text c='dimmed' size='xs' style={{ lineHeight: 1 }}>
+              {email}
+            </Text>
+          </>
+        )}
       </Stack>
     </Group>
   );
