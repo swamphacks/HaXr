@@ -14,8 +14,10 @@ import {
 	Title,
 	Radio,
 	FileInput,
+	Modal
 } from '@mantine/core';
 import { useForm, UseFormReturnType, isEmail, isNotEmpty } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
 import {
 	ageChoices,
 	schools,
@@ -43,13 +45,16 @@ import {
 import { mlhQuestions, mantineForm, MantineForm } from '@/forms/application';
 import { Form, Competition } from '@prisma/client';
 import Status from '@/components/status';
+import useStateWithRef from '@/utils/stateWithRef';
 
 function Question({
 	question,
 	form,
+	disabled
 }: {
 	question: QuestionInterface;
 	form: UseFormReturnType<Record<string, any>>;
+	disabled: boolean
 }) {
 	const [file, setFile] = useState<File | null>(null);
 	switch (question.type) {
@@ -61,6 +66,7 @@ function Question({
 					description={question.description}
 					required={question.settings.required}
 					placeholder={question.placeholder ?? 'Enter response'}
+					disabled={disabled}
 					key={form.key(question.key)}
 					{...form.getInputProps(question.key)}
 				/>
@@ -73,6 +79,7 @@ function Question({
 					required={question.settings.required}
 					placeholder={question.placeholder ?? 'Enter response'}
 					resize='vertical'
+					disabled={disabled}
 					key={form.key(question.key)}
 					{...form.getInputProps(question.key)}
 				/>
@@ -88,7 +95,9 @@ function Question({
 				>
 					<Stack className='mt-2'>
 						{question.choices?.map((choice: string, index: number) => {
-							return <Radio key={index} label={choice} value={choice} />;
+							return <Radio key={index} label={choice} value={choice}
+								disabled={disabled}
+							/>;
 						})}
 					</Stack>
 				</Radio.Group>
@@ -105,7 +114,9 @@ function Question({
 				>
 					<Stack className='mt-2'>
 						{question.choices?.map((choice: string, index: number) => {
-							return <Checkbox key={index} label={choice} value={choice} />;
+							return <Checkbox key={index} label={choice} value={choice}
+								disabled={disabled}
+							/>;
 						})}
 					</Stack>
 				</Checkbox.Group>
@@ -119,6 +130,7 @@ function Question({
 					required={question.settings.required}
 					placeholder={question.placeholder ?? 'Select an option'}
 					data={question.choices}
+					disabled={disabled}
 					key={form.key(question.key)}
 					{...form.getInputProps(question.key)}
 					searchable
@@ -132,6 +144,7 @@ function Question({
 					description={question.description}
 					required={question.settings.required}
 					key={form.key(question.key)}
+					disabled={disabled}
 					{...form.getInputProps(question.key, { type: 'checkbox' })}
 				/>
 			);
@@ -144,6 +157,7 @@ function Question({
 					</Text>
 					<PhoneInput
 						defaultCountry='us'
+						disabled={disabled}
 						placeholder='Enter your phone number'
 					/>
 				</div>
@@ -157,6 +171,7 @@ function Question({
 						description={question.description}
 						required={question.settings.required}
 						placeholder='Upload files'
+						disabled={disabled}
 						value={file}
 						onChange={setFile}
 					/>
@@ -175,9 +190,11 @@ function Question({
 function Section({
 	section,
 	form,
+	submitted
 }: {
 	section: FormSection;
 	form: UseFormReturnType<Record<string, any>>;
+	submitted: boolean;
 }) {
 	return (
 		<>
@@ -190,7 +207,7 @@ function Section({
 			<Stack>
 				{section.questions.map((question: QuestionInterface) => {
 					return (
-						<Question key={question.key} question={question} form={form} />
+						<Question key={question.key} question={question} form={form} disabled={submitted} />
 					);
 				})}
 			</Stack>
@@ -229,13 +246,15 @@ function recordEquals(a: Record<string, any>, b: Record<string, any>) {
 export default function ViewForm({ params }: { params: { formId: string } }) {
 	const phoneUtil = PhoneNumberUtil.getInstance();
 	const [isValid, setIsValid] = useState(false);
+	const [modalOpened, { open, close }] = useDisclosure(false);
 	const [status, setStatus] = useState<StatusIndicator>(
 		StatusIndicator.LOADING
 	);
 	const [formSections, setFormSections] = useState<FormSection[]>([]);
+	const [submitted, setSubmitted] = useState(false);
+	const submittedRef = useRef(false);
 	const prevValues = useRef<Record<string, any>>({});
 	const responseId = useRef<string>('');
-	const autosaveTimer = useRef<NodeJS.Timeout | null>(null);
 	const [phone, setPhone] = useState('');
 	const userId = 'test-user';
 
@@ -243,6 +262,31 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 		mode: 'uncontrolled',
 		initialValues: {},
 	});
+
+	const autosave = async () => {
+		try {
+			const currentValues = form.getValues();
+			const prev = prevValues.current;
+			const currId = responseId.current;
+
+			// Only save if there are changes
+			if (!recordEquals(prev, currentValues)) {
+				await saveResponse(currId, currentValues);
+				prevValues.current = currentValues;
+				setStatus(StatusIndicator.SUCCESS);
+				console.log('Autosaved');
+			} else {
+				console.log('no changes - not saved');
+			}
+		} catch (error) {
+			console.log(error);
+			setStatus(StatusIndicator.FAILED);
+		}
+
+		if (!submittedRef.current) {
+			setTimeout(autosave, 1000);
+		}
+	};
 
 	useEffect(() => {
 		getApplication('SWAMPHACKS-X').then((resp) => {
@@ -260,37 +304,19 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 				prevValues.current = values;
 				form.setValues(values);
 				console.log(values);
-				setStatus(StatusIndicator.SUCCESS);
+
+				if (!resp.submitted) {
+					// Autosave every second
+					setStatus(StatusIndicator.SUCCESS);
+					setTimeout(autosave, 1000);
+				} else {
+					setStatus(StatusIndicator.SUBMITTED);
+				}
+				setSubmitted(resp.submitted);
+				submittedRef.current = resp.submitted;
 			});
 
-			// Autosave every second
-			autosaveTimer.current = setInterval(async () => {
-				try {
-					const currentValues = form.getValues();
-					const prev = prevValues.current;
-					const currId = responseId.current;
-
-					// Only save if there are changes
-					if (!recordEquals(prev, currentValues)) {
-						await saveResponse(currId, currentValues);
-						prevValues.current = currentValues;
-						setStatus(StatusIndicator.SUCCESS);
-						console.log('Autosaved');
-					} else {
-						console.log('no changes - not saved');
-					}
-				} catch (error) {
-					console.log(error);
-					setStatus(StatusIndicator.FAILED);
-				}
-			}, 1000);
 		});
-
-		return () => {
-			if (autosaveTimer.current) {
-				clearInterval(autosaveTimer.current);
-			}
-		};
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const isPhoneValid = (phone: string) => {
@@ -308,11 +334,36 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 		form.setFieldValue('phoneNumber', value);
 	};
 
-	const handleSubmit = (values: any) => { };
+	const handleSubmit = async () => {
+		submittedRef.current = true; // Stop autosave
+		const resp = await submitResponse(responseId.current, form.getValues());
+		setSubmitted(true);
+		setStatus(StatusIndicator.SUBMITTED);
+		console.log(resp);
+	};
 
 	return (
 		<form onSubmit={handleSubmit}>
-			<div className='flex flex-col items-center'>
+			<Modal opened={modalOpened} onClose={close} title='Submit Form'>
+				<Text style={{ marginBottom: "12px" }}>
+					Are you sure you want to submit your application? You will not be able
+					to edit it after submission.
+				</Text>
+				<Group justify="center">
+					<Button
+						color='green'
+						variant='light'
+						onClick={() => {
+							handleSubmit()
+							close();
+						}}
+					>
+						Submit
+					</Button>
+				</Group>
+			</Modal>
+
+			<div className='flex flex-col items-center mb-16'>
 				<div className='m-[5rem] grid w-[40rem] grid-cols-1 gap-4'>
 					{/* Form status */}
 					<div className='justify-self-end'>
@@ -320,12 +371,13 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 					</div>
 
 					{/* Form sections */}
-					<Section section={mlhQuestions.general} form={form} />
+					<Section section={mlhQuestions.general} form={form} submitted={submitted} />
 					{formSections.map((section: FormSection) => {
-						return <Section key={section.key} section={section} form={form} />;
+						return <Section key={section.key} section={section} form={form} submitted={submitted} />;
 					})}
-					<Section section={mlhQuestions.agreements} form={form} />
+					<Section section={mlhQuestions.agreements} form={form} submitted={submitted} />
 				</div>
+				<Button variant='light' color='green' onClick={open} disabled={submitted}>Submit Form</Button>
 			</div>
 		</form>
 	);
