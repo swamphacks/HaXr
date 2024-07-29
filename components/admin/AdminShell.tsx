@@ -24,6 +24,7 @@ import {
   Title,
 } from '@mantine/core';
 import {
+  IconArrowLeft,
   IconCalendar,
   IconCoin,
   IconDoorEnter,
