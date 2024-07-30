@@ -1,4 +1,8 @@
-import { updateUserProfile, updateUserAvatar, deleteUserAvatar } from '@/actions/user';
+import {
+  updateUserProfile,
+  updateUserAvatar,
+  deleteUserAvatar,
+} from '@/actions/user';
 import { profileConfigurationScheme } from '@/schemas';
 import {
   Anchor,
@@ -123,7 +127,8 @@ export default function Account() {
 
                     if (file.size > 102400) {
                       notifications.show({
-                        message: 'Your Avatar image size is too big! Keep it less than 100KB.',
+                        message:
+                          'Your Avatar image size is too big! Keep it less than 100KB.',
                         icon: <IconX />,
                         color: 'red',
                         title: 'Avatar Update Failed',
@@ -145,19 +150,20 @@ export default function Account() {
                       );
                       return;
                     }
-                    
+
                     await deleteUserAvatar(session.user.id);
-                
-                    const user = await updateUserAvatar(session?.user?.id, newBlob.url);
-                
+
+                    const user = await updateUserAvatar(
+                      session?.user?.id,
+                      newBlob.url
+                    );
+
                     if (user !== null) {
-                
                       await update({
                         ...session,
                         user: user,
                       });
-              
-                
+
                       notifications.show({
                         message: 'Your Avatar has updated successfully!',
                         icon: <IconCheck />,
@@ -167,7 +173,8 @@ export default function Account() {
                       });
                     } else {
                       notifications.show({
-                        message: 'Your Avatar has not been updated successfully!',
+                        message:
+                          'Your Avatar has not been updated successfully!',
                         icon: <IconX />,
                         color: 'red',
                         title: 'Avatar Update Failed',
