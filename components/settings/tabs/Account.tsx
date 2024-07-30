@@ -1,43 +1,32 @@
-import { updateUserProfile } from '@/actions/user';
+import { updateUserProfile, updateUserAvatar, deleteUserAvatar } from '@/actions/user';
 import { profileConfigurationScheme } from '@/schemas';
-import { createHash, hash } from 'crypto';
 import {
   Anchor,
   Avatar,
-  Box,
   Button,
-  Center,
   Fieldset,
-  Flex,
   Group,
   LoadingOverlay,
   Stack,
   Text,
   TextInput,
   Textarea,
-  Title,
   Tooltip,
 } from '@mantine/core';
 import { useForm, Form, yupResolver } from '@mantine/form';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import {
-  IconBrandGravatar,
-  IconCheck,
-  IconFileUpload,
-  IconFlagQuestion,
-  IconQuestionMark,
-  IconX,
-} from '@tabler/icons-react';
+import { IconCheck, IconFileUpload, IconX } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
-import Image from 'next/image';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { upload } from '@vercel/blob/client';
 
 export default function Account() {
   const { data: session, status, update } = useSession();
   const [visible, { toggle, open, close }] = useDisclosure();
   const isMobile = useMediaQuery(`(max-width: 50em)`);
   const [isHovered, setIsHovered] = useState(false);
+  const inputFileRef = useRef<HTMLInputElement>(null);
 
   const form = useForm({
     mode: 'uncontrolled',
@@ -47,17 +36,6 @@ export default function Account() {
       console.log(values);
     },
   });
-
-  const hashEmail = (email: string) => {
-    if (!email) return;
-    let preEmail = email.trim();
-    preEmail = preEmail.toLowerCase();
-
-    const hashedEmail = createHash('sha256').update(preEmail).digest('hex');
-
-    console.log(hashedEmail);
-    return `https://gravatar.com/avatar/${hashedEmail}`;
-  };
 
   const onSubmit = async (values: any) => {
     if (!session?.user?.id) {
@@ -112,41 +90,92 @@ export default function Account() {
                 justify='center'
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                onClick={() => window.open('https://gravatar.com', '_blank')}
+                onClick={() => inputFileRef.current?.click()}
               >
                 <Avatar
-                  src={hashEmail(session?.user?.email!)}
+                  src={session?.user?.image}
                   size={100}
                   className={isHovered ? 'opacity-30' : ''}
                 />
-                <Tooltip
-                  bg='dark'
-                  color='white'
-                  label={
-                    <Text size='xs'>
-                      Gravatar is a universal avatar hosting service.<br></br>
-                      Please sign up with your Swamphacks account&apos;s email.
-                    </Text>
-                  }
-                >
-                  <Box
-                    bg='dark'
-                    className='absolute bottom-0 right-0 rounded-full p-1'
-                  >
-                    <IconFlagQuestion size={20} />
-                  </Box>
-                </Tooltip>
                 {isHovered ? (
                   <Tooltip
                     bg='dark'
                     color='white'
-                    label='Click to upload Avatar using Gravatar'
+                    label='Click to upload Avatar'
                   >
-                    <IconBrandGravatar size='50%' className='absolute' />
+                    <IconFileUpload size='50%' className='absolute' />
                   </Tooltip>
                 ) : (
                   <></>
                 )}
+                <input
+                  type='file'
+                  ref={inputFileRef}
+                  className='hidden'
+                  accept='image/*'
+                  onChange={async (event) => {
+                    event.preventDefault();
+
+                    if (!inputFileRef.current?.files)
+                      throw new Error('No file selected!');
+
+                    const file = inputFileRef.current.files[0];
+
+                    if (file.size > 102400) {
+                      notifications.show({
+                        message: 'Your Avatar image size is too big! Keep it less than 100KB.',
+                        icon: <IconX />,
+                        color: 'red',
+                        title: 'Avatar Update Failed',
+                        autoClose: 3000,
+                      });
+                      return;
+                    }
+
+                    const newBlob = await upload(file.name, file, {
+                      access: 'public',
+                      handleUploadUrl: '/api/avatar/upload',
+                    });
+
+                    if (newBlob) console.log('Uploaded success');
+
+                    if (!session?.user?.id) {
+                      console.error(
+                        '[ERROR] No session ID. Please contact Technical Staff for help'
+                      );
+                      return;
+                    }
+                    
+                    await deleteUserAvatar(session.user.id);
+                
+                    const user = await updateUserAvatar(session?.user?.id, newBlob.url);
+                
+                    if (user !== null) {
+                
+                      await update({
+                        ...session,
+                        user: user,
+                      });
+              
+                
+                      notifications.show({
+                        message: 'Your Avatar has updated successfully!',
+                        icon: <IconCheck />,
+                        color: 'green',
+                        title: 'Avatar Updated',
+                        autoClose: 3000,
+                      });
+                    } else {
+                      notifications.show({
+                        message: 'Your Avatar has not been updated successfully!',
+                        icon: <IconX />,
+                        color: 'red',
+                        title: 'Avatar Update Failed',
+                        autoClose: 3000,
+                      });
+                    }
+                  }}
+                />
               </Group>
               <Group wrap='nowrap'>
                 <TextInput
