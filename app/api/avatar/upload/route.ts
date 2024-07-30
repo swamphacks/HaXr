@@ -10,7 +10,12 @@ export async function POST(request: Request): Promise<NextResponse> {
       request,
       onBeforeGenerateToken: async (pathname) => {
         return {
-          allowedContentTypes: ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
+          allowedContentTypes: [
+            'image/jpeg',
+            'image/png',
+            'image/jpg',
+            'image/webp',
+          ],
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
@@ -20,7 +25,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     return NextResponse.json(jsonResponse);
   } catch (error) {
-    console.log("ERROR HAPPENED!")
+    console.log('ERROR HAPPENED!');
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 400 }
