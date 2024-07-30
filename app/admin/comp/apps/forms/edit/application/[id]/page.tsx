@@ -34,7 +34,12 @@ import {
 	FormSection as FormSection,
 	QuestionSettings,
 } from '@/types/forms';
-import { getForm, updateForm, updateFormSettings, publishForm } from '@/app/actions/Forms';
+import {
+	getForm,
+	updateForm,
+	updateFormSettings,
+	publishForm,
+} from '@/app/actions/Forms';
 import { Form } from '@prisma/client';
 import { JsonArray, JsonObject } from '@prisma/client/runtime/library';
 import { StatusIndicator } from '@/types/forms';
@@ -249,21 +254,21 @@ function Settings({
 	autosaveTimer: React.MutableRefObject<NodeJS.Timeout | undefined>;
 	save: () => void;
 }) {
-
 	const [opened, { open, close }] = useDisclosure(false);
 	const handleIncludeMLH = (e: any) => {
 		setForm({ ...form, is_mlh: e.target.checked });
-	}
+	};
 
 	const handleRequireSubmission = (e: any) => {
 		setForm({ ...form, required: e.target.checked });
-	}
+	};
 
-	const handleFormSettingsChange = async () => {
+	const handlePublish = async () => {
 		close();
 		const resp = await publishForm(form, sections);
+		setForm({ ...form, is_published: true });
 		console.log(resp);
-	}
+	};
 
 	const handleUnpublish = async () => {
 		if (autosaveTimer.current) {
@@ -277,31 +282,61 @@ function Settings({
 
 		autosaveTimer.current = setInterval(save, 1000);
 		close();
-	}
+	};
 
 	return (
 		<div className='flex flex-col items-center'>
-
 			<Modal opened={opened} onClose={close} centered>
 				{form.is_published ? (
 					<>
-						<Text size='md'>Are you sure you want to unpublish the form? <br /><br />Unpublishing the form will make it unavailable to the public. You can still edit the form settings and questions. </Text>
-						<Button onClick={handleUnpublish} style={{ width: '100%', marginTop: '1rem' }} variant='light' color='red'>Unpublish Form</Button>
-					</>) : (
-					<>
-						<Text size='md'>Are you sure you want to publish the form? <br /><br />Publishing the form will make it available to the public on its release date. Note that you <Text span fw={700} fs='italic'>cannot edit the questions</Text> or any settings that affect the questions once the form is published but can still edit the form settings.
+						<Text size='md'>
+							Are you sure you want to unpublish the form? <br />
+							<br />
+							Unpublishing the form will make it unavailable to the public. You
+							can still edit the form settings and questions.{' '}
 						</Text>
-						<Button onClick={handleFormSettingsChange} style={{ width: '100%', marginTop: '1rem' }} variant='light' color='green'>Publish</Button>
+						<Button
+							onClick={handleUnpublish}
+							style={{ width: '100%', marginTop: '1rem' }}
+							variant='light'
+							color='red'
+						>
+							Unpublish Form
+						</Button>
+					</>
+				) : (
+					<>
+						<Text size='md'>
+							Are you sure you want to publish the form? <br />
+							<br />
+							Publishing the form will make it available to the public on its
+							release date. Note that you{' '}
+							<Text span fw={700} fs='italic'>
+								cannot edit the questions
+							</Text>{' '}
+							or any settings that affect the questions once the form is
+							published but can still edit the form settings.
+						</Text>
+						<Button
+							onClick={handlePublish}
+							style={{ width: '100%', marginTop: '1rem' }}
+							variant='light'
+							color='green'
+						>
+							Publish
+						</Button>
 					</>
 				)}
 			</Modal>
 
-			<div className='flex flex-col w-[30rem] gap-4'>
+			<div className='flex w-[30rem] flex-col gap-4'>
 				<div className='flex flex-col gap-2'>
+					<Divider label='General' />
 					<Switch
 						defaultChecked={form.is_mlh}
 						label='Include MLH Questions'
-						description='MLH Questions are required for any registration forms such as the application.'
+						description='MLH Questions are required for any registration forms such as the application. This cannot be changed once the form is published.'
+						disabled={form.is_published}
 						onChange={handleIncludeMLH}
 					/>
 					<Switch
@@ -317,36 +352,61 @@ function Settings({
 					<DateTimePicker
 						description='The date and time the form will be released. If no date is set, the form will be released immediately upon its publishing.'
 						defaultValue={form.opens_at}
-						valueFormat="MMM DD YYYY hh:mm A"
+						valueFormat='MMM DD YYYY hh:mm A'
 						placeholder='Select a date and time'
 						label='Release Date'
+						onChange={(date) => { setForm({ ...form, opens_at: date?.toISOString() }) }}
+						clearable
 					/>
 					<DateTimePicker
 						description='The date and time the form will be closed.'
 						defaultValue={form.closes_at}
-						valueFormat="MMM DD YYYY hh:mm A"
+						valueFormat='MMM DD YYYY hh:mm A'
 						placeholder='Select a date and time'
 						label='Close Date'
+						onChange={(date) => { setForm({ ...form, closes_at: date?.toISOString() }) }}
 						required
 					/>
 				</div>
 
 				<div>
-					{form.is_published ?
+					{form.is_published ? (
 						<>
-							<Button onClick={open} style={{ width: '100%', marginBottom: '0.5rem' }} color='red' variant='light'>Unpublish Form</Button>
-							<p className='text-[var(--mantine-color-dimmed)] text-xs'>
-								Unpublishing the form will make it unavailable to the public. You can still edit the form settings and questions.
+							<Button
+								onClick={open}
+								style={{ width: '100%', marginBottom: '0.5rem' }}
+								color='red'
+								variant='light'
+							>
+								Unpublish Form
+							</Button>
+							<p className='text-xs text-[var(--mantine-color-dimmed)]'>
+								Unpublishing the form will make it unavailable to the public.
+								You can still edit the form settings and questions.
 							</p>
 						</>
-						: (
-							<>
-								<Button onClick={open} style={{ width: '100%', marginBottom: '0.5rem' }} color='green' variant='light'>Publish Form</Button>
-								<p className='text-[var(--mantine-color-dimmed)] text-xs'>Publishing the form will make it available to the public on its release date. Note that you cannot edit the questions or any settings that affect the questions once the form is published but can still edit the form settings.</p></>)}
+					) : (
+						<>
+							<Button
+								onClick={open}
+								style={{ width: '100%', marginBottom: '0.5rem' }}
+								color='green'
+								variant='light'
+							>
+								Publish Form
+							</Button>
+							<p className='text-xs text-[var(--mantine-color-dimmed)]'>
+								Publishing the form will make it available to the public on its
+								release date. Note that you cannot edit the questions or any
+								settings that affect the questions once the form is published
+								but can still edit the form settings.
+							</p>
+						</>
+					)}
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
 
 export default function CreateApplication({
@@ -376,10 +436,7 @@ export default function CreateApplication({
 
 	const save = async () => {
 		try {
-			if (
-				formRef.current &&
-				sectionsRef.current
-			) {
+			if (formRef.current && sectionsRef.current) {
 				// Update the form if there are changes
 				if (!formRef.current.is_published) {
 					if (
@@ -392,10 +449,7 @@ export default function CreateApplication({
 						// update refs
 						prevForm.current = formRef.current;
 						prevSections.current = sectionsRef.current;
-						await updateForm(
-							formRef.current,
-							sectionsRef.current
-						);
+						await updateForm(formRef.current, sectionsRef.current);
 						setStatus(StatusIndicator.SUCCESS);
 						console.log('saved');
 					}
@@ -409,16 +463,15 @@ export default function CreateApplication({
 						prevForm.current = formRef.current;
 						await updateFormSettings(formRef.current);
 						setStatus(StatusIndicator.SUCCESS);
-						console.log('saved settings')
+						console.log('saved settings');
 					}
 				}
-
 			}
 		} catch (e) {
 			setStatus(StatusIndicator.FAILED);
 			console.log(e);
 		}
-	}
+	};
 
 	useEffect(() => {
 		getForm(params.id).then((res) => {
@@ -429,7 +482,6 @@ export default function CreateApplication({
 				console.log(res);
 
 				autosaveTimer.current = setInterval(save, 1000);
-
 			} else {
 				setStatus(StatusIndicator.FAILED);
 			}
@@ -493,9 +545,7 @@ export default function CreateApplication({
 							autosaveTimer={autosaveTimer}
 							save={save}
 						/>
-					) : (
-						null
-					)}
+					) : null}
 				</Tabs.Panel>
 			</Tabs>
 		</>
