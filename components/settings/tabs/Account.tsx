@@ -171,7 +171,6 @@ export default function Account() {
 
   return (
     <Stack w='100%' h='100%' pr={20} pl={20} pos='relative'>
-      s
       <Form form={form} onSubmit={onSubmitProfile}>
         <Stack justify='center' align='center'>
           <Fieldset legend='Public Profile'>
