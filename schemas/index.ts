@@ -11,10 +11,10 @@ export const profileConfigurationScheme = yup.object().shape({
     .string()
     .min(10, 'Phone number is too short.')
     .max(10, 'Phone number is too long.')
-    .matches(phoneRegExp, 'Please use only 10 numbers'),
-  bio: yup.string().max(100, 'Too many characters'),
-  githubURL: yup.string().url('Please enter a url'),
-  linkedinURL: yup.string().url('Please enter a url'),
+    .matches(phoneRegExp, 'Please use only 10 numbers.'),
+  bio: yup.string().max(500, 'Keep it under 500 characters.'),
+  githubURL: yup.string().url('Please enter a valid url.'),
+  linkedinURL: yup.string().url('Please enter a valid url.'),
 });
 
 export const competitionConfigurationSchema = yup.object().shape({

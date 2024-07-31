@@ -7,11 +7,18 @@ import { profileConfigurationScheme } from '@/schemas';
 import {
   Anchor,
   Avatar,
+  Box,
   Button,
   Fieldset,
   Group,
+  Loader,
   LoadingOverlay,
+  MultiSelect,
+  Pill,
+  PillsInput,
+  Skeleton,
   Stack,
+  TagsInput,
   Text,
   TextInput,
   Textarea,
@@ -34,22 +41,28 @@ import { upload } from '@vercel/blob/client';
 export default function Account() {
   const { data: session, status, update } = useSession();
   const [visible, { toggle, open, close }] = useDisclosure();
-  const isMobile = useMediaQuery(`(max-width: 50em)`);
   const [isHovered, setIsHovered] = useState(false);
   const inputFileRef = useRef<HTMLInputElement>(null);
+  const [loadingAvatar, setLoadingAvatar] = useState(false);
+  const [bioLength, setBioLength] = useState(session?.user?.bio?.length || 0);
+  const [skills, setSkills] = useState<string[]>(session?.user?.skills || []);
 
   const form = useForm({
     mode: 'uncontrolled',
     initialValues: {
       bio: session?.user?.bio,
+      skills: skills,
     },
     validate: yupResolver(profileConfigurationScheme),
     onValuesChange: (values: any) => {
       console.log(values);
+      if (values.bio !== null) {
+        setBioLength(values.bio.length);
+      }
     },
   });
 
-  const onSubmit = async (values: any) => {
+  const onSubmitProfile = async (values: any) => {
     if (!session?.user?.id) {
       console.error(
         '[ERROR] No session ID. Please contact Technical Staff for help'
@@ -69,6 +82,10 @@ export default function Account() {
       });
 
       form.reset();
+
+      form.setFieldValue('bio', user.bio);
+      setBioLength(user.bio?.length!);
+      setSkills(user.skills);
 
       notifications.show({
         message: 'Your profile has updated successfully!',
@@ -90,9 +107,73 @@ export default function Account() {
     close();
   };
 
+  const onUploadAvatar = async (event: any) => {
+    event.preventDefault();
+
+    if (!inputFileRef.current?.files) throw new Error('No file selected!');
+
+    const file = inputFileRef.current.files[0];
+
+    if (file.size > 5000000) {
+      notifications.show({
+        message: 'Your Avatar image size is too big! Keep it less than 5MB.',
+        icon: <IconX />,
+        color: 'red',
+        title: 'Avatar Update Failed',
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    setLoadingAvatar(true);
+
+    const newBlob = await upload(file.name, file, {
+      access: 'public',
+      handleUploadUrl: '/api/avatar/upload',
+    });
+
+    if (newBlob) console.log('Uploaded success');
+
+    if (!session?.user?.id) {
+      console.error(
+        '[ERROR] No session ID. Please contact Technical Staff for help'
+      );
+      return;
+    }
+
+    await deleteUserAvatar(session.user.id);
+
+    const user = await updateUserAvatar(session?.user?.id, newBlob.url);
+
+    if (user !== null) {
+      await update({
+        ...session,
+        user: user,
+      });
+
+      notifications.show({
+        message: 'Your Avatar has updated successfully!',
+        icon: <IconCheck />,
+        color: 'green',
+        title: 'Avatar Updated',
+        autoClose: 3000,
+      });
+    } else {
+      notifications.show({
+        message: 'Your Avatar has not been updated successfully!',
+        icon: <IconX />,
+        color: 'red',
+        title: 'Avatar Update Failed',
+        autoClose: 3000,
+      });
+    }
+
+    setLoadingAvatar(false);
+  };
+
   return (
-    <Stack w='100%' h='100%' pr={20} pl={20}>
-      <Form form={form} onSubmit={onSubmit}>
+    <Stack w='100%' h='100%' pr={20} pl={20} pos='relative'>s
+      <Form form={form} onSubmit={onSubmitProfile}>
         <Stack justify='center' align='center'>
           <Fieldset legend='Public Profile'>
             <LoadingOverlay visible={visible || status === 'loading'} />
@@ -102,14 +183,16 @@ export default function Account() {
                 justify='center'
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                onClick={() => inputFileRef.current?.click()}
+                onClick={() => {
+                  if (!loadingAvatar) inputFileRef.current?.click();
+                }}
               >
                 <Avatar
                   src={session?.user?.image}
                   size={100}
-                  className={isHovered ? 'opacity-30' : ''}
+                  className={isHovered || loadingAvatar ? 'opacity-20' : ''}
                 />
-                {isHovered ? (
+                {isHovered && !loadingAvatar ? (
                   <Tooltip
                     bg='dark'
                     color='white'
@@ -120,76 +203,17 @@ export default function Account() {
                 ) : (
                   <></>
                 )}
+                {loadingAvatar ? (
+                  <Loader size={40} className='absolute' />
+                ) : (
+                  <></>
+                )}
                 <input
                   type='file'
                   ref={inputFileRef}
                   className='hidden'
                   accept='image/*'
-                  onChange={async (event) => {
-                    event.preventDefault();
-
-                    if (!inputFileRef.current?.files)
-                      throw new Error('No file selected!');
-
-                    const file = inputFileRef.current.files[0];
-
-                    if (file.size > 102400) {
-                      notifications.show({
-                        message:
-                          'Your Avatar image size is too big! Keep it less than 100KB.',
-                        icon: <IconX />,
-                        color: 'red',
-                        title: 'Avatar Update Failed',
-                        autoClose: 3000,
-                      });
-                      return;
-                    }
-
-                    const newBlob = await upload(file.name, file, {
-                      access: 'public',
-                      handleUploadUrl: '/api/avatar/upload',
-                    });
-
-                    if (newBlob) console.log('Uploaded success');
-
-                    if (!session?.user?.id) {
-                      console.error(
-                        '[ERROR] No session ID. Please contact Technical Staff for help'
-                      );
-                      return;
-                    }
-
-                    await deleteUserAvatar(session.user.id);
-
-                    const user = await updateUserAvatar(
-                      session?.user?.id,
-                      newBlob.url
-                    );
-
-                    if (user !== null) {
-                      await update({
-                        ...session,
-                        user: user,
-                      });
-
-                      notifications.show({
-                        message: 'Your Avatar has updated successfully!',
-                        icon: <IconCheck />,
-                        color: 'green',
-                        title: 'Avatar Updated',
-                        autoClose: 3000,
-                      });
-                    } else {
-                      notifications.show({
-                        message:
-                          'Your Avatar has not been updated successfully!',
-                        icon: <IconX />,
-                        color: 'red',
-                        title: 'Avatar Update Failed',
-                        autoClose: 3000,
-                      });
-                    }
-                  }}
+                  onChange={onUploadAvatar}
                 />
               </Group>
               <Group wrap='nowrap'>
@@ -213,16 +237,32 @@ export default function Account() {
                 {...form.getInputProps('school')}
                 w='100%'
               />
-              <Textarea
-                label='Bio'
-                key={form.key('bio')}
-                description='(optional)'
-                placeholder='Ex. First Year CS @ UF'
+              <Stack w='100%' gap={2}>
+                <Textarea
+                  label='Bio'
+                  key={form.key('bio')}
+                  description='(optional)'
+                  placeholder='Ex. First Year CS @ UF'
+                  w='100%'
+                  autosize
+                  minRows={3}
+                  maxRows={7}
+                  {...form.getInputProps('bio')}
+                />
+                <Text size='xs' c={bioLength <= 500 ? 'gray' : 'red.7'}>
+                  Characters: {bioLength}/500.
+                </Text>
+              </Stack>
+
+              <TagsInput
                 w='100%'
-                autosize
-                minRows={3}
-                maxRows={7}
-                {...form.getInputProps('bio')}
+                label='Skills'
+                placeholder='Type here...'
+                value={skills}
+                onChange={(e) => {
+                  form.setFieldValue('skills', e)
+                  setSkills(e)
+                }}
               />
 
               <TextInput
@@ -230,7 +270,7 @@ export default function Account() {
                 label='Github URL'
                 key={form.key('githubURL')}
                 placeholder={session?.user?.githubURL || ''}
-                {...form.getInputProps('linkedinURL')}
+                {...form.getInputProps('githubURL')}
                 w='100%'
               />
 

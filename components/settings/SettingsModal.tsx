@@ -1,6 +1,5 @@
 import {
   Burger,
-  Button,
   Drawer,
   Group,
   Modal,
@@ -9,7 +8,6 @@ import {
   Tabs,
   Text,
   Title,
-  em,
   rem,
 } from '@mantine/core';
 import {
@@ -18,7 +16,6 @@ import {
   IconBrush,
   IconProps,
   IconSettings,
-  IconUser,
 } from '@tabler/icons-react';
 import React, { useState } from 'react';
 import Account from './tabs/Account';
