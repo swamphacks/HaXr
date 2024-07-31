@@ -12,6 +12,9 @@ export const profileConfigurationScheme = yup.object().shape({
     .min(10, 'Phone number is too short.')
     .max(10, 'Phone number is too long.')
     .matches(phoneRegExp, 'Please use only 10 numbers'),
+  bio: yup.string().max(100, 'Too many characters'),
+  githubURL: yup.string().url('Please enter a url'),
+  linkedinURL: yup.string().url('Please enter a url'),
 });
 
 export const competitionConfigurationSchema = yup.object().shape({

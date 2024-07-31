@@ -7,5 +7,9 @@ export declare module '@auth/core/types' {
     phone: string | null;
     school: string | null;
     role: Role;
+    bio: string | null,
+    githubURL: string | null,
+    linkedinURL: string | null,
+    skills: string[]
   }
 }

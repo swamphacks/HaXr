@@ -26,6 +26,12 @@ model User {
   role          Role      @default(Hacker)
   accounts      Account[]
   sessions      Session[]
+
+  // Optional
+  bio         String?  @db.Text
+  githubURL   String?
+  linkedinURL String?
+  skills      String[]
 }
 
 model Account {

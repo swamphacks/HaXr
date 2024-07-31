@@ -20,7 +20,13 @@ import {
 import { useForm, Form, yupResolver } from '@mantine/form';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { IconCheck, IconFileUpload, IconX } from '@tabler/icons-react';
+import {
+  IconBrandGithub,
+  IconBrandLinkedin,
+  IconCheck,
+  IconFileUpload,
+  IconX,
+} from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
 import React, { useRef, useState } from 'react';
 import { upload } from '@vercel/blob/client';
@@ -34,7 +40,9 @@ export default function Account() {
 
   const form = useForm({
     mode: 'uncontrolled',
-    initialValues: {},
+    initialValues: {
+      bio: session?.user?.bio
+    },
     validate: yupResolver(profileConfigurationScheme),
     onValuesChange: (values: any) => {
       console.log(values);
@@ -207,8 +215,31 @@ export default function Account() {
               />
               <Textarea
                 label='Bio'
+                key={form.key('bio')}
                 description='(optional)'
-                placeholder='I like cats and stuff...'
+                placeholder='Ex. First Year CS @ UF'
+                w='100%'
+                autosize
+                minRows={3}
+                maxRows={7}
+                {...form.getInputProps('bio')}
+              />
+
+              <TextInput
+                leftSection={<IconBrandGithub />}
+                label='Github URL'
+                key={form.key('githubURL')}
+                placeholder={session?.user?.githubURL || ''}
+                {...form.getInputProps('linkedinURL')}
+                w='100%'
+              />
+
+              <TextInput
+                leftSection={<IconBrandLinkedin />}
+                label='Linkedin URL'
+                key={form.key('linkedinURL')}
+                placeholder={session?.user?.linkedinURL || ''}
+                {...form.getInputProps('linkedinURL')}
                 w='100%'
               />
             </Stack>
