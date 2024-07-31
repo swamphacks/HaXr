@@ -56,9 +56,7 @@ export default function Account() {
     validate: yupResolver(profileConfigurationScheme),
     onValuesChange: (values: any) => {
       console.log(values);
-      if (values.bio !== null) {
-        setBioLength(values.bio.length);
-      }
+      if (values.bio !== null) setBioLength(values.bio.length);
     },
   });
 
@@ -172,7 +170,8 @@ export default function Account() {
   };
 
   return (
-    <Stack w='100%' h='100%' pr={20} pl={20} pos='relative'>s
+    <Stack w='100%' h='100%' pr={20} pl={20} pos='relative'>
+      s
       <Form form={form} onSubmit={onSubmitProfile}>
         <Stack justify='center' align='center'>
           <Fieldset legend='Public Profile'>
@@ -260,8 +259,8 @@ export default function Account() {
                 placeholder='Type here...'
                 value={skills}
                 onChange={(e) => {
-                  form.setFieldValue('skills', e)
-                  setSkills(e)
+                  form.setFieldValue('skills', e);
+                  setSkills(e);
                 }}
               />
 
