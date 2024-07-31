@@ -41,7 +41,7 @@ export default function Account() {
   const form = useForm({
     mode: 'uncontrolled',
     initialValues: {
-      bio: session?.user?.bio
+      bio: session?.user?.bio,
     },
     validate: yupResolver(profileConfigurationScheme),
     onValuesChange: (values: any) => {

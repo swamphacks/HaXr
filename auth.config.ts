@@ -18,7 +18,7 @@ export default {
           bio: null,
           githubURL: html_url,
           linkedinURL: null,
-          skills: []
+          skills: [],
         };
       },
     }),
