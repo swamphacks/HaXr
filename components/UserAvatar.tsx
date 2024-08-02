@@ -22,12 +22,9 @@ export default function UserAvatar({ session }: Readonly<Props>) {
   const isMobile = useMediaQuery(`(max-width: 50em)`);
   const [settingsModalOpen, { open: openModal, close: closeModal }] =
     useDisclosure();
-  if (!session?.user) {
-    console.log(session);
-    console.log('NULL');
-    return null;
-  }
 
+
+  if (!session?.user) return null;
   const { image, firstName, lastName, email } = session.user;
 
   return (
@@ -51,6 +48,7 @@ export default function UserAvatar({ session }: Readonly<Props>) {
         </MenuDropdown>
       </Menu>
       <Stack gap={5}>
+        {/* Mobile only shows avatar, no email or name */}
         {isMobile ? (
           <></>
         ) : (

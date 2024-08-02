@@ -10,7 +10,6 @@ import {
   Textarea,
   TextInput,
 } from '@mantine/core';
-import * as yup from 'yup';
 import {
   IconApi,
   IconCalendar,
@@ -27,23 +26,22 @@ import {
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { DateInput, DateTimePicker } from '@mantine/dates';
-import { useContext } from 'react';
-import { CompetitionContext } from '@/components/admin/AdminShell';
 import { Competition } from '@prisma/client';
 import { updateCompetitionConfig } from '@/actions/competition';
 import { notifications } from '@mantine/notifications';
 import { competitionConfigurationSchema } from '@/schemas';
 
-export default function Configure() {
-  const { competition } = useContext(CompetitionContext);
+interface Props {
+  competition: Competition;
+}
 
+export default function ConfigureCompetition({ competition }: Props) {
   const form = useForm({
     mode: 'uncontrolled',
     validate: yupResolver(competitionConfigurationSchema),
     initialValues: competition,
   });
 
-  // console.log(form.errors, form.values, competition);
   return (
     <Box mx='auto' maw={500}>
       <Form

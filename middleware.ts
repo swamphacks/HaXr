@@ -29,10 +29,10 @@ export default auth((req) => {
 
   // If root, send to respective dashboard
   if (pathname === '/')
-    return RedirectResponse(req, isAdmin ? '/admin/comp' : '/hacker');
+    return RedirectResponse(req, isAdmin ? '/admin' : '/hacker');
 
-  // If admin root, send to admin competition dashboard
-  if (pathname === '/admin') return RedirectResponse(req, '/admin/comp');
+  // If no comp, then send back to admin dashboard
+  if (pathname === '/admin/comp') return RedirectResponse(req, '/admin');
 });
 
 export const config = {
