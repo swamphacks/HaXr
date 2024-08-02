@@ -5,18 +5,14 @@ import {
 } from '@/actions/user';
 import { profileConfigurationScheme } from '@/schemas';
 import {
+  Alert,
   Anchor,
   Avatar,
-  Box,
   Button,
   Fieldset,
   Group,
   Loader,
   LoadingOverlay,
-  MultiSelect,
-  Pill,
-  PillsInput,
-  Skeleton,
   Stack,
   TagsInput,
   Text,
@@ -31,59 +27,102 @@ import {
   IconBrandGithub,
   IconBrandLinkedin,
   IconCheck,
+  IconCheckbox,
   IconFileUpload,
+  IconNotesOff,
   IconX,
 } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
 import React, { useRef, useState } from 'react';
 import { upload } from '@vercel/blob/client';
 
-export default function Account() {
-  const { data: session, status, update } = useSession();
-  const [visible, { toggle, open, close }] = useDisclosure();
-  const [isHovered, setIsHovered] = useState(false);
-  const inputFileRef = useRef<HTMLInputElement>(null);
-  const [loadingAvatar, setLoadingAvatar] = useState(false);
-  const [bioLength, setBioLength] = useState(session?.user?.bio?.length || 0);
-  const [skills, setSkills] = useState<string[]>(session?.user?.skills || []);
+interface FormValues {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  school?: string;
+  bio?: string;
+  githubURL?: string;
+  linkedinURL?: string;
+  skills: string[];
+}
 
+export default function Account() {
+  // Component level states
+  const { data: session, status, update } = useSession();
+  const [isLoading, { open, close }] = useDisclosure();
+
+  // Avatar states, loading, and values
+  const inputFileRef = useRef<HTMLInputElement>(null);
+  const [loadingAvatar, setLoadingAvatar] = useState<boolean>(false);
+  const [isAvatarHovered, setIsAvatarHovered] = useState<boolean>(false);
+  const MAX_IMAGE_SIZE_MB = 5;
+
+  // Form states for editables
+  const [bioLength, setBioLength] = useState<number>(
+    session?.user?.bio?.length || 0
+  );
+  const [currentSkills, setCurrentSkills] = useState<string[]>(
+    session?.user?.skills || []
+  );
+  const [currentSkillError, setcurrentSkillError] = useState<boolean>(false);
+  const [formChanged, setFormChanged] = useState<boolean | null>(null);
+
+  // Form initilization
   const form = useForm({
     mode: 'uncontrolled',
     initialValues: {
-      bio: session?.user?.bio,
-      skills: skills,
+      bio: session?.user?.bio || '',
+      skills: currentSkills,
     },
     validate: yupResolver(profileConfigurationScheme),
     onValuesChange: (values: any) => {
       console.log(values);
       if (values.bio !== null) setBioLength(values.bio.length);
+      setFormChanged(true);
     },
   });
 
-  const onSubmitProfile = async (values: any) => {
+  // Preprocessing form values after submit
+  const cleanFormValues = (values: FormValues): Partial<FormValues> => {
+    return Object.fromEntries(
+      Object.entries(values).filter(([key, value]) => {
+        if (Array.isArray(value)) return value;
+
+        return value !== null && value.trim() !== '';
+      })
+    );
+  };
+
+  // Submitting Form
+  const onSubmitForm = async (values: any) => {
+    open();
+
     if (!session?.user?.id) {
       console.error(
         '[ERROR] No session ID. Please contact Technical Staff for help'
       );
+      close();
       return;
     }
 
-    const user = await updateUserProfile(session?.user?.id, values);
+    values = cleanFormValues(values);
+    const newUserData = await updateUserProfile(session?.user?.id, values);
 
-    if (user !== null) {
-      console.log('Successfully updated!');
-      console.log(user);
-
+    if (newUserData) {
+      // Updating session to reflect new user
       await update({
         ...session,
-        user: user,
+        user: newUserData,
       });
 
+      // Form resetting and state resetting
       form.reset();
-
-      form.setFieldValue('bio', user.bio);
-      setBioLength(user.bio?.length!);
-      setSkills(user.skills);
+      form.setFieldValue('bio', newUserData.bio || '');
+      setBioLength(newUserData.bio?.length! || 0);
+      setCurrentSkills(newUserData.skills);
+      setFormChanged(false);
+      setcurrentSkillError(false);
 
       notifications.show({
         message: 'Your profile has updated successfully!',
@@ -107,12 +146,11 @@ export default function Account() {
 
   const onUploadAvatar = async (event: any) => {
     event.preventDefault();
-
     if (!inputFileRef.current?.files) throw new Error('No file selected!');
 
     const file = inputFileRef.current.files[0];
 
-    if (file.size > 5000000) {
+    if (file.size > 1000000 * MAX_IMAGE_SIZE_MB) {
       notifications.show({
         message: 'Your Avatar image size is too big! Keep it less than 5MB.',
         icon: <IconX />,
@@ -130,23 +168,25 @@ export default function Account() {
       handleUploadUrl: '/api/avatar/upload',
     });
 
-    if (newBlob) console.log('Uploaded success');
-
-    if (!session?.user?.id) {
-      console.error(
-        '[ERROR] No session ID. Please contact Technical Staff for help'
-      );
+    if (!newBlob || !session?.user?.id) {
+      notifications.show({
+        message: 'You avatar failed to upload...',
+        icon: <IconX />,
+        color: 'red',
+        title: 'Something went wrong',
+        autoClose: 3000,
+      });
+      setLoadingAvatar(false);
       return;
     }
 
     await deleteUserAvatar(session.user.id);
+    const newUserData = await updateUserAvatar(session?.user?.id, newBlob.url);
 
-    const user = await updateUserAvatar(session?.user?.id, newBlob.url);
-
-    if (user !== null) {
+    if (newUserData) {
       await update({
         ...session,
-        user: user,
+        user: newUserData,
       });
 
       notifications.show({
@@ -171,16 +211,16 @@ export default function Account() {
 
   return (
     <Stack w='100%' h='100%' pr={20} pl={20} pos='relative'>
-      <Form form={form} onSubmit={onSubmitProfile}>
+      <Form form={form} onSubmit={onSubmitForm}>
         <Stack justify='center' align='center'>
           <Fieldset legend='Public Profile'>
-            <LoadingOverlay visible={visible || status === 'loading'} />
+            <LoadingOverlay visible={isLoading || status === 'loading'} />
             <Stack align='center'>
               <Group
                 className='relative h-fit w-fit rounded-full hover:cursor-pointer'
                 justify='center'
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+                onMouseEnter={() => setIsAvatarHovered(true)}
+                onMouseLeave={() => setIsAvatarHovered(false)}
                 onClick={() => {
                   if (!loadingAvatar) inputFileRef.current?.click();
                 }}
@@ -188,9 +228,11 @@ export default function Account() {
                 <Avatar
                   src={session?.user?.image}
                   size={100}
-                  className={isHovered || loadingAvatar ? 'opacity-20' : ''}
+                  className={
+                    isAvatarHovered || loadingAvatar ? 'opacity-20' : ''
+                  }
                 />
-                {isHovered && !loadingAvatar ? (
+                {isAvatarHovered && !loadingAvatar && (
                   <Tooltip
                     bg='dark'
                     color='white'
@@ -198,14 +240,8 @@ export default function Account() {
                   >
                     <IconFileUpload size='50%' className='absolute' />
                   </Tooltip>
-                ) : (
-                  <></>
                 )}
-                {loadingAvatar ? (
-                  <Loader size={40} className='absolute' />
-                ) : (
-                  <></>
-                )}
+                {loadingAvatar && <Loader size={40} className='absolute' />}
                 <input
                   type='file'
                   ref={inputFileRef}
@@ -255,11 +291,33 @@ export default function Account() {
               <TagsInput
                 w='100%'
                 label='Skills'
-                placeholder='Type here...'
-                value={skills}
-                onChange={(e) => {
-                  form.setFieldValue('skills', e);
-                  setSkills(e);
+                placeholder='Type here and hit enter...'
+                value={currentSkills}
+                splitChars={[]}
+                maxTags={15}
+                error={
+                  currentSkillError
+                    ? 'Do not enter skills with more than 15 characters.'
+                    : false
+                }
+                onOptionSubmit={(value: string) => {
+                  if (value.length > 15) {
+                    setcurrentSkillError(true);
+                    return;
+                  }
+                  setcurrentSkillError(false);
+
+                  form.setFieldValue('skills', [...currentSkills, value]);
+                  setCurrentSkills((prev) => [...prev, value]);
+                }}
+                onRemove={(value: string) => {
+                  form.setFieldValue(
+                    'skills',
+                    currentSkills.filter((skill) => skill !== value)
+                  );
+                  setCurrentSkills((prev) =>
+                    prev.filter((skill) => skill !== value)
+                  );
                 }}
               />
 
@@ -301,12 +359,24 @@ export default function Account() {
               <TextInput
                 label='Phone'
                 key={form.key('phone')}
-                placeholder={session?.user?.phone || 'Ex. (314)-000-0101'}
+                placeholder={session?.user?.phone || 'Ex. 1234567890'}
                 {...form.getInputProps('phone')}
               />
             </Stack>
           </Fieldset>
           <Stack w='95%' gap={10}>
+            {formChanged !== null && (
+              <Alert
+                title={
+                  formChanged
+                    ? 'Changes have not been saved.'
+                    : 'Changes saved.'
+                }
+                radius='md'
+                color={formChanged ? 'red.6' : 'green.6'}
+                icon={formChanged ? <IconNotesOff /> : <IconCheckbox />}
+              ></Alert>
+            )}
             <Text size='xs'>
               By clicking submit, you agree to Swamphacks&apos;s{' '}
               <Anchor>Term&apos;s of Service</Anchor>,{' '}
