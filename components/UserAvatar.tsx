@@ -9,27 +9,34 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
-import { IconLogout } from '@tabler/icons-react';
+import { IconLogout, IconSettings } from '@tabler/icons-react';
 import { serverSignOut } from '@/actions/auth';
-import { useMediaQuery } from '@mantine/hooks';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import SettingsModal from './settings/SettingsModal';
 
 interface Props {
   session: Session;
 }
 
 export default function UserAvatar({ session }: Readonly<Props>) {
-  const isMobile = useMediaQuery('(max-width: 50em)');
+  const isMobile = useMediaQuery(`(max-width: 50em)`);
+  const [settingsModalOpen, { open: openModal, close: closeModal }] =
+    useDisclosure();
 
   if (!session?.user) return null;
   const { image, firstName, lastName, email } = session.user;
 
   return (
     <Group justify='center'>
+      <SettingsModal opened={settingsModalOpen} closeModal={closeModal} />
       <Menu trigger='click-hover' shadow='md' withArrow>
         <MenuTarget>
           <Avatar src={image} radius='xl' />
         </MenuTarget>
         <MenuDropdown>
+          <MenuItem leftSection={<IconSettings />} onClick={openModal}>
+            Settings
+          </MenuItem>
           <MenuItem
             color='red'
             leftSection={<IconLogout />}

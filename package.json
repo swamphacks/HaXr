@@ -28,6 +28,8 @@
     "@prisma/adapter-neon": "^5.13.0",
     "@prisma/client": "^5.13.0",
     "@tabler/icons-react": "^3.2.0",
+    "@vercel/blob": "^0.23.4",
+    "crypto-js": "^4.2.0",
     "@zxing/browser": "^0.1.5",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.11",

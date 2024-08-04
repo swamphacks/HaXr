@@ -24,9 +24,14 @@ model User {
   school        String?
   image         String?
   role          Role      @default(Hacker)
+  accounts      Account[]
+  sessions      Session[]
 
-  accounts Account[]
-  sessions Session[]
+  // Optional
+  bio         String?  @db.Text
+  githubURL   String?
+  linkedinURL String?
+  skills      String[]
 
   applications Application[]
   attendees    Attendee[]
