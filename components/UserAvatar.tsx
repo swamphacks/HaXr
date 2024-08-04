@@ -23,7 +23,6 @@ export default function UserAvatar({ session }: Readonly<Props>) {
   const [settingsModalOpen, { open: openModal, close: closeModal }] =
     useDisclosure();
 
-
   if (!session?.user) return null;
   const { image, firstName, lastName, email } = session.user;
 
