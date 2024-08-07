@@ -15,10 +15,11 @@ import {
 	Radio,
 	FileInput,
 	Modal,
-	Alert
+	Alert,
+	NumberInput,
 } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
-import { useForm, UseFormReturnType, isEmail, isNotEmpty } from '@mantine/form';
+import { useForm, UseFormReturnType } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import {
 	ageChoices,
@@ -43,11 +44,12 @@ import {
 	Application,
 	ApplicationResponse,
 	StatusIndicator,
+	shortAnswerLength,
 } from '@/types/forms';
 import { mlhQuestions, mantineForm, MantineForm } from '@/forms/application';
 import { Form, Competition } from '@prisma/client';
 import Status from '@/components/status';
-import useStateWithRef from '@/utils/stateWithRef';
+import { isValidEmail, initializeQuestion, isEmpty } from '@/utils/forms';
 
 function Question({
 	question,
@@ -59,6 +61,23 @@ function Question({
 	disabled: boolean;
 }) {
 	const [file, setFile] = useState<File | null>(null);
+	const handleFileChange = (file: File | null) => {
+		setFile(file);
+		form.setFieldValue(question.key, file);
+		console.log(file);
+	}
+
+	const [phone, setPhone] = useState(form.getValues()[question.key] ?? '');
+	const handlePhoneChange = (e: any) => {
+		const value = e.target.value;
+
+		if (value.length > 10) return;
+		if (!/^\d*$/.test(value)) return;
+
+		setPhone(value);
+		form.setFieldValue(question.key, value);
+	};
+
 	switch (question.type) {
 		case questionType.shortResponse:
 		case questionType.email:
@@ -118,6 +137,11 @@ function Question({
 					required={question.settings.required}
 					key={form.key(question.key)}
 					{...form.getInputProps(question.key, { type: 'checkbox' })}
+					styles={{
+						error: {
+							marginTop: '8px',
+						}
+					}}
 				>
 					<Stack className='mt-2'>
 						{question.choices?.map((choice: string, index: number) => {
@@ -162,17 +186,16 @@ function Question({
 			);
 		case questionType.phone:
 			return (
-				<div key={question.key}>
-					<Text size='sm'>
-						{question.title}{' '}
-						<span className='text-[var(--mantine-color-red-8)]'> *</span>
-					</Text>
-					<PhoneInput
-						defaultCountry='us'
-						disabled={disabled}
-						placeholder='Enter your phone number'
-					/>
-				</div>
+				<TextInput
+					label={question.title}
+					description={question.description}
+					placeholder="Phone Number"
+					style={{ width: '9rem' }}
+					required={question.settings.required}
+					{...form.getInputProps(question.key)}
+					onChange={handlePhoneChange}
+					value={phone}
+				/>
 			);
 		case questionType.file:
 			return (
@@ -184,8 +207,10 @@ function Question({
 						required={question.settings.required}
 						placeholder='Upload files'
 						disabled={disabled}
+						key={form.key(question.key)}
+						{...form.getInputProps(question.key)}
 						value={file}
-						onChange={setFile}
+						onChange={handleFileChange}
 					/>
 					{file && (
 						<Text size='sm' ta='center'>
@@ -286,32 +311,29 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 	});
 
 	const autosave = async () => {
-		try {
-			const currentValues = form.getValues();
-			const prev = prevValues.current;
-			const currId = responseId.current;
-
-			// Only save if there are changes
-			if (!recordEquals(prev, currentValues)) {
-				await saveResponse(currId, currentValues);
-				prevValues.current = currentValues;
-				setStatus(StatusIndicator.SUCCESS);
-				console.log('Autosaved');
-			} else {
-				console.log('no changes - not saved');
-			}
-		} catch (error) {
-			console.log(error);
-			setStatus(StatusIndicator.FAILED);
-		}
-
-		if (!submittedRef.current) {
-			setTimeout(autosave, 1000);
-		}
+		// try {
+		// 	const currentValues = form.getValues();
+		// 	const prev = prevValues.current;
+		// 	const currId = responseId.current;
+		//
+		// 	// Only save if there are changes
+		// 	if (!recordEquals(prev, currentValues)) {
+		// 		await saveResponse(currId, currentValues);
+		// 		prevValues.current = currentValues;
+		// 		setStatus(StatusIndicator.SUCCESS);
+		// 		console.log('Autosaved');
+		// 	}
+		// } catch (error) {
+		// 	console.log(error);
+		// 	setStatus(StatusIndicator.FAILED);
+		// }
+		//
+		// if (!submittedRef.current) {
+		// 	setTimeout(autosave, 1000);
+		// }
 	};
 
 	useEffect(() => {
-		toggle();
 		getApplication('SWAMPHACKS-X').then((resp) => {
 			console.log(resp);
 			if (!resp || !resp.application?.sections) {
@@ -325,8 +347,20 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 			setFormSections(sections);
 
 			getFormResponse(application.id, 'test-user', prevValues).then((resp) => {
+				const answers = resp.answers as unknown as Record<string, any>;
+				const values: Record<string, any> = {};
 				responseId.current = resp.id;
-				const values = resp.answers as unknown as Record<string, any>;
+				sections.flatMap((section: FormSection) => section.questions).forEach((question: QuestionInterface) => initializeQuestion(question, answers, values));
+
+				if (application.is_mlh) {
+					mlhQuestions.general.questions.forEach((question: QuestionInterface) => {
+						initializeQuestion(question, answers, values);
+					});
+					mlhQuestions.agreements.questions.forEach((question: QuestionInterface) => {
+						initializeQuestion(question, answers, values);
+					});
+				}
+
 				prevValues.current = values;
 				form.setValues(values);
 				console.log(values);
@@ -345,10 +379,13 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const isPhoneValid = (phone: string) => {
+		// if (phoneString.length !== 10) return false;
+		// const phoneDash = phoneString.slice(0, 3) + '-' + phoneString.slice(3, 6) + '-' + phoneString.slice(6);
+		// console.log(phoneDash);
 		try {
-			return phoneUtil.isValidNumber(phoneUtil.parseAndKeepRawInput(phone));
+			const number = phoneUtil.parseAndKeepRawInput(phone, 'US');
+			return phoneUtil.isValidNumber(number);
 		} catch (error) {
-			console.log(phone);
 			console.log('not valid phone number');
 			return false;
 		}
@@ -359,29 +396,107 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 		form.setFieldValue('phoneNumber', value);
 	};
 
+	const validateInputs = () => {
+		const values = form.getValues();
+		const errors: Record<string, any> = {};
+		Object.entries(values).forEach(([questionKey, response]) => {
+			let question = formSections
+				.flatMap((section) => section.questions)
+				.find((q) => q.key === questionKey);
+
+			if (!question && !formObject?.is_mlh) return;
+			if (!question && formObject?.is_mlh) {
+				question = mlhQuestions.general.questions.find((question: QuestionInterface) => question.key === questionKey)
+					|| mlhQuestions.agreements.questions.find((question: QuestionInterface) => question.key === questionKey);
+			}
+
+			if (!question) return;
+			if (!response && !question.settings.required) {
+				return;
+			}
+
+			switch (question.type) {
+				case questionType.email:
+					if (isEmpty(response) && question.settings.required) {
+						errors[questionKey] = 'Please enter an email';
+					}
+					if (!isValidEmail(response)) {
+						errors[questionKey] = 'Invalid email';
+					}
+					break;
+				case questionType.phone:
+					if (isEmpty(response) && question.settings.required) {
+						errors[questionKey] = 'Please enter an email';
+					}
+					if (!isPhoneValid(response)) {
+						errors[questionKey] = 'Invalid phone number';
+					}
+					break;
+				case questionType.paragraph:
+				case questionType.shortResponse:
+					if (isEmpty(response) && question.settings.required) {
+						errors[questionKey] = 'Please enter a response';
+					}
+					if (response.length > (question.settings?.maxChars ?? shortAnswerLength)) {
+						errors[questionKey] = 'Response is too long';
+					}
+					break;
+				case questionType.dropdown:
+				case questionType.multiplechoice:
+					if (question.choices && !question.choices.includes(response)) {
+						errors[questionKey] = 'Please select a valid choice';
+					}
+					break;
+				case questionType.checkbox:
+					if ((!Array.isArray(response) || response.length === 0) && question.settings.required) {
+						errors[questionKey] = 'Please select at least one option';
+					}
+					break;
+				case questionType.agreement:
+					if (!response && question.settings.required) {
+						errors[questionKey] = 'Please agree to the terms';
+					}
+					break;
+				case questionType.file:
+					if (!(response instanceof File)) {
+						errors[questionKey] = 'Please upload a file';
+					}
+					break;
+			}
+
+			// if (question.type === questionType.phone) {
+			// 	if (!isPhoneValid(response)) {
+			// 		errors[questionKey] = 'Invalid phone number';
+			// 	}
+			// }
+		});
+		form.setErrors(errors);
+		return Object.keys(errors).length === 0;
+	}
+
 	const handleSubmit = async () => {
-		toggle();
-		submittedRef.current = true; // Stop autosave
-		const resp = await submitResponse(responseId.current, form.getValues());
-		setSubmitted(true);
-		setStatus(StatusIndicator.SUBMITTED);
-		toggle();
-		console.log(resp);
+		const success = validateInputs();
+		if (!success) {
+			return;
+		}
+		// submittedRef.current = true; // Stop autosave
+		// const resp = await submitResponse(responseId.current, form.getValues());
+		// setSubmitted(true);
+		// setStatus(StatusIndicator.SUBMITTED);
+		// console.log(resp);
 	};
 
 	return (
 		<>
-
 			<div className='my-16 grid grid-cols-[auto_40rem_auto] items-center'>
 				<div />
 				{loadedForm !== false ? (
 					<form onSubmit={handleSubmit}>
-
 						{/* Submission Modal */}
 						<Modal opened={modalOpened} onClose={close} title='Submit Form'>
 							<Text style={{ marginBottom: '12px' }}>
-								Are you sure you want to submit your application? You will not be
-								able to edit it after submission.
+								Are you sure you want to submit your application? You will not
+								be able to edit it after submission.
 							</Text>
 							<Group justify='center'>
 								<Button
@@ -453,13 +568,22 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
 								<Status status={status} />
 							</div>
 						)}
-					</form>) :
-					<div className='flex flex-col justify-center items-center'>
-						<Alert variant="light" color="red" title="Form not found" icon={<IconInfoCircle />}>
-							The form you are looking for was not found. The form may have closed or been deleted. If you were in the process of editing the form before the form closed, it has been auto-submitted. If you believe this is an error, please contact the event organizers.
+					</form>
+				) : (
+					<div className='flex flex-col items-center justify-center'>
+						<Alert
+							variant='light'
+							color='red'
+							title='Form not found'
+							icon={<IconInfoCircle />}
+						>
+							The form you are looking for was not found. The form may have
+							closed or been deleted. If you were in the process of editing the
+							form before the form closed, it has been auto-submitted. If you
+							believe this is an error, please contact the event organizers.
 						</Alert>
 					</div>
-				}
+				)}
 			</div>
 			<div />
 		</>

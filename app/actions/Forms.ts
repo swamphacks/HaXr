@@ -17,9 +17,9 @@ export async function getApplication(competition_code: string) {
 			code: competition_code,
 			application: {
 				closes_at: {
-					gte: new Date()
-				}
-			}
+					gte: new Date(),
+				},
+			},
 		},
 		include: {
 			application: true,
@@ -32,9 +32,9 @@ export async function getForm(formId: string) {
 	const form = await prisma.form.findFirst({
 		where: {
 			id: formId,
-			closes_at: {
-				lte: new Date()
-			}
+			// closes_at: {
+			// 	// lte: new Date(),
+			// },
 		},
 	});
 	return form;
