@@ -125,7 +125,12 @@ export default function Account() {
       setcurrentSkillError(false);
 
       notifications.show({
-        message: 'Your profile has updated successfully!',
+        message: (
+          <Text size='sm'>
+            Your profile updated successfully. You may need to{' '}
+            <Anchor href=''>refresh</Anchor> to see the changes.
+          </Text>
+        ),
         icon: <IconCheck />,
         color: 'green',
         title: 'Public Profile Updated',
@@ -190,7 +195,12 @@ export default function Account() {
       });
 
       notifications.show({
-        message: 'Your Avatar has updated successfully!',
+        message: (
+          <Text size='sm'>
+            Your avatar updated successfully. You may need to{' '}
+            <Anchor href=''>refresh</Anchor> to see the changes.
+          </Text>
+        ),
         icon: <IconCheck />,
         color: 'green',
         title: 'Avatar Updated',

@@ -1,16 +1,24 @@
 'use client';
 import {
+  Box,
   Button,
   Center,
   Combobox,
   Stack,
+  Text,
   Title,
   useCombobox,
 } from '@mantine/core';
-import { IconDoorExit, IconLink, IconTrophy } from '@tabler/icons-react';
+import {
+  IconDoorExit,
+  IconLink,
+  IconSettings,
+  IconTrophy,
+} from '@tabler/icons-react';
 import { serverSignOut } from '@/actions/auth';
 import { AdminLink, Competition } from '@prisma/client';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface Props {
   links: AdminLink[];
@@ -19,6 +27,7 @@ interface Props {
 
 export default function AdminDashboard({ links, competitions }: Props) {
   const combobox = useCombobox();
+  const { data: session } = useSession();
   const router = useRouter();
 
   return (
@@ -80,7 +89,7 @@ export default function AdminDashboard({ links, competitions }: Props) {
           color='red'
           variant='outline'
           leftSection={<IconDoorExit />}
-          onClick={() => serverSignOut()}
+          onClick={serverSignOut}
         >
           Sign-out
         </Button>
