@@ -1,7 +1,5 @@
 import { questionType } from '@/types/questionTypes';
 
-export const shortAnswerLength = 2;
-
 export enum StatusIndicator {
   SUCCESS = 'Success',
   FAILED = 'Failed',
@@ -21,7 +19,9 @@ export const fileTypes: FileType[] = [
   FileType.VIDEO,
 ];
 
-export const fileSizes = ['1MB', '10MB', '100MB', '1GB'];
+export const fileSizes = ['1KB', '1MB', '10MB', '100MB', '1GB'];
+
+export const ShortResponseLength = 100;
 
 export interface QuestionSettings {
   maxChars?: number;

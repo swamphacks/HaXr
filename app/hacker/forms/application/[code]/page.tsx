@@ -2,33 +2,19 @@
 
 import { useState, useEffect, useRef } from 'react';
 import {
-  TextInput,
-  Textarea,
-  Select,
-  Checkbox,
   Divider,
   Stack,
   Button,
   Group,
   Text,
   Title,
-  Radio,
-  FileInput,
   Modal,
   Alert,
-  NumberInput,
 } from '@mantine/core';
-import { IconInfoCircle, IconX } from '@tabler/icons-react';
+import { IconInfoCircle } from '@tabler/icons-react';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import {
-  ageChoices,
-  schools,
-  levelOfStudies,
-  countries,
-  questionType,
-} from '@/types/questionTypes';
-import { PhoneInput } from 'react-international-phone';
+import { questionType } from '@/types/questionTypes';
 import 'react-international-phone/style.css';
 import { PhoneNumberUtil } from 'google-libphonenumber';
 import {
@@ -36,252 +22,23 @@ import {
   getFormResponse,
   saveResponse,
   submitResponse,
-  uploadFile,
-  deleteFile,
 } from '@/app/actions/Forms';
 import {
   Question as QuestionInterface,
-  Agreement,
   FormSection,
-  Application,
-  ApplicationResponse,
   StatusIndicator,
-  shortAnswerLength,
-  Choice,
+  ShortResponseLength,
 } from '@/types/forms';
-import { mlhQuestions, mantineForm, MantineForm } from '@/forms/application';
-import { Form, Competition } from '@prisma/client';
+import { mlhQuestions } from '@/forms/application';
+import { Form } from '@prisma/client';
 import Status from '@/components/status';
-import { isValidEmail, initializeQuestion, isEmpty } from '@/utils/forms';
-
-function Question({
-  question,
-  competitionCode,
-  formId,
-  responseId,
-  form,
-  disabled,
-}: {
-  question: QuestionInterface;
-  competitionCode: string;
-  formId: string;
-  responseId: string;
-  form: UseFormReturnType<Record<string, any>>;
-  disabled: boolean;
-}) {
-  const [file, setFile] = useState<File | null>(null);
-  const [phone, setPhone] = useState('');
-
-  const handlePhoneChange = (e: any) => {
-    const value = e.target.value;
-
-    if (value.length > 10) return;
-    if (!/^\d*$/.test(value)) return;
-
-    setPhone(value);
-    form.setFieldValue(question.key, value);
-  };
-
-  const handleFileChange = async (file: File | null) => {
-    setFile(file);
-    if (!file) {
-      await deleteFile(form.getValues()[question.key].url);
-      form.setFieldValue(question.key, { url: '', value: '' });
-      return;
-    }
-    const formData = new FormData();
-    formData.append('file', file);
-    const resp = await uploadFile(
-      competitionCode,
-      formId,
-      responseId,
-      question.key,
-      formData
-    );
-    if (!resp) {
-      console.error('Failed to upload file');
-      return;
-    }
-
-    form.setFieldValue(question.key, { url: resp.url, value: file.name });
-    console.log('file saved');
-  };
-
-  useEffect(() => {
-    const values = form.getValues();
-
-    const filename = values[question.key]?.value;
-    if (filename) {
-      setFile(new File([], filename));
-    }
-
-    setPhone(values[question.key] ?? '');
-  }, [form]);
-
-  switch (question.type) {
-    case questionType.shortResponse:
-    case questionType.email:
-      return (
-        <TextInput
-          id={question.key}
-          label={question.title}
-          description={question.description}
-          required={question.settings.required}
-          placeholder={question.placeholder ?? 'Enter response'}
-          disabled={disabled}
-          key={form.key(question.key)}
-          {...form.getInputProps(question.key)}
-        />
-      );
-    case questionType.paragraph:
-      return (
-        <Textarea
-          id={question.key}
-          label={question.title}
-          description={question.description}
-          required={question.settings.required}
-          placeholder={question.placeholder ?? 'Enter response'}
-          resize='vertical'
-          disabled={disabled}
-          key={form.key(question.key)}
-          {...form.getInputProps(question.key)}
-        />
-      );
-    case questionType.multiplechoice:
-      return (
-        <Radio.Group
-          id={question.key}
-          label={question.title}
-          description={question.description}
-          required={question.settings.required}
-          key={form.key(question.key)}
-          {...form.getInputProps(question.key)}
-          styles={{
-            error: {
-              marginTop: '8px',
-            },
-          }}
-        >
-          <Stack className='mt-2'>
-            {question.choices?.map((choice: Choice) => {
-              return (
-                <Radio
-                  id={question.key}
-                  key={choice.key}
-                  label={choice.value}
-                  value={choice.value}
-                  disabled={disabled}
-                />
-              );
-            })}
-          </Stack>
-        </Radio.Group>
-      );
-
-    case questionType.checkbox:
-      return (
-        <Checkbox.Group
-          id={question.key}
-          label={question.title}
-          description={question.description}
-          required={question.settings.required}
-          key={form.key(question.key)}
-          {...form.getInputProps(question.key, { type: 'checkbox' })}
-          styles={{
-            error: {
-              marginTop: '8px',
-            },
-          }}
-        >
-          <Stack className='mt-2'>
-            {question.choices?.map((choice: Choice) => {
-              return (
-                <Checkbox
-                  id={question.key}
-                  key={choice.key}
-                  label={choice.value}
-                  value={choice.value}
-                  disabled={disabled}
-                />
-              );
-            })}
-          </Stack>
-        </Checkbox.Group>
-      );
-
-    case questionType.dropdown:
-      const data =
-        question.choices?.map((choice: Choice) => choice.value) ?? [];
-      return (
-        <Select
-          id={question.key}
-          label={question.title}
-          description={question.description}
-          required={question.settings.required}
-          placeholder={question.placeholder ?? 'Select an option'}
-          data={data}
-          disabled={disabled}
-          key={form.key(question.key)}
-          {...form.getInputProps(question.key)}
-          searchable
-        />
-      );
-
-    case questionType.agreement:
-      return (
-        <Checkbox
-          id={question.key}
-          label={question.title}
-          description={question.description}
-          required={question.settings.required}
-          key={form.key(question.key)}
-          disabled={disabled}
-          {...form.getInputProps(question.key, { type: 'checkbox' })}
-        />
-      );
-    case questionType.phone:
-      return (
-        <TextInput
-          id={question.key}
-          label={question.title}
-          description={question.description}
-          placeholder='Phone Number'
-          disabled={disabled}
-          style={{ width: '9rem' }}
-          required={question.settings.required}
-          {...form.getInputProps(question.key)}
-          onChange={handlePhoneChange}
-          value={phone}
-        />
-      );
-    case questionType.file:
-      return (
-        <Stack gap='sm'>
-          <FileInput
-            id={question.key}
-            accept='image/png,image/jpeg'
-            label={question.title}
-            description={question.description}
-            required={question.settings.required}
-            placeholder={file?.name || 'Upload files'}
-            disabled={disabled}
-            key={form.key(question.key)}
-            {...form.getInputProps(question.key)}
-            value={file}
-            onChange={handleFileChange}
-            clearable
-          />
-          {file ? (
-            <Text size='sm' ta='center'>
-              Picked file: {file.name}
-            </Text>
-          ) : null}
-        </Stack>
-      );
-    default:
-      return <h1 key={form.key(question.key)}>Not implemented yet</h1>;
-  }
-}
+import {
+  isValidEmail,
+  initializeQuestion,
+  isEmpty,
+  recordEquals,
+} from '@/utils/forms';
+import { Question } from '@/components/forms/Questions';
 
 function Section({
   section,
@@ -327,39 +84,8 @@ function Section({
   );
 }
 
-function arrayEquals(a: string[], b: string[]) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length !== b.length) return false;
-
-  for (let i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
-function recordEquals(a: Record<string, any>, b: Record<string, any>) {
-  // Compare the keys
-  if (!arrayEquals(Object.keys(a), Object.keys(b))) return false;
-
-  for (const key in a) {
-    if (
-      Array.isArray(a[key]) &&
-      Array.isArray(b[key]) &&
-      !arrayEquals(a[key], b[key])
-    )
-      return false;
-    else {
-      if (b[key] !== a[key]) return false;
-    }
-  }
-
-  return true;
-}
-
 export default function ViewForm({ params }: { params: { formId: string } }) {
   const phoneUtil = PhoneNumberUtil.getInstance();
-  const [isValid, setIsValid] = useState(false);
   const [modalOpened, { open, close }] = useDisclosure(false);
   const [status, setStatus] = useState<StatusIndicator>(
     StatusIndicator.LOADING
@@ -367,18 +93,171 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
   const [formSections, setFormSections] = useState<FormSection[]>([]);
   const [formObject, setFormObject] = useState<Form>();
   const [submitted, setSubmitted] = useState(false);
-  const [loadingVisible, { toggle }] = useDisclosure(false);
   const submittedRef = useRef(false);
   const prevValues = useRef<Record<string, any>>({});
   const responseId = useRef<string>('');
   const [loadedForm, setLoadedForm] = useState<boolean>();
-  const [phone, setPhone] = useState('');
-  const userId = 'test-user';
 
   const form = useForm<Record<string, any>>({
     mode: 'uncontrolled',
     initialValues: {},
   });
+
+  const isPhoneValid = (phone: string) => {
+    try {
+      const number = phoneUtil.parseAndKeepRawInput(phone, 'US');
+      return phoneUtil.isValidNumber(number);
+    } catch (error) {
+      console.log('not valid phone number');
+      return false;
+    }
+  };
+
+  const validateInputs = (
+    responses: Record<string, any>,
+    scrollToError: boolean = true
+  ) => {
+    const errors: Record<string, any> = {};
+    Object.entries(responses).forEach(([questionKey, response]) => {
+      // find associated question
+      let question = formSections
+        .flatMap((section) => section.questions)
+        .find((q) => q.key === questionKey);
+
+      // If no question is found and this is not an MLH form, the response has nothing to be validated against - this case should not happen
+      if (!question && !formObject?.is_mlh) return;
+
+      // If no question is found and this is an MLH form, check the MLH questions
+      if (!question && formObject?.is_mlh) {
+        question =
+          mlhQuestions.general.questions.find(
+            (question: QuestionInterface) => question.key === questionKey
+          ) ||
+          mlhQuestions.agreements.questions.find(
+            (question: QuestionInterface) => question.key === questionKey
+          );
+      }
+
+      if (!question) return; // No question is associated - return
+      if (!response && !question.settings.required) {
+        return;
+      }
+
+      switch (question.type) {
+        case questionType.email:
+          if (isEmpty(response) && question.settings.required) {
+            errors[questionKey] = 'Please enter an email';
+          }
+          if (!isValidEmail(response)) {
+            errors[questionKey] = 'Invalid email';
+          }
+          break;
+        case questionType.phone:
+          if (isEmpty(response) && question.settings.required) {
+            errors[questionKey] = 'Please enter a phone number';
+          }
+          if (!isPhoneValid(response)) {
+            errors[questionKey] = 'Invalid phone number';
+          }
+          break;
+        case questionType.paragraph:
+        case questionType.shortResponse:
+          if (isEmpty(response) && question.settings.required) {
+            errors[questionKey] = 'Please enter a response';
+          }
+          if (
+            response.length >
+            (question.settings?.maxChars ?? ShortResponseLength)
+          ) {
+            errors[questionKey] = 'Exceeded maximum character limit';
+          }
+          break;
+        case questionType.dropdown:
+        case questionType.multiplechoice:
+          if (
+            question.choices &&
+            !question.choices.map((choice) => choice.value).includes(response)
+          ) {
+            errors[questionKey] = 'Please select a valid choice';
+          }
+          break;
+        case questionType.checkbox:
+          if (
+            (!Array.isArray(response) || response.length === 0) &&
+            question.settings.required
+          ) {
+            errors[questionKey] = 'Please select at least one option';
+          }
+          break;
+        case questionType.agreement:
+          if (!response && question.settings.required) {
+            errors[questionKey] = 'Please agree';
+          }
+          break;
+        case questionType.file:
+          // Existing error should already exist if file size is too large
+          if (questionKey in form.errors)
+            errors[questionKey] = form.errors[questionKey];
+          else if (isEmpty(response?.value ?? '')) {
+            errors[questionKey] = 'Please upload a file';
+          }
+          break;
+      }
+    });
+
+    form.setErrors(errors);
+    if (scrollToError) {
+      // Scroll to first error
+      let foundError = false;
+      for (const question of mlhQuestions.general.questions) {
+        if (question.key in errors) {
+          document
+            .getElementById(question.key)
+            ?.scrollIntoView({ behavior: 'smooth' });
+          foundError = true;
+          break;
+        }
+      }
+
+      for (const question of formSections.flatMap(
+        (section: FormSection) => section.questions
+      )) {
+        if (foundError) break;
+        if (question.key in errors) {
+          document
+            .getElementById(question.key)
+            ?.scrollIntoView({ behavior: 'smooth' });
+          foundError = true;
+          break;
+        }
+      }
+
+      for (const question of mlhQuestions.agreements.questions) {
+        if (foundError) break;
+        if (question.key in errors) {
+          document
+            .getElementById(question.key)
+            ?.scrollIntoView({ behavior: 'smooth' });
+          foundError = true;
+          break;
+        }
+      }
+    }
+
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    const success = validateInputs(form.getValues());
+    if (!success) {
+      return;
+    }
+    submittedRef.current = true; // Stop autosave
+    const resp = await submitResponse(responseId.current, form.getValues());
+    setSubmitted(true);
+    setStatus(StatusIndicator.SUBMITTED);
+    console.log(resp);
+  };
 
   const autosave = async () => {
     if (submittedRef.current) {
@@ -461,165 +340,6 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
       });
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const isPhoneValid = (phone: string) => {
-    // if (phoneString.length !== 10) return false;
-    // const phoneDash = phoneString.slice(0, 3) + '-' + phoneString.slice(3, 6) + '-' + phoneString.slice(6);
-    // console.log(phoneDash);
-    try {
-      const number = phoneUtil.parseAndKeepRawInput(phone, 'US');
-      return phoneUtil.isValidNumber(number);
-    } catch (error) {
-      console.log('not valid phone number');
-      return false;
-    }
-  };
-
-  const handlePhoneChange = (value: string) => {
-    setPhone(value);
-    form.setFieldValue('phoneNumber', value);
-  };
-
-  const validateInputs = () => {
-    const values = form.getValues();
-    const errors: Record<string, any> = {};
-    Object.entries(values).forEach(([questionKey, response]) => {
-      let question = formSections
-        .flatMap((section) => section.questions)
-        .find((q) => q.key === questionKey);
-
-      if (!question && !formObject?.is_mlh) return;
-      if (!question && formObject?.is_mlh) {
-        question =
-          mlhQuestions.general.questions.find(
-            (question: QuestionInterface) => question.key === questionKey
-          ) ||
-          mlhQuestions.agreements.questions.find(
-            (question: QuestionInterface) => question.key === questionKey
-          );
-      }
-
-      if (!question) return;
-      if (!response && !question.settings.required) {
-        return;
-      }
-
-      switch (question.type) {
-        case questionType.email:
-          if (isEmpty(response) && question.settings.required) {
-            errors[questionKey] = 'Please enter an email';
-          }
-          if (!isValidEmail(response)) {
-            errors[questionKey] = 'Invalid email';
-          }
-          break;
-        case questionType.phone:
-          if (isEmpty(response) && question.settings.required) {
-            errors[questionKey] = 'Please enter an email';
-          }
-          if (!isPhoneValid(response)) {
-            errors[questionKey] = 'Invalid phone number';
-          }
-          break;
-        case questionType.paragraph:
-        case questionType.shortResponse:
-          if (isEmpty(response) && question.settings.required) {
-            errors[questionKey] = 'Please enter a response';
-          }
-          if (
-            response.length > (question.settings?.maxChars ?? shortAnswerLength)
-          ) {
-            errors[questionKey] = 'Response is too long';
-          }
-          break;
-        case questionType.dropdown:
-        case questionType.multiplechoice:
-          if (
-            question.choices &&
-            !question.choices.map((choice) => choice.value).includes(response)
-          ) {
-            errors[questionKey] = 'Please select a valid choice';
-          }
-          break;
-        case questionType.checkbox:
-          if (
-            (!Array.isArray(response) || response.length === 0) &&
-            question.settings.required
-          ) {
-            errors[questionKey] = 'Please select at least one option';
-          }
-          break;
-        case questionType.agreement:
-          if (!response && question.settings.required) {
-            errors[questionKey] = 'Please agree to the terms';
-          }
-          break;
-        case questionType.file:
-          if (isEmpty(response?.value ?? '')) {
-            errors[questionKey] = 'Please upload a file';
-          }
-          break;
-      }
-
-      // if (question.type === questionType.phone) {
-      // 	if (!isPhoneValid(response)) {
-      // 		errors[questionKey] = 'Invalid phone number';
-      // 	}
-      // }
-    });
-
-    form.setErrors(errors);
-
-    // Scroll to first error
-    let foundError = false;
-    for (const question of mlhQuestions.general.questions) {
-      if (question.key in errors) {
-        document
-          .getElementById(question.key)
-          ?.scrollIntoView({ behavior: 'smooth' });
-        foundError = true;
-        break;
-      }
-    }
-
-    for (const question of formSections.flatMap(
-      (section: FormSection) => section.questions
-    )) {
-      if (foundError) break;
-      if (question.key in errors) {
-        document
-          .getElementById(question.key)
-          ?.scrollIntoView({ behavior: 'smooth' });
-        foundError = true;
-        break;
-      }
-    }
-
-    for (const question of mlhQuestions.agreements.questions) {
-      if (foundError) break;
-      if (question.key in errors) {
-        document
-          .getElementById(question.key)
-          ?.scrollIntoView({ behavior: 'smooth' });
-        foundError = true;
-        break;
-      }
-    }
-
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    const success = validateInputs();
-    if (!success) {
-      return;
-    }
-    submittedRef.current = true; // Stop autosave
-    const resp = await submitResponse(responseId.current, form.getValues());
-    setSubmitted(true);
-    setStatus(StatusIndicator.SUBMITTED);
-    console.log(resp);
-  };
 
   return (
     <>
