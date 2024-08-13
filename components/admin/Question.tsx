@@ -143,14 +143,16 @@ function QuestionSettings({
           disabled={disabled}
           labelPosition='left'
         />
-        <Tooltip label='Delete question' color='gray'>
-          <button
-            className='flex h-8 w-8 flex-row items-center justify-center justify-self-end rounded-full transition-colors duration-300 hover:bg-stone-600'
-            onClick={removeQuestion}
-          >
-            <IconTrash />
-          </button>
-        </Tooltip>
+        {disabled ? null : (
+          <Tooltip label='Delete question' color='gray'>
+            <button
+              className='flex h-8 w-8 flex-row items-center justify-center justify-self-end rounded-full transition-colors duration-300 hover:bg-stone-600'
+              onClick={removeQuestion}
+            >
+              <IconTrash />
+            </button>
+          </Tooltip>
+        )}
       </div>
     </Stack>
   );
@@ -208,9 +210,11 @@ function Choices({
                 onChange={(e) => handleChoiceChange(choice.key, e.target.value)}
                 disabled={disabled}
               />
-              <button onClick={() => handleRemoveChoice(choice.key)}>
-                <IconX stroke={1} />
-              </button>
+              {disabled ? null : (
+                <button onClick={() => handleRemoveChoice(choice.key)}>
+                  <IconX stroke={1} />
+                </button>
+              )}
             </div>
           );
         })}
