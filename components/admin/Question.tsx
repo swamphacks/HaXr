@@ -15,6 +15,7 @@ import {
 } from '@mantine/core';
 import { questionType } from '@/types/questionTypes';
 import { Question as FormQuestion, fileTypes, fileSizes } from '@/types/forms';
+import { IconTrash } from '@tabler/icons-react';
 
 function getQuestionType(value: string) {
   switch (value) {
@@ -52,10 +53,12 @@ export const OtherIncludedContext = createContext({
 function QuestionSettings({
   question,
   setQuestion,
+  removeQuestion,
   disabled,
 }: {
   question: FormQuestion;
   setQuestion: (value: FormQuestion) => void;
+  removeQuestion: () => void;
   disabled: boolean;
 }) {
   const handleRequiredChange = (e: any) => {
@@ -126,13 +129,23 @@ function QuestionSettings({
         </>
       ) : null}
 
-      <Switch
-        label='Required'
-        defaultChecked={question.settings.required}
-        onChange={handleRequiredChange}
-        disabled={disabled}
-        labelPosition='left'
-      />
+      <div className='relative grid grid-cols-2 items-center'>
+        <Switch
+          label='Required'
+          defaultChecked={question.settings.required}
+          onChange={handleRequiredChange}
+          disabled={disabled}
+          labelPosition='left'
+        />
+        <Tooltip label='Delete question' color='gray'>
+          <button
+            className='flex h-8 w-8 flex-row items-center justify-center justify-self-end rounded-full transition-colors duration-300 hover:bg-stone-600'
+            onClick={removeQuestion}
+          >
+            <IconTrash />
+          </button>
+        </Tooltip>
+      </div>
     </Stack>
   );
 }
@@ -190,10 +203,12 @@ function Choices({
 export default function QuestionEdit({
   question,
   setQuestion,
+  removeQuestion,
   disabled = false,
 }: {
   question: FormQuestion;
   setQuestion: (value: FormQuestion) => void;
+  removeQuestion: () => void;
   disabled: boolean;
 }) {
   const handleTitleChange = (e: any) => {
@@ -242,6 +257,7 @@ export default function QuestionEdit({
       <QuestionSettings
         disabled={disabled}
         question={question}
+        removeQuestion={removeQuestion}
         setQuestion={setQuestion}
       />
     </div>
