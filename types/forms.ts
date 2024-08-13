@@ -22,6 +22,7 @@ export const fileTypes: FileType[] = [
 export const fileSizes = ['1KB', '1MB', '10MB', '100MB', '1GB'];
 
 export const ShortResponseLength = 100;
+export const MaxParagraphLength = 10000;
 
 export interface QuestionSettings {
   maxChars?: number;
