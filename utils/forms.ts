@@ -1,4 +1,4 @@
-import { Question, FormSection } from '@/types/forms';
+import { Question, FormSection, FileResponse } from '@/types/forms';
 import { questionType } from '@/types/questionTypes';
 
 export function isNotEmpty(value?: string | string[]): boolean {
@@ -24,15 +24,22 @@ export function isEmpty(value: string): boolean {
 
 export function initializeQuestion(
   question: Question,
-  answers: Record<string, any>,
-  values: Record<string, any>
+  responses: Record<string, any>,
+  transformed: Record<string, any>
 ) {
+  const resp = responses[question.key];
   switch (question.type) {
     case questionType.agreement:
-      values[question.key] = answers[question.key] ?? false;
+      transformed[question.key] = resp ?? false;
+      break;
+    case questionType.file:
+      transformed[question.key] = {
+        url: resp.url ?? '',
+        value: resp.value ?? '',
+      };
       break;
     default:
-      values[question.key] = answers[question.key] ?? '';
+      transformed[question.key] = resp ?? '';
       break;
   }
 }

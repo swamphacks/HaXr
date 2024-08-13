@@ -34,6 +34,7 @@
     "@tabler/icons-react": "^3.2.0",
     "@zxing/browser": "^0.1.5",
     "clsx": "^2.1.1",
+    "@vercel/blob": "^0.23.4",
     "dayjs": "^1.11.11",
     "framer-motion": "^11.1.9",
     "http-status-codes": "^2.3.0",

@@ -30,13 +30,18 @@ export interface QuestionSettings {
   required: boolean;
 }
 
+export interface Choice {
+  key: string;
+  value: string;
+}
+
 export interface Question {
   title: string;
   description?: string;
   placeholder?: string;
   type: questionType;
   key: string;
-  choices?: string[];
+  choices?: Choice[];
   settings: QuestionSettings;
 }
 
@@ -66,6 +71,7 @@ export interface Application {
 
 export interface Response {
   key: string;
+  url?: string;
   value: string | number | boolean;
 }
 
@@ -86,4 +92,9 @@ export interface FormSettings {
   required: boolean;
   opens_at: Date | null;
   closes_at: Date | null;
+}
+
+export interface FileResponse {
+  url: string;
+  value: string;
 }
