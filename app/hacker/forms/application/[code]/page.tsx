@@ -54,18 +54,6 @@ import { Form, Competition } from '@prisma/client';
 import Status from '@/components/status';
 import { isValidEmail, initializeQuestion, isEmpty } from '@/utils/forms';
 
-function ClearFileButton({ question }: { question: HTMLButtonElement | null }) {
-  const handleClear = () => {
-    if (question) {
-      question.setAttribute('value', '');
-    }
-  };
-  return (
-    <button onClick={handleClear}>
-      <IconX stroke={1} />
-    </button>
-  );
-}
 function Question({
   question,
   competitionCode,
@@ -82,13 +70,17 @@ function Question({
   disabled: boolean;
 }) {
   const [file, setFile] = useState<File | null>(null);
+  const [phone, setPhone] = useState('');
 
-  useEffect(() => {
-    const filename = form.getValues()[question.key]?.value;
-    if (filename) {
-      setFile(new File([], filename));
-    }
-  }, [form]);
+  const handlePhoneChange = (e: any) => {
+    const value = e.target.value;
+
+    if (value.length > 10) return;
+    if (!/^\d*$/.test(value)) return;
+
+    setPhone(value);
+    form.setFieldValue(question.key, value);
+  };
 
   const handleFileChange = async (file: File | null) => {
     setFile(file);
@@ -115,16 +107,16 @@ function Question({
     console.log('file saved');
   };
 
-  const [phone, setPhone] = useState(form.getValues()[question.key] ?? '');
-  const handlePhoneChange = (e: any) => {
-    const value = e.target.value;
+  useEffect(() => {
+    const values = form.getValues();
 
-    if (value.length > 10) return;
-    if (!/^\d*$/.test(value)) return;
+    const filename = values[question.key]?.value;
+    if (filename) {
+      setFile(new File([], filename));
+    }
 
-    setPhone(value);
-    form.setFieldValue(question.key, value);
-  };
+    setPhone(values[question.key] ?? '');
+  }, [form]);
 
   switch (question.type) {
     case questionType.shortResponse:
@@ -254,6 +246,7 @@ function Question({
           label={question.title}
           description={question.description}
           placeholder='Phone Number'
+          disabled={disabled}
           style={{ width: '9rem' }}
           required={question.settings.required}
           {...form.getInputProps(question.key)}
@@ -562,7 +555,7 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
           }
           break;
         case questionType.file:
-          if (!(response instanceof File)) {
+          if (isEmpty(response?.value ?? '')) {
             errors[questionKey] = 'Please upload a file';
           }
           break;
