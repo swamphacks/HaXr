@@ -5,6 +5,8 @@ import { Pool } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { ApplicationResponse, FormSection } from '@/types/forms';
 import { FormSettings } from '@/types/forms';
+import { put, del } from '@vercel/blob';
+import { revalidatePath } from 'next/cache';
 
 const neon = new Pool({
   connectionString: process.env.POSTGRES_PRISMA_URL,
@@ -20,6 +22,7 @@ export async function getApplication(competition_code: string) {
         closes_at: {
           gte: new Date(),
         },
+        is_published: true,
       },
     },
     include: {
@@ -27,6 +30,43 @@ export async function getApplication(competition_code: string) {
     },
   });
   return resp;
+}
+
+function constructFilename(
+  competitionCode: string,
+  formId: string,
+  responseId: string,
+  questionId: string,
+  file: File
+) {
+  return `${competitionCode}/forms/${formId}/responses/${responseId}/${questionId}/${file.name}`;
+}
+
+export async function uploadFile(
+  competitionCode: string,
+  formId: string,
+  responseId: string,
+  questionId: string,
+  formData: FormData
+) {
+  const file = formData.get('file') as File;
+  const filename = constructFilename(
+    competitionCode,
+    formId,
+    responseId,
+    questionId,
+    file
+  );
+  const resp = await put(filename, file, { access: 'public' });
+  revalidatePath('/');
+  if (!resp) {
+    return null;
+  }
+  return resp;
+}
+
+export async function deleteFile(url: string) {
+  await del(url);
 }
 
 export async function getForm(formId: string) {

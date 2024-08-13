@@ -18,7 +18,7 @@ import {
   Alert,
   NumberInput,
 } from '@mantine/core';
-import { IconInfoCircle } from '@tabler/icons-react';
+import { IconInfoCircle, IconX } from '@tabler/icons-react';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import {
@@ -36,6 +36,8 @@ import {
   getFormResponse,
   saveResponse,
   submitResponse,
+  uploadFile,
+  deleteFile,
 } from '@/app/actions/Forms';
 import {
   Question as QuestionInterface,
@@ -45,26 +47,72 @@ import {
   ApplicationResponse,
   StatusIndicator,
   shortAnswerLength,
+  Choice,
 } from '@/types/forms';
 import { mlhQuestions, mantineForm, MantineForm } from '@/forms/application';
 import { Form, Competition } from '@prisma/client';
 import Status from '@/components/status';
 import { isValidEmail, initializeQuestion, isEmpty } from '@/utils/forms';
 
+function ClearFileButton({ question }: { question: HTMLButtonElement | null }) {
+  const handleClear = () => {
+    if (question) {
+      question.setAttribute('value', '');
+    }
+  };
+  return (
+    <button onClick={handleClear}>
+      <IconX stroke={1} />
+    </button>
+  );
+}
 function Question({
   question,
+  competitionCode,
+  formId,
+  responseId,
   form,
   disabled,
 }: {
   question: QuestionInterface;
+  competitionCode: string;
+  formId: string;
+  responseId: string;
   form: UseFormReturnType<Record<string, any>>;
   disabled: boolean;
 }) {
   const [file, setFile] = useState<File | null>(null);
-  const handleFileChange = (file: File | null) => {
+
+  useEffect(() => {
+    const filename = form.getValues()[question.key]?.value;
+    if (filename) {
+      setFile(new File([], filename));
+    }
+  }, [form]);
+
+  const handleFileChange = async (file: File | null) => {
     setFile(file);
-    form.setFieldValue(question.key, file);
-    console.log(file);
+    if (!file) {
+      await deleteFile(form.getValues()[question.key].url);
+      form.setFieldValue(question.key, { url: '', value: '' });
+      return;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    const resp = await uploadFile(
+      competitionCode,
+      formId,
+      responseId,
+      question.key,
+      formData
+    );
+    if (!resp) {
+      console.error('Failed to upload file');
+      return;
+    }
+
+    form.setFieldValue(question.key, { url: resp.url, value: file.name });
+    console.log('file saved');
   };
 
   const [phone, setPhone] = useState(form.getValues()[question.key] ?? '');
@@ -123,13 +171,13 @@ function Question({
           }}
         >
           <Stack className='mt-2'>
-            {question.choices?.map((choice: string, index: number) => {
+            {question.choices?.map((choice: Choice) => {
               return (
                 <Radio
                   id={question.key}
-                  key={index}
-                  label={choice}
-                  value={choice}
+                  key={choice.key}
+                  label={choice.value}
+                  value={choice.value}
                   disabled={disabled}
                 />
               );
@@ -154,13 +202,13 @@ function Question({
           }}
         >
           <Stack className='mt-2'>
-            {question.choices?.map((choice: string, index: number) => {
+            {question.choices?.map((choice: Choice) => {
               return (
                 <Checkbox
                   id={question.key}
-                  key={index}
-                  label={choice}
-                  value={choice}
+                  key={choice.key}
+                  label={choice.value}
+                  value={choice.value}
                   disabled={disabled}
                 />
               );
@@ -170,6 +218,8 @@ function Question({
       );
 
     case questionType.dropdown:
+      const data =
+        question.choices?.map((choice: Choice) => choice.value) ?? [];
       return (
         <Select
           id={question.key}
@@ -177,7 +227,7 @@ function Question({
           description={question.description}
           required={question.settings.required}
           placeholder={question.placeholder ?? 'Select an option'}
-          data={question.choices}
+          data={data}
           disabled={disabled}
           key={form.key(question.key)}
           {...form.getInputProps(question.key)}
@@ -220,18 +270,19 @@ function Question({
             label={question.title}
             description={question.description}
             required={question.settings.required}
-            placeholder='Upload files'
+            placeholder={file?.name || 'Upload files'}
             disabled={disabled}
             key={form.key(question.key)}
             {...form.getInputProps(question.key)}
             value={file}
             onChange={handleFileChange}
+            clearable
           />
-          {file && (
+          {file ? (
             <Text size='sm' ta='center'>
               Picked file: {file.name}
             </Text>
-          )}
+          ) : null}
         </Stack>
       );
     default:
@@ -243,9 +294,15 @@ function Section({
   section,
   form,
   submitted,
+  competitionCode,
+  formId,
+  responseId,
 }: {
   section: FormSection;
   form: UseFormReturnType<Record<string, any>>;
+  competitionCode: string;
+  formId: string;
+  responseId: string;
   submitted: boolean;
 }) {
   return (
@@ -264,6 +321,9 @@ function Section({
             <Question
               key={question.key}
               question={question}
+              competitionCode={competitionCode}
+              formId={formId}
+              responseId={responseId}
               form={form}
               disabled={submitted}
             />
@@ -296,7 +356,9 @@ function recordEquals(a: Record<string, any>, b: Record<string, any>) {
       !arrayEquals(a[key], b[key])
     )
       return false;
-    else if (b[key] !== a[key]) return false;
+    else {
+      if (b[key] !== a[key]) return false;
+    }
   }
 
   return true;
@@ -326,26 +388,31 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
   });
 
   const autosave = async () => {
-    // try {
-    // 	const currentValues = form.getValues();
-    // 	const prev = prevValues.current;
-    // 	const currId = responseId.current;
-    //
-    // 	// Only save if there are changes
-    // 	if (!recordEquals(prev, currentValues)) {
-    // 		await saveResponse(currId, currentValues);
-    // 		prevValues.current = currentValues;
-    // 		setStatus(StatusIndicator.SUCCESS);
-    // 		console.log('Autosaved');
-    // 	}
-    // } catch (error) {
-    // 	console.log(error);
-    // 	setStatus(StatusIndicator.FAILED);
-    // }
-    //
-    // if (!submittedRef.current) {
-    // 	setTimeout(autosave, 1000);
-    // }
+    if (submittedRef.current) {
+      console.log(submittedRef.current);
+      return;
+    }
+
+    try {
+      const currentValues = form.getValues();
+      const prev = prevValues.current;
+      const currId = responseId.current;
+
+      // Only save if there are changes
+      if (!recordEquals(prev, currentValues)) {
+        await saveResponse(currId, currentValues);
+        prevValues.current = currentValues;
+        setStatus(StatusIndicator.SUCCESS);
+        console.log('Autosaved');
+      }
+    } catch (error) {
+      console.log(error);
+      setStatus(StatusIndicator.FAILED);
+    }
+
+    if (!submittedRef.current) {
+      setTimeout(autosave, 1000);
+    }
   };
 
   useEffect(() => {
@@ -357,36 +424,37 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
         return;
       }
       const application: Form = resp.application;
+      console.log(application);
       setFormObject(application);
       const sections = resp.application.sections as unknown as FormSection[];
       setFormSections(sections);
 
       getFormResponse(application.id, 'test-user', prevValues).then((resp) => {
-        const answers = resp.answers as unknown as Record<string, any>;
-        const values: Record<string, any> = {};
+        const responses = resp.answers as unknown as Record<string, any>;
+        const transformed: Record<string, any> = {};
         responseId.current = resp.id;
         sections
           .flatMap((section: FormSection) => section.questions)
           .forEach((question: QuestionInterface) =>
-            initializeQuestion(question, answers, values)
+            initializeQuestion(question, responses, transformed)
           );
 
         if (application.is_mlh) {
           mlhQuestions.general.questions.forEach(
             (question: QuestionInterface) => {
-              initializeQuestion(question, answers, values);
+              initializeQuestion(question, responses, transformed);
             }
           );
           mlhQuestions.agreements.questions.forEach(
             (question: QuestionInterface) => {
-              initializeQuestion(question, answers, values);
+              initializeQuestion(question, responses, transformed);
             }
           );
         }
 
-        prevValues.current = values;
-        form.setValues(values);
-        console.log(values);
+        prevValues.current = transformed;
+        form.setValues(transformed);
+        console.log(transformed);
 
         if (!resp.submitted) {
           // Autosave every second
@@ -473,7 +541,10 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
           break;
         case questionType.dropdown:
         case questionType.multiplechoice:
-          if (question.choices && !question.choices.includes(response)) {
+          if (
+            question.choices &&
+            !question.choices.map((choice) => choice.value).includes(response)
+          ) {
             errors[questionKey] = 'Please select a valid choice';
           }
           break;
@@ -550,11 +621,11 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
     if (!success) {
       return;
     }
-    // submittedRef.current = true; // Stop autosave
-    // const resp = await submitResponse(responseId.current, form.getValues());
-    // setSubmitted(true);
-    // setStatus(StatusIndicator.SUBMITTED);
-    // console.log(resp);
+    submittedRef.current = true; // Stop autosave
+    const resp = await submitResponse(responseId.current, form.getValues());
+    setSubmitted(true);
+    setStatus(StatusIndicator.SUBMITTED);
+    console.log(resp);
   };
 
   return (
@@ -603,6 +674,9 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
                       section={mlhQuestions.general}
                       form={form}
                       submitted={submitted}
+                      competitionCode={formObject.competition_code}
+                      formId={formObject.id}
+                      responseId={responseId.current}
                     />
                   ) : null}
                   {formSections.map((section: FormSection) => {
@@ -612,6 +686,9 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
                         section={section}
                         form={form}
                         submitted={submitted}
+                        competitionCode={formObject.competition_code}
+                        formId={formObject.id}
+                        responseId={responseId.current}
                       />
                     );
                   })}
@@ -620,6 +697,9 @@ export default function ViewForm({ params }: { params: { formId: string } }) {
                       section={mlhQuestions.agreements}
                       form={form}
                       submitted={submitted}
+                      competitionCode={formObject.competition_code}
+                      formId={formObject.id}
+                      responseId={responseId.current}
                     />
                   ) : null}
                 </div>

@@ -24,6 +24,7 @@
     "@prisma/adapter-neon": "^5.13.0",
     "@prisma/client": "^5.17.0",
     "@tabler/icons-react": "^3.2.0",
+    "@vercel/blob": "^0.23.4",
     "dayjs": "^1.11.11",
     "google-libphonenumber": "^3.2.35",
     "next": "14.2.2",

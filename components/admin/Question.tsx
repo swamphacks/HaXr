@@ -14,8 +14,14 @@ import {
   MultiSelect,
 } from '@mantine/core';
 import { questionType } from '@/types/questionTypes';
-import { Question as FormQuestion, fileTypes, fileSizes } from '@/types/forms';
-import { IconTrash } from '@tabler/icons-react';
+import {
+  Question as FormQuestion,
+  fileTypes,
+  fileSizes,
+  Choice,
+} from '@/types/forms';
+import { IconTrash, IconX } from '@tabler/icons-react';
+import { v4 as uuidv4 } from 'uuid';
 
 function getQuestionType(value: string) {
   switch (value) {
@@ -160,15 +166,28 @@ function Choices({
   disabled: boolean;
 }) {
   const handleAddChoice = () => {
-    setQuestion({ ...question, choices: [...(question.choices ?? []), ''] });
-  };
-
-  const handleChoiceChange = (index: number, value: string) => {
     setQuestion({
       ...question,
-      choices: question.choices?.map((choice, i) =>
-        i === index ? value : choice
+      choices: [...(question.choices ?? []), { key: uuidv4(), value: '' }],
+    });
+  };
+
+  const handleRemoveChoice = (index: string) => {
+    setQuestion({
+      ...question,
+      choices: question.choices?.filter(
+        (choice: Choice) => choice.key !== index
       ),
+    });
+  };
+
+  const handleChoiceChange = (key: string, value: string) => {
+    setQuestion({
+      ...question,
+      choices: question.choices?.map((choice: Choice) => {
+        if (choice.key !== key) return choice;
+        return { ...choice, value: value };
+      }),
     });
   };
 
@@ -180,14 +199,19 @@ function Choices({
     return (
       <Stack align='left'>
         <Divider my='md' label='Choices' />
-        {question.choices?.map((choice: string, index: number) => {
+        {question.choices?.map((choice: Choice) => {
           return (
-            <TextInput
-              key={index}
-              defaultValue={choice}
-              onChange={(e) => handleChoiceChange(index, e.target.value)}
-              disabled={disabled}
-            />
+            <div className='flex flex-row items-center' key={choice.key}>
+              <TextInput
+                styles={{ root: { flexGrow: 1 } }}
+                defaultValue={choice.value}
+                onChange={(e) => handleChoiceChange(choice.key, e.target.value)}
+                disabled={disabled}
+              />
+              <button onClick={() => handleRemoveChoice(choice.key)}>
+                <IconX stroke={1} />
+              </button>
+            </div>
           );
         })}
         <Button variant='light' onClick={handleAddChoice} disabled={disabled}>
