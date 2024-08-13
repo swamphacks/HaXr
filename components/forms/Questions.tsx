@@ -13,7 +13,7 @@ import {
 import { uploadFile, deleteFile } from '@/app/actions/Forms';
 import { UseFormReturnType } from '@mantine/form';
 import { questionType } from '@/types/questionTypes';
-import { ShortResponseLength } from '@/types/forms';
+import { ShortResponseLength, MaxParagraphLength } from '@/types/forms';
 
 export function ShortResponse({
   question,
@@ -105,12 +105,28 @@ export function Paragraph({
   form: UseFormReturnType<Record<string, any>>;
 }) {
   const [totalChars, setTotalChars] = useState<number>(0);
+  const [response, setResponse] = useState<string>('');
   const maxChars = question.settings.maxChars ?? 500;
-  const inputProps = form.getInputProps(question.key);
+
+  const handleChange = (e: any) => {
+    const value = e.target.value;
+    const length = value.length;
+    setTotalChars(length);
+    if (value.length >= MaxParagraphLength) {
+      return;
+    }
+    setResponse(value);
+    form.setFieldValue(question.key, value);
+    if (length > maxChars) {
+      form.setFieldError(question.key, 'Exceeded maximum character limit');
+    }
+  };
 
   useEffect(() => {
     const values = form.getValues();
-    setTotalChars(values[question.key]?.length ?? 0);
+    const resp = values[question.key] ?? '';
+    setTotalChars(resp.length);
+    setResponse(resp);
   }, [form]);
 
   return (
@@ -123,19 +139,9 @@ export function Paragraph({
         placeholder={question.placeholder ?? 'Enter response'}
         resize='vertical'
         disabled={disabled}
-        key={form.key(question.key)}
-        {...inputProps}
-        onChange={(e) => {
-          inputProps.onChange(e);
-          const length = e.target.value.length;
-          setTotalChars(length);
-          if (length > maxChars) {
-            form.setFieldError(
-              question.key,
-              'Exceeded maximum character limit'
-            );
-          }
-        }}
+        {...form.getInputProps(question.key)}
+        onChange={handleChange}
+        value={response}
       />
       <p className='text-sm text-[var(--mantine-color-dimmed)]'>
         {totalChars}/{maxChars} characters
