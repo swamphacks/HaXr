@@ -66,7 +66,12 @@ export async function uploadFile(
 }
 
 export async function deleteFile(url: string) {
-  await del(url);
+  try {
+    await del(url);
+  } catch {
+    // del should throw an error if the url is invalid
+    console.log('Failed to delete file with url: ', url);
+  }
 }
 
 export async function getForm(formId: string) {
