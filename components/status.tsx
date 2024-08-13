@@ -11,6 +11,7 @@ function StatusImage({ status }: { status: StatusIndicator }) {
     case StatusIndicator.FAILED:
       imgSrc = '/status_indicator/fail.svg';
       break;
+    case StatusIndicator.SAVING:
     case StatusIndicator.LOADING:
       imgSrc = '/status_indicator/loading.svg';
       break;
@@ -32,10 +33,13 @@ function StatusText({ status }: { status: StatusIndicator }) {
       statusText = 'Failed to save';
       break;
     case StatusIndicator.LOADING:
-      statusText = 'Loading';
+      statusText = 'Loading...';
       break;
     case StatusIndicator.SUBMITTED:
       statusText = 'Submitted';
+      break;
+    case StatusIndicator.SAVING:
+      statusText = 'Saving...';
       break;
   }
 
