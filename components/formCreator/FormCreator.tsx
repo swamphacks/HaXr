@@ -12,7 +12,7 @@ import classes from '@/styles/Input.module.css';
 import { v4 as uuidv4 } from 'uuid';
 import {
   FormSection,
-  QuestionValidationError,
+  FormValidationError,
   FormErrorTypes,
 } from '@/types/forms';
 import { getForm, updateForm, updateFormSettings } from '@/app/actions/Forms';
@@ -42,8 +42,7 @@ function ApplicationCreator({
   const handleAddSection = () => {
     setErrors(
       errors.filter(
-        (error: QuestionValidationError) =>
-          error.type !== FormErrorTypes.NoSections
+        (error: FormValidationError) => error.type !== FormErrorTypes.NoSections
       )
     );
     setSections((oldSections: FormSection[]) => {
@@ -68,11 +67,11 @@ function ApplicationCreator({
   };
 
   const titleError = errors.find(
-    (error: QuestionValidationError) => error.type === FormErrorTypes.FormTitle
+    (error: FormValidationError) => error.type === FormErrorTypes.FormTitle
   );
 
   const noSectionsError = errors.find(
-    (error: QuestionValidationError) => error.type === FormErrorTypes.NoSections
+    (error: FormValidationError) => error.type === FormErrorTypes.NoSections
   );
 
   return (
@@ -84,7 +83,7 @@ function ApplicationCreator({
           onChange={(e) => {
             setErrors(
               errors.filter(
-                (error: QuestionValidationError) =>
+                (error: FormValidationError) =>
                   error.type !== FormErrorTypes.FormTitle
               )
             );
@@ -118,11 +117,7 @@ function ApplicationCreator({
       >
         {sections.map((section: FormSection) => {
           return (
-            <div
-              key={section.key}
-              className='relative flex flex-row'
-              style={{ width: form.is_published ? '100%' : '95%' }}
-            >
+            <div key={section.key} className='relative flex flex-row'>
               <Section setSections={setSections} section={section} />
               {form.is_published ? null : (
                 <button onClick={() => handleDeletion(section.key)}>
@@ -137,17 +132,15 @@ function ApplicationCreator({
         })}
       </Accordion>
 
-      <Stack gap='md' align='center' justify='flex-start' className='mt-4'>
-        <Button
-          variant='light'
-          color='teal'
-          style={{ width: '48rem' }}
-          onClick={handleAddSection}
-          disabled={form.is_published}
-        >
-          Add Section
-        </Button>
-      </Stack>
+      <Button
+        variant='light'
+        color='teal'
+        onClick={handleAddSection}
+        disabled={form.is_published}
+        styles={{ root: { marginTop: '2rem' } }}
+      >
+        Add Section
+      </Button>
     </div>
   );
 }
@@ -158,7 +151,7 @@ export function CreateApplication({ params }: { params: { id: string } }) {
   const [sections, setSections, sectionsRef] = useStateWithRef<FormSection[]>(
     []
   );
-  const [errors, setErrors] = useState<QuestionValidationError[]>([]);
+  const [errors, setErrors] = useState<FormValidationError[]>([]);
   const [status, setStatus] = useState<StatusIndicator>(
     StatusIndicator.LOADING
   );
