@@ -8,7 +8,8 @@ import { questionType } from '@/types/questionTypes';
 import {
   Question as FormQuestion,
   FormSection,
-  QuestionValidatinError,
+  QuestionValidationError,
+  FormErrorTypes,
 } from '@/types/forms';
 import { FormCreatorContext } from '@/components/formCreator/FormCreator';
 
@@ -47,7 +48,26 @@ export default function Section({
     });
   };
 
+  const errorWithSection = errors.find((error: QuestionValidationError) => {
+    return (
+      error.type === FormErrorTypes.SectionTitle && error.key === section.key
+    );
+  });
+
+  const errorInSection = errors.some((error: QuestionValidationError) => {
+    return section.questions.some((question: FormQuestion) => {
+      return error.key === question.key;
+    });
+  });
+
   const handleSectionTitleChange = (e: any) => {
+    if (errorWithSection) {
+      setErrors(
+        errors.filter(
+          (error: QuestionValidationError) => error.key !== errorWithSection.key
+        )
+      );
+    }
     setSections((oldSections: FormSection[]) => {
       return oldSections.map((oldSection: FormSection) => {
         if (oldSection.key === section.key) {
@@ -69,12 +89,6 @@ export default function Section({
     });
   };
 
-  const errorInSection = errors.some((error: QuestionValidatinError) => {
-    return section.questions.some((question: FormQuestion) => {
-      return error.key === question.key;
-    });
-  });
-
   return (
     <Accordion.Item
       key={section.key}
@@ -84,22 +98,36 @@ export default function Section({
       <Accordion.Control
         styles={{
           label: {
-            color: errorInSection ? 'var(--mantine-color-red-6)' : 'inherit',
+            color:
+              errorWithSection || errorInSection
+                ? 'var(--mantine-color-red-6)'
+                : 'inherit',
+            height: '61px',
           },
         }}
       >
-        {section.title}
+        {section.title || 'Untitled Section'}
       </Accordion.Control>
       <Accordion.Panel>
         <Stack align='center'>
-          <TextInput
-            onChange={handleSectionTitleChange}
-            className='w-[48rem]'
-            label='Section	Title'
-            defaultValue={section.title}
-            placeholder='Untitled Section'
-            disabled={form.is_published}
-          />
+          <div>
+            <TextInput
+              onChange={handleSectionTitleChange}
+              className='w-[48rem]'
+              label='Section	Title'
+              defaultValue={section.title}
+              placeholder='Untitled Section'
+              disabled={form.is_published}
+              styles={{
+                input: {
+                  borderColor: errorWithSection ? 'red' : 'var(--input-bd)',
+                },
+              }}
+            />
+            {errorWithSection ? (
+              <p className='text-sm text-red-500'>{errorWithSection.message}</p>
+            ) : null}
+          </div>
           <TextInput
             onChange={handleSectionDescriptionChange}
             className='w-[48rem]'

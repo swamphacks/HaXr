@@ -14,6 +14,7 @@ import {
   Question,
   fileTypes,
   fileSizes,
+  FormErrorTypes,
 } from '@/types/forms';
 import { FormCreatorContext } from '@/components/formCreator/FormCreator';
 import { notifications } from '@mantine/notifications';
@@ -41,6 +42,29 @@ export default function Settings() {
 
   const validate = () => {
     const errors: QuestionValidationError[] = [];
+
+    // Validate Form Title
+    if (isEmpty(form.title)) {
+      errors.push({
+        key: '',
+        type: FormErrorTypes.FormTitle,
+        message: 'Form title cannot be empty',
+      });
+    }
+
+    // Validate Section Titles
+    sections.forEach((section: FormSection) => {
+      const title = section.title || 'Untitled Section';
+      if (isEmpty(title)) {
+        errors.push({
+          key: section.key,
+          type: FormErrorTypes.SectionTitle,
+          message: 'Section title cannot be empty',
+        });
+      }
+    });
+
+    // Validate Questions
     sections
       .flatMap((section: FormSection) => section.questions)
       .forEach((question: Question) => {
@@ -48,6 +72,7 @@ export default function Settings() {
         if (isEmpty(question.title)) {
           errors.push({
             key: question.key,
+            type: FormErrorTypes.Question,
             message: 'Question title cannot be empty',
           });
           return;
@@ -61,6 +86,7 @@ export default function Settings() {
           if (!fileSizes.includes(fileSize)) {
             errors.push({
               key: question.key,
+              type: FormErrorTypes.Question,
               message: 'Please select a valid file size',
             });
             return;
@@ -70,6 +96,7 @@ export default function Settings() {
           if (acceptedFiles.length === 0) {
             errors.push({
               key: question.key,
+              type: FormErrorTypes.Question,
               message: 'Please select at least one file type',
             });
             return;
@@ -78,6 +105,7 @@ export default function Settings() {
             if (!fileTypes.includes(fileType)) {
               errors.push({
                 key: question.key,
+                type: FormErrorTypes.Question,
                 message: `File type ${fileType} is not supported`,
               });
               break;
@@ -97,6 +125,7 @@ export default function Settings() {
           if (choices.length === 0) {
             errors.push({
               key: question.key,
+              type: FormErrorTypes.Question,
               message: 'Question must have at least one choice',
             });
           }
