@@ -39,6 +39,7 @@ export interface Choice {
 export enum FormErrorTypes {
   Question = 'Question',
   SectionTitle = 'Section',
+  NoQuestions = 'NoQuestions',
   FormTitle = 'Title',
 }
 

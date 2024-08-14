@@ -12,6 +12,7 @@ import {
   FormErrorTypes,
 } from '@/types/forms';
 import { FormCreatorContext } from '@/components/formCreator/FormCreator';
+import ErrorMessage from '@/components/formCreator/ErrorMessage';
 
 export default function Section({
   setSections,
@@ -24,6 +25,12 @@ export default function Section({
     useContext(FormCreatorContext);
 
   const handleAddQuestion = () => {
+    setErrors(
+      errors.filter(
+        (error: QuestionValidationError) =>
+          error.key !== section.key && error.type !== FormErrorTypes.NoQuestions
+      )
+    );
     setSections((oldSections: FormSection[]) => {
       return oldSections.map((oldSection: FormSection) => {
         if (oldSection.key === section.key) {
@@ -51,6 +58,12 @@ export default function Section({
   const errorWithSection = errors.find((error: QuestionValidationError) => {
     return (
       error.type === FormErrorTypes.SectionTitle && error.key === section.key
+    );
+  });
+
+  const noQuestionError = errors.find((error: QuestionValidationError) => {
+    return (
+      error.type === FormErrorTypes.NoQuestions && error.key === section.key
     );
   });
 
@@ -99,7 +112,7 @@ export default function Section({
         styles={{
           label: {
             color:
-              errorWithSection || errorInSection
+              errorWithSection || errorInSection || noQuestionError
                 ? 'var(--mantine-color-red-6)'
                 : 'inherit',
             height: '61px',
@@ -124,9 +137,7 @@ export default function Section({
                 },
               }}
             />
-            {errorWithSection ? (
-              <p className='text-sm text-red-500'>{errorWithSection.message}</p>
-            ) : null}
+            <ErrorMessage error={errorWithSection} />
           </div>
           <TextInput
             onChange={handleSectionDescriptionChange}
@@ -136,6 +147,8 @@ export default function Section({
             placeholder='Enter Description'
             disabled={form.is_published}
           />
+          <ErrorMessage error={noQuestionError} />
+
           {section.questions.map((question: FormQuestion) => (
             <QuestionEdit
               key={question.key}

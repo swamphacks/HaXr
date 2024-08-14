@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
-import { Box, Button, Stack, Tabs, rem, Accordion } from '@mantine/core';
+import { Button, Stack, Tabs, rem, Accordion } from '@mantine/core';
 import {
   IconForms,
   IconMessageCircle,
@@ -23,6 +23,7 @@ import { sectionEquals, recordEquals } from '@/utils/saveUtils';
 import useStateWithRef from '@/utils/stateWithRef';
 import Section from '@/components/formCreator/FormSection';
 import Settings from '@/components/formCreator/FormSettings';
+import ErrorMessage from '@/components/formCreator/ErrorMessage';
 
 export const FormCreatorContext = createContext(null as any);
 
@@ -87,11 +88,7 @@ function ApplicationCreator({
             borderColor: titleError ? 'red' : 'var(--mantine-color-dark-3)',
           }}
         />
-        {titleError ? (
-          <p className='justify-self-start text-sm text-red-500'>
-            {titleError.message}
-          </p>
-        ) : null}
+        <ErrorMessage error={titleError} />
       </div>
 
       <Accordion
