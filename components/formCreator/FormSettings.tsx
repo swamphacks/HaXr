@@ -62,13 +62,20 @@ export default function Settings() {
           message: 'Section title cannot be empty',
         });
       }
+      if (section.questions.length === 0) {
+        errors.push({
+          key: section.key,
+          type: FormErrorTypes.NoQuestions,
+          message: 'Section must have at least one question',
+        });
+      }
     });
 
     // Validate Questions
     sections
       .flatMap((section: FormSection) => section.questions)
       .forEach((question: Question) => {
-        // Verify title is not empty
+        // Verify question title is not empty
         if (isEmpty(question.title)) {
           errors.push({
             key: question.key,
