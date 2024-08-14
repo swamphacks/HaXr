@@ -14,6 +14,7 @@ import { uploadFile, deleteFile } from '@/app/actions/Forms';
 import { UseFormReturnType } from '@mantine/form';
 import { questionType } from '@/types/questionTypes';
 import { ShortResponseLength, MaxParagraphLength } from '@/types/forms';
+import { getMimeTypes } from '@/utils/forms';
 
 export function ShortResponse({
   question,
@@ -370,7 +371,7 @@ export function FileUpload({
     <Stack gap='sm'>
       <FileInput
         id={question.key}
-        accept='image/png,image/jpeg'
+        accept={getMimeTypes(question.settings.acceptedFiles ?? [])}
         label={question.title}
         description={question.description}
         required={question.settings.required}
