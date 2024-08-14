@@ -52,6 +52,15 @@ export default function Settings() {
       });
     }
 
+    // Validate Sections
+    if (sections.length === 0) {
+      errors.push({
+        key: '',
+        type: FormErrorTypes.NoSections,
+        message: 'Form must have at least one section',
+      });
+    }
+
     // Validate Section Titles
     sections.forEach((section: FormSection) => {
       const title = section.title || 'Untitled Section';
