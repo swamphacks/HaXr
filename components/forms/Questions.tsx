@@ -200,10 +200,19 @@ export function FormCheckbox({
   disabled: boolean;
   form: UseFormReturnType<Record<string, any>>;
 }) {
+  const [initialValues, setInitial] = useState<string[]>([]);
+
+  useEffect(() => {
+    const values = form.getValues();
+    setInitial(values[question.key] ?? []);
+    console.log(values[question.key]);
+  }, [form]);
+
   return (
     <Checkbox.Group
       id={question.key}
       label={question.title}
+      defaultValue={initialValues}
       description={question.description}
       required={question.settings.required}
       key={form.key(question.key)}
