@@ -9,22 +9,18 @@ import {
   rem,
   Text,
   Accordion,
-  Checkbox,
   Switch,
   Divider,
   Modal,
-  Select,
   TextInput,
-  Notification,
 } from '@mantine/core';
-import { useForm, UseFormReturnType } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import { DateTimePicker } from '@mantine/dates';
 import {
   IconForms,
   IconMessageCircle,
   IconSettings,
-  IconCheck,
+  IconX,
 } from '@tabler/icons-react';
 import QuestionEdit from '@/components/admin/Question';
 import classes from '@/styles/Input.module.css';
@@ -41,7 +37,6 @@ import {
   updateForm,
   updateFormSettings,
   saveAndPublishForm,
-  publishForm,
 } from '@/app/actions/Forms';
 import { Form } from '@prisma/client';
 import { JsonArray } from '@prisma/client/runtime/library';
@@ -107,7 +102,11 @@ function Section({
   };
 
   return (
-    <Accordion.Item key={section.key} value={section.key}>
+    <Accordion.Item
+      key={section.key}
+      value={section.key}
+      style={{ flexGrow: 2 }}
+    >
       <Accordion.Control>{section.title}</Accordion.Control>
       <Accordion.Panel>
         <Stack align='center'>
@@ -197,17 +196,26 @@ function ApplicationCreator({
   setSections: any;
 }) {
   const handleAddSection = () => {
-    setSections([
-      ...((form.sections as JsonArray) ?? []),
-      {
-        key: uuidv4(),
-        title: 'Unititled Section',
-        description: '',
-        questions: [],
-      },
-    ] as unknown as FormSection[]);
+    setSections((oldSections: FormSection[]) => {
+      return [
+        ...oldSections,
+        {
+          key: uuidv4(),
+          title: 'Unititled Section',
+          description: '',
+          questions: [],
+        },
+      ];
+    });
   };
 
+  const handleDeletion = (key: string) => {
+    setSections((oldSections: FormSection[]) => {
+      return oldSections.filter(
+        (oldSection: FormSection) => oldSection.key !== key
+      );
+    });
+  };
   return (
     <>
       <Stack gap='md' align='center' justify='flex-start'>
@@ -235,12 +243,25 @@ function ApplicationCreator({
       >
         {sections.map((section: FormSection) => {
           return (
-            <Section
-              published={form.is_published}
+            <div
               key={section.key}
-              setSections={setSections}
-              section={section}
-            />
+              className='relative'
+              style={{ width: form.is_published ? '100%' : '95%' }}
+            >
+              <Section
+                published={form.is_published}
+                setSections={setSections}
+                section={section}
+              />
+              {form.is_published ? null : (
+                <button onClick={() => handleDeletion(section.key)}>
+                  <IconX
+                    stroke={1}
+                    className='absolute right-[-40px] top-[18px]'
+                  />
+                </button>
+              )}
+            </div>
           );
         })}
       </Accordion>
