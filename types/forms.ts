@@ -36,8 +36,15 @@ export interface Choice {
   value: string;
 }
 
+export enum FormErrorTypes {
+  Question = 'Question',
+  SectionTitle = 'Section',
+  FormTitle = 'Title',
+}
+
 export interface QuestionValidationError {
   key: string;
+  type: FormErrorTypes;
   message: string;
 }
 

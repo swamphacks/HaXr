@@ -6,7 +6,6 @@
   padding-left: 0;
   padding-right: 0;
   background-color: transparent;
-  border-color: var(--mantine-color-dark-3);
 
   &:focus {
     outline: none;

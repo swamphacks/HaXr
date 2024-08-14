@@ -10,7 +10,11 @@ import {
 } from '@tabler/icons-react';
 import classes from '@/styles/Input.module.css';
 import { v4 as uuidv4 } from 'uuid';
-import { FormSection, QuestionValidationError } from '@/types/forms';
+import {
+  FormSection,
+  QuestionValidationError,
+  FormErrorTypes,
+} from '@/types/forms';
 import { getForm, updateForm, updateFormSettings } from '@/app/actions/Forms';
 import { Form } from '@prisma/client';
 import { StatusIndicator } from '@/types/forms';
@@ -33,7 +37,7 @@ function ApplicationCreator({
   sections: FormSection[];
   setSections: any;
 }) {
-  const { a, b, errors, ...args } = useContext(FormCreatorContext);
+  const { a, b, errors, setErrors, ...args } = useContext(FormCreatorContext);
   const handleAddSection = () => {
     setSections((oldSections: FormSection[]) => {
       return [
@@ -55,23 +59,40 @@ function ApplicationCreator({
       );
     });
   };
+
+  const titleError = errors.find(
+    (error: QuestionValidationError) => error.type === FormErrorTypes.FormTitle
+  );
+
   return (
-    <>
-      <Stack gap='md' align='center' justify='flex-start'>
-        <Box w={rem(500)}>
-          <input
-            placeholder='Untitled Form'
-            defaultValue={form.title}
-            onChange={(e) =>
-              setForm((oldForm: Form) => {
-                return { ...oldForm, title: e.target.value };
-              })
-            }
-            disabled={form.is_published}
-            className={classes.title}
-          />
-        </Box>
-      </Stack>
+    <div className='grid w-full grid-cols-1 justify-items-center'>
+      <div className='grid w-[700px] grid-cols-1'>
+        <input
+          placeholder='Untitled Form'
+          defaultValue={form.title}
+          onChange={(e) => {
+            setErrors(
+              errors.filter(
+                (error: QuestionValidationError) =>
+                  error.type !== FormErrorTypes.FormTitle
+              )
+            );
+            setForm((oldForm: Form) => {
+              return { ...oldForm, title: e.target.value };
+            });
+          }}
+          disabled={form.is_published}
+          className={classes.title}
+          style={{
+            borderColor: titleError ? 'red' : 'var(--mantine-color-dark-3)',
+          }}
+        />
+        {titleError ? (
+          <p className='justify-self-start text-sm text-red-500'>
+            {titleError.message}
+          </p>
+        ) : null}
+      </div>
 
       <Accordion
         transitionDuration={500}
@@ -81,6 +102,9 @@ function ApplicationCreator({
           },
           panel: {
             marginTop: '1rem',
+          },
+          root: {
+            width: '900px',
           },
         }}
       >
@@ -116,7 +140,7 @@ function ApplicationCreator({
           Add Section
         </Button>
       </Stack>
-    </>
+    </div>
   );
 }
 
