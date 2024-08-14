@@ -24,6 +24,20 @@ export async function getApplication(competition_code: string) {
         },
         is_published: true,
       },
+      OR: [
+        {
+          application: {
+            opens_at: null,
+          },
+        },
+        {
+          application: {
+            opens_at: {
+              lte: new Date(),
+            },
+          },
+        },
+      ],
     },
     include: {
       application: true,
