@@ -40,10 +40,11 @@ export enum FormErrorTypes {
   Question = 'Question',
   SectionTitle = 'Section',
   NoQuestions = 'NoQuestions',
+  NoSections = 'NoSections',
   FormTitle = 'Title',
 }
 
-export interface QuestionValidationError {
+export interface FormValidationError {
   key: string;
   type: FormErrorTypes;
   message: string;

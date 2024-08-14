@@ -40,6 +40,12 @@ function ApplicationCreator({
 }) {
   const { a, b, errors, setErrors, ...args } = useContext(FormCreatorContext);
   const handleAddSection = () => {
+    setErrors(
+      errors.filter(
+        (error: QuestionValidationError) =>
+          error.type !== FormErrorTypes.NoSections
+      )
+    );
     setSections((oldSections: FormSection[]) => {
       return [
         ...oldSections,
@@ -63,6 +69,10 @@ function ApplicationCreator({
 
   const titleError = errors.find(
     (error: QuestionValidationError) => error.type === FormErrorTypes.FormTitle
+  );
+
+  const noSectionsError = errors.find(
+    (error: QuestionValidationError) => error.type === FormErrorTypes.NoSections
   );
 
   return (
@@ -89,6 +99,7 @@ function ApplicationCreator({
           }}
         />
         <ErrorMessage error={titleError} />
+        <ErrorMessage error={noSectionsError} />
       </div>
 
       <Accordion
