@@ -71,7 +71,7 @@ export default function Account() {
   const [formChanged, setFormChanged] = useState<boolean | null>(null);
 
   const displayPhone = (phone: string) => {
-    if (phone.length !== 10) return null;
+    if (!phone || phone.length !== 10) return null;
 
     return `(${phone.slice(0, 3)})-${phone.slice(3, 6)}-${phone.slice(6)}`;
   };
