@@ -1,7 +1,4 @@
 import * as yup from 'yup';
-const phoneRegExp =
-  /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
-
 export const profileConfigurationScheme = yup.object().shape({
   firstName: yup.string(),
   lastName: yup.string(),
@@ -9,9 +6,8 @@ export const profileConfigurationScheme = yup.object().shape({
   email: yup.string().email(),
   phone: yup
     .string()
-    .min(10, 'Phone number is too short.')
-    .max(10, 'Phone number is too long.')
-    .matches(phoneRegExp, 'Please use only 10 numbers.'),
+    .min(14, 'Phone number is too short.')
+    .max(14, 'Phone number is too long.'),
   bio: yup.string().max(500, 'Keep it under 500 characters.'),
   githubURL: yup.string().url('Please enter a valid url.'),
   linkedinURL: yup.string().url('Please enter a valid url.'),

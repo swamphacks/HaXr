@@ -1,10 +1,5 @@
 'use client';
-import React, {
-  createContext,
-  PropsWithChildren,
-  useEffect,
-  useState,
-} from 'react';
+import React, { PropsWithChildren } from 'react';
 import {
   AppShell,
   AppShellHeader,
@@ -12,14 +7,10 @@ import {
   AppShellNavbar,
   AppShellSection,
   Burger,
-  Center,
-  Divider,
   Group,
   Image,
-  Loader,
   NavLink,
   ScrollArea,
-  Select,
   Text,
   Title,
 } from '@mantine/core';
@@ -44,9 +35,6 @@ import { useDisclosure } from '@mantine/hooks';
 import { Competition } from '@prisma/client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Spinner from '../Spinner';
-import useSWR from 'swr';
-import superjson from 'superjson';
 
 interface Props {
   session: Session;

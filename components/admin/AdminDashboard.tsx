@@ -19,6 +19,7 @@ import { serverSignOut } from '@/actions/auth';
 import { AdminLink, Competition } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Spinner from '../Spinner';
 
 interface Props {
   links: AdminLink[];
@@ -27,8 +28,10 @@ interface Props {
 
 export default function AdminDashboard({ links, competitions }: Props) {
   const combobox = useCombobox();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
+
+  if (status === 'loading') return <Spinner />;
 
   return (
     <Center mx='auto' my='sm' maw={500}>

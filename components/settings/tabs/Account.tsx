@@ -11,6 +11,7 @@ import {
   Button,
   Fieldset,
   Group,
+  InputBase,
   Loader,
   LoadingOverlay,
   Stack,
@@ -21,8 +22,9 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useForm, Form, yupResolver } from '@mantine/form';
-import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
+import { IMaskInput } from 'react-imask';
 import {
   IconBrandGithub,
   IconBrandLinkedin,
@@ -34,7 +36,6 @@ import {
 } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
 import React, { useRef, useState } from 'react';
-import { upload } from '@vercel/blob/client';
 
 interface FormValues {
   firstName?: string;
@@ -56,7 +57,8 @@ export default function Account() {
   const inputFileRef = useRef<HTMLInputElement>(null);
   const [loadingAvatar, setLoadingAvatar] = useState<boolean>(false);
   const [isAvatarHovered, setIsAvatarHovered] = useState<boolean>(false);
-  const MAX_IMAGE_SIZE_MB = 5;
+  const MAX_IMAGE_SIZE_MB = 4.5;
+  const MAX_FILE_SIZE_BYTES = 1000000 * MAX_IMAGE_SIZE_MB;
 
   // Form states for editables
   const [bioLength, setBioLength] = useState<number>(
@@ -67,6 +69,12 @@ export default function Account() {
   );
   const [currentSkillError, setcurrentSkillError] = useState<boolean>(false);
   const [formChanged, setFormChanged] = useState<boolean | null>(null);
+
+  const displayPhone = (phone: string) => {
+    if (phone.length !== 10) return null;
+
+    return `(${phone.slice(0, 3)})-${phone.slice(3, 6)}-${phone.slice(6)}`;
+  };
 
   // Form initilization
   const form = useForm({
@@ -85,13 +93,28 @@ export default function Account() {
 
   // Preprocessing form values after submit
   const cleanFormValues = (values: FormValues): Partial<FormValues> => {
-    return Object.fromEntries(
-      Object.entries(values).filter(([key, value]) => {
-        if (Array.isArray(value)) return value;
+    const cleanedEntries = Object.entries(values).map(([key, value]) => {
+      if (key === 'phone' && typeof value === 'string') {
+        // Filter pure numbers out of phone number
+        const cleanedPhone = value.replace(/\D/g, '');
+        return [key, cleanedPhone];
+      }
 
-        return value !== null && value.trim() !== '';
-      })
-    );
+      if (Array.isArray(value)) {
+        // Leave untouched
+        return [key, value];
+      }
+
+      if (typeof value === 'string' && value.trim() === '') {
+        // Label empty strings as null for removal later
+        return null;
+      }
+
+      return [key, value];
+    });
+
+    // Filter out null entries (those that were empty strings)
+    return Object.fromEntries(cleanedEntries.filter((entry) => entry !== null));
   };
 
   // Submitting Form
@@ -107,6 +130,7 @@ export default function Account() {
     }
 
     values = cleanFormValues(values);
+    console.log(values);
     const newUserData = await updateUserProfile(session?.user?.id, values);
 
     if (newUserData) {
@@ -151,16 +175,40 @@ export default function Account() {
 
   const onUploadAvatar = async (event: any) => {
     event.preventDefault();
-    if (!inputFileRef.current?.files) throw new Error('No file selected!');
+
+    if (session?.user?.id === undefined) {
+      notifications.show({
+        title: 'Oops! Something went wrong.',
+        message:
+          'A technical error has occurred. Please contact a member of the technical team for assistance. (ERR_AUTH_03)',
+        icon: <IconX />,
+        color: 'red',
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    if (!inputFileRef.current?.files) {
+      notifications.show({
+        title: 'No file selected',
+        message: 'No file has been selected. Please try again!',
+        icon: <IconX />,
+        color: 'red',
+        autoClose: 3000,
+      });
+      return;
+    }
 
     const file = inputFileRef.current.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
 
-    if (file.size > 1000000 * MAX_IMAGE_SIZE_MB) {
+    if (file.size > MAX_FILE_SIZE_BYTES) {
       notifications.show({
+        title: 'Avatar Update Failed',
         message: 'Your Avatar image size is too big! Keep it less than 5MB.',
         icon: <IconX />,
         color: 'red',
-        title: 'Avatar Update Failed',
         autoClose: 3000,
       });
       return;
@@ -168,33 +216,20 @@ export default function Account() {
 
     setLoadingAvatar(true);
 
-    const newBlob = await upload(file.name, file, {
-      access: 'public',
-      handleUploadUrl: '/api/avatar/upload',
-    });
-
-    if (!newBlob || !session?.user?.id) {
-      notifications.show({
-        message: 'You avatar failed to upload...',
-        icon: <IconX />,
-        color: 'red',
-        title: 'Something went wrong',
-        autoClose: 3000,
-      });
-      setLoadingAvatar(false);
-      return;
-    }
-
     await deleteUserAvatar(session.user.id);
-    const newUserData = await updateUserAvatar(session?.user?.id, newBlob.url);
+    const updatedUserData = await updateUserAvatar(
+      session?.user?.id!,
+      formData
+    );
 
-    if (newUserData) {
+    if (updatedUserData) {
       await update({
         ...session,
-        user: newUserData,
+        user: updatedUserData,
       });
 
       notifications.show({
+        title: 'Avatar Updated',
         message: (
           <Text size='sm'>
             Your avatar updated successfully. You may need to{' '}
@@ -203,15 +238,14 @@ export default function Account() {
         ),
         icon: <IconCheck />,
         color: 'green',
-        title: 'Avatar Updated',
         autoClose: 3000,
       });
     } else {
       notifications.show({
+        title: 'Avatar Update Failed',
         message: 'Your Avatar has not been updated successfully!',
         icon: <IconX />,
         color: 'red',
-        title: 'Avatar Update Failed',
         autoClose: 3000,
       });
     }
@@ -366,10 +400,14 @@ export default function Account() {
                   disabled
                 />
               </Tooltip>
-              <TextInput
+              <InputBase
                 label='Phone'
                 key={form.key('phone')}
-                placeholder={session?.user?.phone || 'Ex. 1234567890'}
+                placeholder={
+                  displayPhone(session?.user?.phone!) || 'Ex. (433)-897-1123'
+                }
+                component={IMaskInput}
+                mask='(000)-000-0000'
                 {...form.getInputProps('phone')}
               />
             </Stack>

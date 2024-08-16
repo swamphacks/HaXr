@@ -2,7 +2,8 @@
 
 import prisma from '@/prisma';
 import { type User } from '@prisma/client';
-import { del } from '@vercel/blob';
+import { del, put } from '@vercel/blob';
+import { revalidatePath } from 'next/cache';
 
 const updateUserProfile = async (user_id: string, user: User) => {
   try {
@@ -19,15 +20,23 @@ const updateUserProfile = async (user_id: string, user: User) => {
   }
 };
 
-const updateUserAvatar = async (user_id: string, user_avatar_url: string) => {
+const updateUserAvatar = async (user_id: string, formData: FormData) => {
+  const avatar_image = formData.get('file') as File;
+
+  const blob = await put(avatar_image.name, avatar_image, {
+    access: 'public',
+  });
+
+  revalidatePath('/');
+
   try {
-    if (!user_avatar_url) throw new Error('Missing url');
+    if (!blob.url) throw new Error('Missing url');
     const new_user = await prisma.user.update({
       where: {
         id: user_id,
       },
       data: {
-        image: user_avatar_url,
+        image: blob.url,
       },
     });
 
