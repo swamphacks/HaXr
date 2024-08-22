@@ -432,7 +432,7 @@ export default function Account() {
               <Anchor>Community Guidelines</Anchor>.
             </Text>
             <Button fullWidth type='submit'>
-              Submit
+              Save Profile
             </Button>
           </Stack>
         </Stack>
