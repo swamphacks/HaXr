@@ -55,6 +55,17 @@ export default function Forms() {
     router.push(`/admin/comp/forms/edit/${form.id}`);
   };
 
+  const convertDate = (dateString: Date) => {
+    const date = new Date(dateString);
+    const formatter = new Intl.DateTimeFormat('en-US', { month: 'long' });
+    let hour = date.getHours();
+    const dayHalf = hour >= 12 ? 'PM' : 'AM';
+    if (hour > 12) hour -= 12;
+    if (hour === 0) hour = 12;
+    const minutes = date.getMinutes();
+    return `${formatter.format(date)} ${date.getDate()}, ${date.getFullYear()} ${hour}:${minutes < 10 ? '0' + minutes.toString() : minutes} ${dayHalf}`;
+  };
+
   const rows = data?.map((form: Form) => (
     <Table.Tr
       key={form.id}
@@ -80,8 +91,8 @@ export default function Forms() {
       <Table.Td>
         <a href={`/admin/comp/forms/edit/${form.id}`}>{form.title}</a>
       </Table.Td>
-      <Table.Td>{form.update_at.toString()}</Table.Td>
-      <Table.Td>{form.created_at.toString()}</Table.Td>
+      <Table.Td>{convertDate(form.update_at)}</Table.Td>
+      <Table.Td>{convertDate(form.created_at)}</Table.Td>
     </Table.Tr>
   ));
 
