@@ -38,8 +38,13 @@ export default function Settings() {
     opens_at: form.opens_at,
     closes_at: form.closes_at,
   });
+  const [closeDateError, setCloseDateError] = useState<{
+    error: boolean;
+    msg: string;
+  }>({ error: false, msg: '' });
+  const [openDateError, setOpenDateError] = useState({ error: false, msg: '' });
 
-  const validate = () => {
+  const validateQuestions = () => {
     const errors: QuestionValidationError[] = [];
 
     // Validate Form Title
@@ -162,16 +167,52 @@ export default function Settings() {
     // setForm({ ...form, required: e.target.checked });
   };
 
+  const validateFormSettings = () => {
+    let isValid = true;
+    if (!settings.closes_at) {
+      setCloseDateError({ error: true, msg: 'Close date cannot be empty' });
+      return false;
+    }
+
+    if (settings.opens_at && settings.opens_at >= settings.closes_at) {
+      setOpenDateError({
+        error: true,
+        msg: 'Release date must be before the close date',
+      });
+      isValid = false;
+    } else {
+      setOpenDateError({ error: false, msg: '' });
+    }
+
+    if (settings.closes_at <= new Date()) {
+      setCloseDateError({
+        error: true,
+        msg: 'Close date must be after the current date',
+      });
+      isValid = false;
+    }
+    if (isValid) {
+      setOpenDateError({ error: false, msg: '' });
+      setCloseDateError({ error: false, msg: '' });
+    }
+    return isValid;
+  };
+
   const handleSaveFormSettings = async () => {
     if (autosaveTimer.current) {
       clearInterval(autosaveTimer.current);
     }
 
-    setStatus(StatusIndicator.SAVING);
-    const resp = await updateFormSettings({ ...form, ...settings });
-    console.log(resp);
-    setForm({ ...form, ...settings });
-    setStatus(StatusIndicator.SUCCESS);
+    if (
+      !settings.is_published ||
+      (settings.is_published && validateFormSettings())
+    ) {
+      setStatus(StatusIndicator.SAVING);
+      const resp = await updateFormSettings({ ...form, ...settings });
+      console.log(resp);
+      setForm({ ...form, ...settings });
+      setStatus(StatusIndicator.SUCCESS);
+    }
 
     autosaveTimer.current = setInterval(save, 1000);
   };
@@ -180,7 +221,7 @@ export default function Settings() {
     if (autosaveTimer.current) {
       clearInterval(autosaveTimer.current);
     }
-    const numErrors = validate();
+    const numErrors = validateQuestions();
     if (numErrors !== 0) {
       notifications.show({
         color: 'red',
@@ -195,6 +236,11 @@ export default function Settings() {
     }
     setStatus(StatusIndicator.SAVING);
 
+    if (validateFormSettings()) {
+      console.log('everything looks good');
+    } else {
+      console.log('something wrong with form settings');
+    }
     const resp = await saveAndPublishForm(form, sections, settings);
     setSettings({ ...settings, is_published: true });
     setForm({ ...form, ...settings, is_published: true });
@@ -296,30 +342,52 @@ export default function Settings() {
 
         <div className='flex flex-col gap-2'>
           <Divider label='Release Settings' />
-          <DateTimePicker
-            description='The date and time the form will be released. If no date is set, the form will be released immediately upon its publishing.'
-            defaultValue={settings.opens_at}
-            valueFormat='MMM DD YYYY hh:mm A'
-            placeholder='Select a date and time'
-            label='Release Date'
-            onChange={(date) => {
-              setSettings({ ...settings, opens_at: date });
-              // setForm({ ...form, opens_at: date?.toISOString() });
-            }}
-            clearable
-          />
-          <DateTimePicker
-            description='The date and time the form will be closed.'
-            defaultValue={settings.closes_at}
-            valueFormat='MMM DD YYYY hh:mm A'
-            placeholder='Select a date and time'
-            label='Close Date'
-            onChange={(date) => {
-              setSettings({ ...settings, closes_at: date });
-              // setForm({ ...form, closes_at: date?.toISOString() });
-            }}
-            required
-          />
+          <div className='flex flex-col'>
+            <DateTimePicker
+              description='The date and time the form will be released. If no date is set, the form will be released immediately upon its publishing.'
+              defaultValue={settings.opens_at}
+              valueFormat='MMM DD YYYY hh:mm A'
+              placeholder='Select a date and time'
+              label='Release Date'
+              onChange={(date) => {
+                setSettings({ ...settings, opens_at: date });
+              }}
+              styles={{
+                input: {
+                  borderColor: openDateError.error
+                    ? 'red'
+                    : 'var(--mantine-color-dark-4)',
+                },
+              }}
+              clearable
+            />
+            {openDateError.error ? (
+              <p className='text-sm text-red-500'>{openDateError.msg}</p>
+            ) : null}
+          </div>
+          <div className='flex flex-col'>
+            <DateTimePicker
+              description='The date and time the form will be closed.'
+              defaultValue={settings.closes_at}
+              valueFormat='MMM DD YYYY hh:mm A'
+              placeholder='Select a date and time'
+              label='Close Date'
+              onChange={(date) => {
+                setSettings({ ...settings, closes_at: date });
+              }}
+              styles={{
+                input: {
+                  borderColor: closeDateError.error
+                    ? 'red'
+                    : 'var(--mantine-color-dark-4)',
+                },
+              }}
+              required
+            />
+            {closeDateError.error ? (
+              <p className='text-sm text-red-500'>{closeDateError.msg}</p>
+            ) : null}
+          </div>
         </div>
 
         <div>
