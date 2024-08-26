@@ -7,31 +7,35 @@ import { revalidatePath } from 'next/cache';
 
 const updateUserProfile = async (user_id: string, user: User) => {
   try {
-    const new_user = await prisma.user.update({
+    return prisma.user.update({
       where: {
         id: user_id,
       },
       data: { ...user },
     });
-
-    return new_user;
   } catch {
     return null;
   }
 };
 
+/* 
+Order of Operation:
+1. Upload the old avatar to the blob storage
+2. Delete the old avatar from the blob storage
+3. Update the user's avatar in the database
+*/
 const updateUserAvatar = async (user_id: string, formData: FormData) => {
-  const avatar_image = formData.get('file') as File;
-
-  const blob = await put(avatar_image.name, avatar_image, {
-    access: 'public',
-  });
-
-  revalidatePath('/');
-
   try {
+    const avatar_image = formData.get('file') as File;
+    const blob = await put(avatar_image.name, avatar_image, {
+      access: 'public',
+    });
+
     if (!blob.url) throw new Error('Missing url');
-    const new_user = await prisma.user.update({
+
+    await deleteUserAvatar(user_id);
+
+    return prisma.user.update({
       where: {
         id: user_id,
       },
@@ -39,9 +43,8 @@ const updateUserAvatar = async (user_id: string, formData: FormData) => {
         image: blob.url,
       },
     });
-
-    return new_user;
-  } catch {
+  } catch (e) {
+    console.log(e);
     return null;
   }
 };

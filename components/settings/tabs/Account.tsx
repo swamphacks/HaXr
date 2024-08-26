@@ -37,7 +37,7 @@ import {
 import { useSession } from 'next-auth/react';
 import React, { useRef, useState } from 'react';
 
-interface FormValues {
+interface FormPropValues {
   firstName?: string;
   lastName?: string;
   phone?: string;
@@ -77,44 +77,54 @@ export default function Account() {
   };
 
   // Form initilization
-  const form = useForm({
+  const form = useForm<FormPropValues>({
     mode: 'uncontrolled',
     initialValues: {
       bio: session?.user?.bio || '',
       skills: currentSkills,
     },
     validate: yupResolver(profileConfigurationScheme),
-    onValuesChange: (values: any) => {
+    onValuesChange: (values: FormPropValues) => {
       console.log(values);
-      if (values.bio !== null) setBioLength(values.bio.length);
+      if (values.bio) setBioLength(values.bio.length);
       setFormChanged(true);
+    },
+    transformValues: (values: FormPropValues) => {
+      const cleanedEntries = Object.entries(values).map(([key, value]) => {
+        if (key === 'phone' && typeof value === 'string') {
+          // Filter pure numbers out of phone number
+          const cleanedPhone = value.replace(/\D/g, '');
+          return [key, cleanedPhone];
+        }
+
+        if (Array.isArray(value)) {
+          // Leave untouched
+          return [key, value];
+        }
+
+        if (typeof value === 'string' && value.trim() === '') {
+          // Label empty strings as null for removal later
+          return null;
+        }
+
+        return [key, value];
+      });
+
+      // Filter out null entries (those that were empty strings)
+      return Object.fromEntries(
+        cleanedEntries.filter((entry) => entry !== null)
+      );
     },
   });
 
-  // Preprocessing form values after submit
-  const cleanFormValues = (values: FormValues): Partial<FormValues> => {
-    const cleanedEntries = Object.entries(values).map(([key, value]) => {
-      if (key === 'phone' && typeof value === 'string') {
-        // Filter pure numbers out of phone number
-        const cleanedPhone = value.replace(/\D/g, '');
-        return [key, cleanedPhone];
-      }
-
-      if (Array.isArray(value)) {
-        // Leave untouched
-        return [key, value];
-      }
-
-      if (typeof value === 'string' && value.trim() === '') {
-        // Label empty strings as null for removal later
-        return null;
-      }
-
-      return [key, value];
-    });
-
-    // Filter out null entries (those that were empty strings)
-    return Object.fromEntries(cleanedEntries.filter((entry) => entry !== null));
+  // Utility function to reset form values
+  const resetFormValues = () => {
+    form.reset();
+    form.setFieldValue('bio', session?.user?.bio || '');
+    setBioLength(session?.user?.bio?.length! || 0);
+    setCurrentSkills(session?.user?.skills || []);
+    setFormChanged(false);
+    setcurrentSkillError(false);
   };
 
   // Submitting Form
@@ -129,7 +139,6 @@ export default function Account() {
       return;
     }
 
-    values = cleanFormValues(values);
     console.log(values);
     const newUserData = await updateUserProfile(session?.user?.id, values);
 
@@ -140,13 +149,7 @@ export default function Account() {
         user: newUserData,
       });
 
-      // Form resetting and state resetting
-      form.reset();
-      form.setFieldValue('bio', newUserData.bio || '');
-      setBioLength(newUserData.bio?.length! || 0);
-      setCurrentSkills(newUserData.skills);
-      setFormChanged(false);
-      setcurrentSkillError(false);
+      resetFormValues();
 
       notifications.show({
         message: (
@@ -176,7 +179,7 @@ export default function Account() {
   const onUploadAvatar = async (event: any) => {
     event.preventDefault();
 
-    if (session?.user?.id === undefined) {
+    if (!session?.user?.id) {
       notifications.show({
         title: 'Oops! Something went wrong.',
         message:
@@ -216,11 +219,12 @@ export default function Account() {
 
     setLoadingAvatar(true);
 
-    await deleteUserAvatar(session.user.id);
-    const updatedUserData = await updateUserAvatar(
-      session?.user?.id!,
-      formData
-    );
+    // const updatedUserData = await updateUserAvatar(
+    //   session.user.id as string,
+    //   formData.get('file') as File
+    // );
+
+    const updatedUserData = await updateUserAvatar(session.user.id, formData);
 
     if (updatedUserData) {
       await update({
