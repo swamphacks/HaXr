@@ -132,9 +132,7 @@ export default function Account() {
     open();
 
     if (!session?.user?.id) {
-      console.error(
-        '[ERROR] No session ID. Please contact Technical Staff for help'
-      );
+      console.error('Cannot submit form without session ID.');
       close();
       return;
     }
@@ -218,11 +216,6 @@ export default function Account() {
     }
 
     setLoadingAvatar(true);
-
-    // const updatedUserData = await updateUserAvatar(
-    //   session.user.id as string,
-    //   formData.get('file') as File
-    // );
 
     const updatedUserData = await updateUserAvatar(session.user.id, formData);
 

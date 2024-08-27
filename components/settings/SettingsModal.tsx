@@ -43,8 +43,7 @@ export default function SettingsModal({ opened, closeModal }: SettingsProps) {
   const iconStyle = { width: rem(20), height: rem(20) };
   const isMobile = useMediaQuery(`(max-width: 50em)`);
   const [activeTab, setActiveTab] = useState('account');
-  const [burgerOpen, { toggle, open: openBurger, close: closeBurger }] =
-    useDisclosure();
+  const [burgerOpen, { toggle, close: closeBurger }] = useDisclosure();
 
   const tabs: TabItem[] = [
     { value: 'account', label: 'Account', icon: IconSettings },
@@ -100,7 +99,7 @@ export default function SettingsModal({ opened, closeModal }: SettingsProps) {
         setActiveTab('account');
       }}
       size='lg'
-      fullScreen={isMobile ? true : false}
+      fullScreen={isMobile}
       title={
         isMobile ? (
           <Group>

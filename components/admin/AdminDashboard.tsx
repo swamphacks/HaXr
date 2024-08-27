@@ -28,10 +28,7 @@ interface Props {
 
 export default function AdminDashboard({ links, competitions }: Props) {
   const combobox = useCombobox();
-  const { data: session, status } = useSession();
   const router = useRouter();
-
-  if (status === 'loading') return <Spinner />;
 
   return (
     <Center mx='auto' my='sm' maw={500}>

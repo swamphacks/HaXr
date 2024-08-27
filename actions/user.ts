@@ -3,9 +3,11 @@
 import prisma from '@/prisma';
 import { type User } from '@prisma/client';
 import { del, put } from '@vercel/blob';
-import { revalidatePath } from 'next/cache';
 
-const updateUserProfile = async (user_id: string, user: User) => {
+const updateUserProfile = async (
+  user_id: string,
+  user: User
+): Promise<User | null> => {
   try {
     return prisma.user.update({
       where: {
@@ -24,7 +26,10 @@ Order of Operation:
 2. Delete the old avatar from the blob storage
 3. Update the user's avatar in the database
 */
-const updateUserAvatar = async (user_id: string, formData: FormData) => {
+const updateUserAvatar = async (
+  user_id: string,
+  formData: FormData
+): Promise<User | null> => {
   try {
     const avatar_image = formData.get('file') as File;
     const blob = await put(avatar_image.name, avatar_image, {
@@ -49,7 +54,7 @@ const updateUserAvatar = async (user_id: string, formData: FormData) => {
   }
 };
 
-const deleteUserAvatar = async (user_id: string) => {
+const deleteUserAvatar = async (user_id: string): Promise<null | undefined> => {
   const user = await prisma.user.findUnique({
     where: {
       id: user_id,
@@ -57,13 +62,13 @@ const deleteUserAvatar = async (user_id: string) => {
   });
 
   if (!user?.image) {
-    return;
+    return null;
   }
 
   try {
     await del(user.image);
   } catch {
-    console.log('Could not delete');
+    console.error(`Could not delete avatar for userID: ${user.id}`);
   }
 };
 
