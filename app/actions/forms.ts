@@ -9,10 +9,10 @@ import prisma from '@/prisma';
 
 // Used by form creator to retrieve forms to edit
 export async function getFormForCreator(formId: string): Promise<Form | null> {
-	return prisma.form.findFirst({
+	return prisma.form.findUnique({
 		where: {
 			id: formId,
-		}
+		},
 	});
 }
 
@@ -20,7 +20,7 @@ export async function getFormForCreator(formId: string): Promise<Form | null> {
 // Form must be published, open before the current date,
 // and not closed
 export async function getForm(formId: string): Promise<Form | null> {
-	return prisma.form.findFirst({
+	return prisma.form.findUnique({
 		where: {
 			id: formId,
 			closes_at: {
@@ -46,7 +46,7 @@ export async function getApplication(
 	competition_code: string
 ): Promise<Form | null> {
 	return prisma.competition
-		.findFirst({
+		.findUnique({
 			where: {
 				code: competition_code,
 				application: {
@@ -92,7 +92,7 @@ function constructFilename(
 	return `${competitionCode}/forms/${formId}/responses/${responseId}/${questionId}/${file.name}`;
 }
 
-export async function uploadFile(
+export async function uploadFormFile(
 	competitionCode: string,
 	formId: string,
 	responseId: string,
@@ -120,7 +120,7 @@ export async function deleteFile(url: string) {
 		await del(url);
 	} catch {
 		// del should throw an error if the url is invalid
-		console.log('Failed to delete file with url: ', url);
+		console.error('Failed to delete file with url: ', url);
 	}
 }
 
@@ -186,22 +186,6 @@ export async function saveAndPublishForm(
 	return resp;
 }
 
-export async function publishForm(form: Form, sections: FormSection[]) {
-	const resp = await prisma.form.update({
-		where: {
-			id: form.id,
-			is_published: false,
-		},
-		data: {
-			...form,
-			sections: sections as unknown as Prisma.JsonArray,
-			is_published: true,
-		},
-	});
-
-	return resp;
-}
-
 export async function getUser(email: string) {
 	const resp = await prisma.user.findUnique({
 		where: {
@@ -231,9 +215,9 @@ export async function getFormResponse(
 					submitted_by_id: userId,
 					form_id: formId,
 					answers: initialValues.current,
-				}
-			})
-		})
+				},
+			});
+		});
 }
 
 export async function saveResponse(

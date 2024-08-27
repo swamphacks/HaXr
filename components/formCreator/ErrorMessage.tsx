@@ -1,9 +1,9 @@
-import { QuestionValidationError } from '@/types/forms';
+import { FormValidationError } from '@/types/forms';
 
 export default function ErrorMessage({
   error,
 }: {
-  error: QuestionValidationError;
+  error: FormValidationError;
 }) {
   if (error) {
     return <p className='text-sm text-red-500'>{error.message}</p>;
