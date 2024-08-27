@@ -32,7 +32,7 @@ import {
 	ShortResponseLength,
 } from '@/types/forms';
 import { mlhQuestions } from '@/forms/application';
-import { Form, Response } from '@prisma/client';
+import { Form } from '@prisma/client';
 import Status from '@/components/status';
 import {
 	isValidEmail,
@@ -91,11 +91,11 @@ function Section({
 export default function ViewForm({
 	formId,
 	session,
-	isApplication
+	onApplication,
 }: {
 	formId: string;
 	session: Session;
-	isApplication: boolean;
+	onApplication: boolean;
 }) {
 	const phoneUtil = PhoneNumberUtil.getInstance();
 	const [modalOpened, { open, close }] = useDisclosure(false);
@@ -322,66 +322,76 @@ export default function ViewForm({
 	};
 
 	useEffect(() => {
-		const formPromise: Promise<Form | null> = isApplication ? getApplication(formId) : getForm(formId);
-		formPromise.then((application: Form | null) => {
-			if (!application) {
-				throw new Error('Form not found');
-			}
-			console.log(application);
-			setFormObject(application);
-			const sections = application.sections as unknown as FormSection[];
-			setFormSections(sections);
-			return application
-		}).then((application: Form) =>
-			Promise.all([application, getUser(session.user?.email ?? '')])
-		).then(([application, user]) => {
-			userId.current = user?.id ?? '';
-			return Promise.all([application, getFormResponse(application.id, userId.current, prevValues)]);
-		}).then(([application, resp]) => {
-			if (!resp) throw new Error('Failed to get response');
+		const formPromise: Promise<Form | null> = onApplication
+			? getApplication(formId)
+			: getForm(formId);
+		formPromise
+			.then((application: Form | null) => {
+				if (!application) {
+					throw new Error('Form not found');
+				}
+				console.log(application);
+				setFormObject(application);
+				const sections = application.sections as unknown as FormSection[];
+				setFormSections(sections);
+				return application;
+			})
+			.then((application: Form) =>
+				Promise.all([application, getUser(session.user?.email ?? '')])
+			)
+			.then(([application, user]) => {
+				userId.current = user?.id ?? '';
+				return Promise.all([
+					application,
+					getFormResponse(application.id, userId.current, prevValues),
+				]);
+			})
+			.then(([application, resp]) => {
+				if (!resp) throw new Error('Failed to get response');
 
-			const responses = resp.answers as unknown as Record<string, any>;
-			const sections = application.sections as unknown as FormSection[];
-			const transformed: Record<string, any> = {};
+				const responses = resp.answers as unknown as Record<string, any>;
+				const sections = application.sections as unknown as FormSection[];
+				const transformed: Record<string, any> = {};
 
-			responseId.current = resp.id;
-			sections
-				.flatMap((section: FormSection) => section.questions)
-				.forEach((question: QuestionInterface) =>
-					initializeQuestion(question, responses, transformed)
-				);
+				responseId.current = resp.id;
+				sections
+					.flatMap((section: FormSection) => section.questions)
+					.forEach((question: QuestionInterface) =>
+						initializeQuestion(question, responses, transformed)
+					);
 
-			if (application.is_mlh) {
-				mlhQuestions.general.questions.forEach(
-					(question: QuestionInterface) => {
-						initializeQuestion(question, responses, transformed);
-					}
-				);
-				mlhQuestions.agreements.questions.forEach(
-					(question: QuestionInterface) => {
-						initializeQuestion(question, responses, transformed);
-					}
-				);
-			}
+				if (application.is_mlh) {
+					mlhQuestions.general.questions.forEach(
+						(question: QuestionInterface) => {
+							initializeQuestion(question, responses, transformed);
+						}
+					);
+					mlhQuestions.agreements.questions.forEach(
+						(question: QuestionInterface) => {
+							initializeQuestion(question, responses, transformed);
+						}
+					);
+				}
 
-			prevValues.current = transformed;
-			form.setValues(transformed);
-			console.log(transformed);
+				prevValues.current = transformed;
+				form.setValues(transformed);
+				console.log(transformed);
 
-			if (!resp.submitted) {
-				// Autosave every second
-				setStatus(StatusIndicator.SUCCESS);
-				setTimeout(autosave, 1000);
-			} else {
-				setStatus(StatusIndicator.SUBMITTED);
-			}
-			setSubmitted(resp.submitted);
-			submittedRef.current = resp.submitted;
-		}).catch((error) => {
-			console.error(error);
-			setStatus(StatusIndicator.FAILED);
-			setLoadedForm(false);
-		});
+				if (!resp.submitted) {
+					// Autosave every second
+					setStatus(StatusIndicator.SUCCESS);
+					setTimeout(autosave, 1000);
+				} else {
+					setStatus(StatusIndicator.SUBMITTED);
+				}
+				setSubmitted(resp.submitted);
+				submittedRef.current = resp.submitted;
+			})
+			.catch((error) => {
+				console.error(error);
+				setStatus(StatusIndicator.FAILED);
+				setLoadedForm(false);
+			});
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (

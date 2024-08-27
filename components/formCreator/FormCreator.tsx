@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
-import { Button, Stack, Tabs, rem, Accordion } from '@mantine/core';
+import { Button, Tabs, rem, Accordion } from '@mantine/core';
 import {
 	IconForms,
 	IconMessageCircle,
@@ -15,7 +15,7 @@ import {
 	FormValidationError,
 	FormErrorTypes,
 } from '@/types/forms';
-import { getForm, updateForm, updateFormSettings } from '@/app/actions/forms';
+import { getFormForCreator, updateForm, updateFormSettings } from '@/app/actions/forms';
 import { Form } from '@prisma/client';
 import { StatusIndicator } from '@/types/forms';
 import Status from '@/components/status';
@@ -207,20 +207,16 @@ export function CreateApplication({ params }: { params: { id: string } }) {
 	};
 
 	useEffect(() => {
-		getForm(params.id)
-			.then((res) => {
-				if (res) {
-					setForm(res);
-					setSections(res.sections as unknown as FormSection[]);
-					setStatus(StatusIndicator.SUCCESS);
-					console.log(res);
-
-					autosaveTimer.current = setInterval(save, 1000);
-				} else {
-					setStatus(StatusIndicator.FAILED);
-				}
+		getFormForCreator(params.id)
+			.then((form) => {
+				if (!form) throw new Error('Form not found');
+				setForm(form);
+				setSections(form.sections as unknown as FormSection[]);
+				setStatus(StatusIndicator.SUCCESS);
+				autosaveTimer.current = setInterval(save, 1000);
 			})
 			.catch((e) => {
+				setStatus(StatusIndicator.FAILED);
 				console.error(e);
 			});
 
