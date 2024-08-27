@@ -1,20 +1,20 @@
 import { Session } from 'next-auth';
 import {
-	Avatar,
-	Group,
-	Menu,
-	MenuDropdown,
-	MenuItem,
-	MenuTarget,
-	Stack,
-	Text,
+  Avatar,
+  Group,
+  Menu,
+  MenuDropdown,
+  MenuItem,
+  MenuTarget,
+  Stack,
+  Text,
 } from '@mantine/core';
 import { IconLogout } from '@tabler/icons-react';
 import { serverSignOut } from '@/actions/auth';
 import { useMediaQuery } from '@mantine/hooks';
 
 interface Props {
-	session: Session;
+  session: Session;
 }
 
 export default function UserAvatar({ session }: Readonly<Props>) {
