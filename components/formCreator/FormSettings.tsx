@@ -4,7 +4,7 @@ import { useState, useContext } from 'react';
 import { Button, Text, Switch, Divider, Modal } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { DateTimePicker } from '@mantine/dates';
-import { FormSettings } from '@/types/forms';
+import { FormSettings, FormValidationError } from '@/types/forms';
 import { questionType } from '@/types/questionTypes';
 import { updateFormSettings, saveAndPublishForm } from '@/app/actions/forms';
 import {
@@ -45,7 +45,7 @@ export default function Settings() {
   const [openDateError, setOpenDateError] = useState({ error: false, msg: '' });
 
   const validateQuestions = () => {
-    const errors: QuestionValidationError[] = [];
+    const errors: FormValidationError[] = [];
 
     // Validate Form Title
     if (isEmpty(form.title)) {

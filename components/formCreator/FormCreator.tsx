@@ -15,7 +15,11 @@ import {
 	FormValidationError,
 	FormErrorTypes,
 } from '@/types/forms';
-import { getFormForCreator, updateForm, updateFormSettings } from '@/app/actions/forms';
+import {
+	getFormForCreator,
+	updateForm,
+	updateFormSettings,
+} from '@/app/actions/forms';
 import { Form } from '@prisma/client';
 import { StatusIndicator } from '@/types/forms';
 import Status from '@/components/status';
@@ -38,7 +42,7 @@ function ApplicationCreator({
 	sections: FormSection[];
 	setSections: any;
 }) {
-	const { a, b, errors, setErrors, ...args } = useContext(FormCreatorContext);
+	const { a, b, errors, setErrors  } = useContext(FormCreatorContext);
 	const handleAddSection = () => {
 		setErrors(
 			errors.filter(
