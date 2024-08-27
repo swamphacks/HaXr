@@ -7,9 +7,17 @@ import { put, del } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import prisma from '@/prisma';
 
+// Used by form creator to retrieve forms to edit
+export async function getFormForCreator(formId: string): Promise<Form | null> {
+	return prisma.form.findFirst({
+		where: {
+			id: formId,
+		}
+	});
+}
 
 // Used by form viewer to retrieve open forms
-// Form must be published, open before the current date, 
+// Form must be published, open before the current date,
 // and not closed
 export async function getForm(formId: string): Promise<Form | null> {
 	return prisma.form.findFirst({
@@ -34,41 +42,44 @@ export async function getForm(formId: string): Promise<Form | null> {
 }
 
 // Gets the form associated with the competition
-export async function getApplication(competition_code: string): Promise<Form | null> {
-	return prisma.competition.findFirst({
-		where: {
-			code: competition_code,
-			application: {
-				closes_at: {
-					gte: new Date(),
-				},
-				is_published: true,
-			},
-			OR: [
-				{
-					application: {
-						opens_at: null,
+export async function getApplication(
+	competition_code: string
+): Promise<Form | null> {
+	return prisma.competition
+		.findFirst({
+			where: {
+				code: competition_code,
+				application: {
+					closes_at: {
+						gte: new Date(),
 					},
+					is_published: true,
 				},
-				{
-					application: {
-						opens_at: {
-							lte: new Date(),
+				OR: [
+					{
+						application: {
+							opens_at: null,
 						},
 					},
-				},
-			],
-		},
-		include: {
-			application: true,
-		},
-	}).then((resp) => {
-		if (!resp) {
-			return null;
-		}
-		return resp.application;
-	});;
-
+					{
+						application: {
+							opens_at: {
+								lte: new Date(),
+							},
+						},
+					},
+				],
+			},
+			include: {
+				application: true,
+			},
+		})
+		.then((resp) => {
+			if (!resp) {
+				return null;
+			}
+			return resp.application;
+		});
 }
 
 function constructFilename(
@@ -112,7 +123,6 @@ export async function deleteFile(url: string) {
 		console.log('Failed to delete file with url: ', url);
 	}
 }
-
 
 export async function createForm(competitionCode: string, formType: FormType) {
 	return await prisma.form.create({
@@ -206,26 +216,24 @@ export async function getFormResponse(
 	userId: string,
 	initialValues: React.MutableRefObject<Record<string, any>>
 ): Promise<Response | null> {
-	let resp = prisma.response.findFirst({
-		where: {
-			form_id: formId,
-			submitted_by_id: userId,
-		},
-	}).then((resp: Response | null) => {
-		return resp;
-	});
-
-	// Create a new response if it doesn't exist
-	if (!resp) {
-		resp = prisma.response.create({
-			data: {
-				submitted_by_id: userId,
+	return prisma.response
+		.findFirst({
+			where: {
 				form_id: formId,
-				answers: initialValues.current,
+				submitted_by_id: userId,
 			},
-		});
-	}
-	return resp;
+		})
+		.then((resp: Response | null) => {
+			if (resp) return resp;
+
+			return prisma.response.create({
+				data: {
+					submitted_by_id: userId,
+					form_id: formId,
+					answers: initialValues.current,
+				}
+			})
+		})
 }
 
 export async function saveResponse(

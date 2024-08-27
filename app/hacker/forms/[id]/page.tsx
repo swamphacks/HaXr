@@ -3,5 +3,8 @@ import { auth } from '@/auth';
 
 export default async function FormView({ params }: { params: { id: string } }) {
 	const session = await auth();
-	return <ViewForm formId={params.id} session={session!} isApplication={false} />;
+	console.log('form id', params.id);
+	return (
+		<ViewForm formId={params.id} session={session!} onApplication={false} />
+	);
 }
