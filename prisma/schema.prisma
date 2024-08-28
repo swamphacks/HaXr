@@ -83,6 +83,7 @@ enum FormType {
 model Form {
   id               String       @id @default(cuid())
   title            String       @default("Untitled Form")
+  description      String?
   created_at       DateTime     @default(now())
   update_at        DateTime     @updatedAt
   competition      Competition  @relation(name: "CompetitionForms", fields: [competition_code], references: [code])
@@ -91,11 +92,11 @@ model Form {
   form_type        FormType     @default(OTHER)
 
   // Settings
-  is_mlh             Boolean   @default(false)
-  opens_at           DateTime?
-  closes_at          DateTime?
-  requiredForCheckin Boolean   @default(false)
-  is_published       Boolean   @default(false)
+  is_mlh               Boolean   @default(false)
+  opens_at             DateTime?
+  closes_at            DateTime?
+  required_for_checkin Boolean   @default(false)
+  is_published         Boolean   @default(false)
 
   sections  Json       @default("[]")
   responses Response[]

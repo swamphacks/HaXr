@@ -118,7 +118,7 @@ export default function ViewForm({
 
   const isPhoneValid = (phone: string) => {
     try {
-      const number = phoneUtil.parseAndKeepRawInput(phone, 'US');
+      const umber = phoneUtil.parseAndKeepRawInput(phone, 'US');
       return phoneUtil.isValidNumber(number);
     } catch (error) {
       console.log('not valid phone number');
@@ -343,13 +343,13 @@ export default function ViewForm({
         userId.current = user?.id ?? '';
         return Promise.all([
           application,
-          getFormResponse(application.id, userId.current, prevValues),
+          getFormResponse(application.id, userId.current),
         ]);
       })
       .then(([application, resp]) => {
         if (!resp) throw new Error('Failed to get response');
 
-        const responses = resp.answers as unknown as Record<string, any>;
+        const responses = resp.values as unknown as Record<string, any>;
         const sections = application.sections as unknown as FormSection[];
         const transformed: Record<string, any> = {};
 
