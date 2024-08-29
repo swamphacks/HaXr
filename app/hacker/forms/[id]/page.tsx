@@ -1,14 +1,9 @@
 import FormContainer from '@/components/forms/FormContainer';
+import { getForm } from '@/app/actions/forms';
 import { auth } from '@/auth';
 
 export default async function FormView({ params }: { params: { id: string } }) {
   const session = await auth();
-  console.log('form id', params.id);
-  return (
-    <FormContainer
-      formId={params.id}
-      userEmail={session!.user?.email ?? ''}
-      onApplication={false}
-    />
-  );
+  const form = await getForm(params.id);
+  return <FormContainer form={form} userEmail={session!.user?.email ?? ''} />;
 }
