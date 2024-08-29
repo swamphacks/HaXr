@@ -27,6 +27,7 @@ import { Form, User, Response } from '@prisma/client';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { Question } from '@/components/forms/Questions';
 import { notifications } from '@mantine//notifications';
+import Status from '@/components/status';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { questionType } from '@/types/questionTypes';
 import { useDisclosure } from '@mantine/hooks';
@@ -290,7 +291,12 @@ export default function FormContent({
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = async () => {
+  const handleFirstSubmit = () => {
+    if (!validateInputs(currResponse.getValues())) return;
+    open();
+  };
+
+  const handleSubmit = () => {
     if (!validateInputs(currResponse.getValues())) return;
     clearInterval(autosaveTimer.current); // stop timer
     submitResponse(user.id, userResponse.id, currResponse.getValues())
@@ -318,77 +324,93 @@ export default function FormContent({
     <div className='my-16 grid grid-cols-[auto_40rem_auto] items-center'>
       <div />
 
-      <form
-        onSubmit={handleSubmit}
-        className='flex flex-col items-center gap-8'
-      >
-        {/* Confirmatin Modal */}
-        <Modal opened={modalOpened} onClose={close} title='Submit Form'>
-          <Text style={{ marginBottom: '12px' }}>
-            Are you sure you want to submit your application? You will not be
-            able to edit it after submission.
-          </Text>
-          <Group justify='center'>
-            <Button
-              color='green'
-              variant='light'
-              onClick={() => {
-                handleSubmit();
-                close();
-              }}
-            >
-              Submit
-            </Button>
-          </Group>
-        </Modal>
+      <section className='grid grid-cols-1 items-center'>
+        <div className='mb-4 flex flex-row'>
+          <Title
+            order={1}
+            styles={{
+              root: {
+                flexGrow: 2,
+              },
+            }}
+          >
+            {prismaForm.title}
+          </Title>
+          <Status status={status} />
+        </div>
 
-        {/* Form sections */}
-        <div className='flex w-full flex-col gap-8'>
-          {prismaForm.is_mlh ? (
-            <Section
-              section={mlhQuestions.general}
-              userResponses={currResponse}
-              submitted={submitted}
-              competitionCode={prismaForm.competition_code}
-              formId={prismaForm.id}
-              responseId={userResponse.id}
-            />
-          ) : null}
-          {formSections.map((section: FormSection) => {
-            return (
+        <form
+          onSubmit={handleSubmit}
+          className='flex flex-col items-center gap-8'
+        >
+          {/* Confirmatin Modal */}
+          <Modal opened={modalOpened} onClose={close} title='Submit Form'>
+            <Text style={{ marginBottom: '12px' }}>
+              Are you sure you want to submit your application? You will not be
+              able to edit it after submission.
+            </Text>
+            <Group justify='center'>
+              <Button
+                color='green'
+                variant='light'
+                onClick={() => {
+                  handleSubmit();
+                  close();
+                }}
+              >
+                Submit
+              </Button>
+            </Group>
+          </Modal>
+
+          {/* Form sections */}
+          <div className='flex w-full flex-col gap-8'>
+            {prismaForm.is_mlh ? (
               <Section
-                key={section.key}
-                section={section}
+                section={mlhQuestions.general}
                 userResponses={currResponse}
                 submitted={submitted}
                 competitionCode={prismaForm.competition_code}
                 formId={prismaForm.id}
                 responseId={userResponse.id}
               />
-            );
-          })}
-          {prismaForm.is_mlh ? (
-            <Section
-              section={mlhQuestions.agreements}
-              userResponses={currResponse}
-              submitted={submitted}
-              competitionCode={prismaForm.competition_code}
-              formId={prismaForm.id}
-              responseId={userResponse.id}
-            />
-          ) : null}
-        </div>
+            ) : null}
+            {formSections.map((section: FormSection) => {
+              return (
+                <Section
+                  key={section.key}
+                  section={section}
+                  userResponses={currResponse}
+                  submitted={submitted}
+                  competitionCode={prismaForm.competition_code}
+                  formId={prismaForm.id}
+                  responseId={userResponse.id}
+                />
+              );
+            })}
+            {prismaForm.is_mlh ? (
+              <Section
+                section={mlhQuestions.agreements}
+                userResponses={currResponse}
+                submitted={submitted}
+                competitionCode={prismaForm.competition_code}
+                formId={prismaForm.id}
+                responseId={userResponse.id}
+              />
+            ) : null}
+          </div>
 
-        {/* Submit */}
-        <Button
-          variant='light'
-          color='green'
-          onClick={open}
-          disabled={submitted}
-        >
-          Submit Form
-        </Button>
-      </form>
+          {/* Submit */}
+          <Button
+            variant='light'
+            color='green'
+            onClick={handleFirstSubmit}
+            disabled={submitted}
+          >
+            Submit Form
+          </Button>
+        </form>
+      </section>
 
       <div />
     </div>
