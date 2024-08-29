@@ -91,11 +91,6 @@ model Competition {
   forms Form[] @relation(name: "CompetitionForms")
 }
 
-enum FormType {
-  APPLICATION
-  OTHER
-}
-
 model Form {
   id               String       @id @default(cuid())
   title            String       @default("Untitled Form")
@@ -105,7 +100,6 @@ model Form {
   competition      Competition  @relation(name: "CompetitionForms", fields: [competition_code], references: [code])
   competitionApp   Competition? @relation(name: "CompetitionApplication")
   competition_code String
-  form_type        FormType     @default(OTHER)
 
   // Settings
   is_mlh               Boolean   @default(false)

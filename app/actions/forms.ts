@@ -7,6 +7,10 @@ import { put, del } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import prisma from '@/prisma';
 
+export async function getForms() {
+  return await prisma.form.findMany();
+}
+
 // Used by form creator to retrieve forms to edit
 export async function getFormForCreator(formId: string): Promise<Form | null> {
   return prisma.form.findUnique({
@@ -124,11 +128,10 @@ export async function deleteFile(url: string) {
   }
 }
 
-export async function createForm(competitionCode: string, formType: FormType) {
+export async function createForm(competitionCode: string) {
   return await prisma.form.create({
     data: {
       competition_code: competitionCode,
-      form_type: formType,
     },
   });
 }

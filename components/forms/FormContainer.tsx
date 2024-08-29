@@ -1,19 +1,18 @@
-import { getForm, getFormResponse, getUser } from '@/app/actions/forms';
+import { getFormResponse, getUser } from '@/app/actions/forms';
 import { Alert } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
+import { Form } from '@prisma/client';
 import { FormSection } from '@/types/forms';
 import FormContent from '@/components/forms/FormContent';
 
 export default async function FormContainer({
-  formId,
+  form,
   userEmail,
-  onApplication,
 }: {
-  formId: string;
+  form: Form | null;
   userEmail: string;
-  onApplication: boolean;
 }) {
-  const [form, user] = await Promise.all([getForm(formId), getUser(userEmail)]);
+  const user = await getUser(userEmail);
 
   if (!form) {
     return (
@@ -67,7 +66,7 @@ export default async function FormContainer({
     );
   }
 
-  const response = await getFormResponse(formId, user.id);
+  const response = await getFormResponse(form.id, user.id);
 
   return <FormContent prismaForm={form} user={user} userResponse={response} />;
 }
