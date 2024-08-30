@@ -1,8 +1,6 @@
 'use server';
 
 import { Prisma, Form, Response } from '@prisma/client';
-import { FormSection } from '@/types/forms';
-import { FormSettings } from '@/types/forms';
 import { put, del } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import prisma from '@/prisma';

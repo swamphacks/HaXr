@@ -19,7 +19,6 @@ interface Props {
 export default function UserAvatar({ session }: Readonly<Props>) {
   const router = useRouter();
 
-  console.log(session);
   if (!session?.user?.image || !session.user.name || !session.user.email)
     return null;
   const { image, name, email } = session.user;

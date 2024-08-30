@@ -3,8 +3,8 @@
 import { Form, Competition } from '@prisma/client';
 import { useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, TextInput, Table, rem } from '@mantine/core';
-import { IconSearch, IconEdit } from '@tabler/icons-react';
+import { Button, Table } from '@mantine/core';
+import { IconEdit } from '@tabler/icons-react';
 import { CompetitionContext } from '@/components/admin/AdminShell';
 import { createForm } from '@/app/actions/forms';
 import { Title } from '@mantine/core';

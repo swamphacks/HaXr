@@ -38,5 +38,3 @@ next-env.d.ts
 
 # jetbrains
 .idea
-
-prisma/migrations/*

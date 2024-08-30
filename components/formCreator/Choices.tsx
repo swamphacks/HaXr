@@ -1,14 +1,83 @@
+import { CloseButton, Radio, Checkbox } from '@mantine/core';
 import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { FormQuestion } from '@/types/questionTypes';
-import Choice from '@/components/formCreator/Choice';
+  FormQuestion,
+  SelectionQuestion,
+  answerChoice,
+  questionType,
+} from '@/types/questionTypes';
 
-type answerChoice = {
-  value: string;
-  id: string;
-};
+export function Choice({
+  choice,
+  question,
+  setQuestions,
+  disabled,
+}: {
+  choice: answerChoice;
+  question: FormQuestion;
+  setQuestions: any;
+  disabled: boolean;
+}) {
+  const handleTextInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    choice.value = e.target.value;
+    setQuestions((questions: FormQuestion[]) => {
+      const choices: answerChoice[] = (question as SelectionQuestion)
+        .answerChoices;
+      return questions.map((q: FormQuestion) =>
+        q.id === question.id
+          ? {
+              ...question,
+              answerChoices: choices.map((c: answerChoice) =>
+                c.id === choice.id ? choice : c
+              ),
+            }
+          : q
+      );
+    });
+  };
+
+  const handleDeletion = () => {
+    setQuestions((questions: FormQuestion[]) =>
+      questions.map((q: FormQuestion) =>
+        q.id === question.id
+          ? {
+              ...question,
+              answerChoices: (
+                question as SelectionQuestion
+              ).answerChoices.filter((c: answerChoice) => c.id !== choice.id),
+            }
+          : q
+      )
+    );
+  };
+
+  return (
+    <div
+      key={choice.id}
+      className='grid touch-none grid-cols-[1.3rem_auto_1.3rem] items-center'
+    >
+
+      {/* Text Input */}
+      <div className='col-start-2 flex flex-row items-center'>
+        {question.type === questionType.multiplechoice ? (
+          <Radio disabled className='mr-2' />
+        ) : null}
+        {question.type === questionType.checkbox ? (
+          <Checkbox disabled className='mr-2' />
+        ) : null}
+        <input
+          type='text'
+          defaultValue={choice.value}
+          onChange={handleTextInput}
+          className='w-full border-[2px] border-solid px-0 bg-transparentk focus:outline-none focus:border-[var(--mantine-color-blue-3)]'
+          disabled={disabled}
+        />
+      </div>
+
+      {/* Delete Button */}
+      {!disabled ? <CloseButton onClick={handleDeletion} /> : null}
+    </div>
+  );
+}
 
 export default function Choices({
   choices,
@@ -23,7 +92,6 @@ export default function Choices({
 }) {
   return (
     <div className='flex flex-col gap-2'>
-      <SortableContext items={choices} strategy={verticalListSortingStrategy}>
         {choices.map((choice: answerChoice) => (
           <Choice
             key={choice.id}
@@ -33,7 +101,6 @@ export default function Choices({
             setQuestions={setQuestions}
           />
         ))}
-      </SortableContext>
     </div>
   );
 }
