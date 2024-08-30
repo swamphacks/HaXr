@@ -25,11 +25,13 @@ model User {
   image         String?
   role          Role      @default(Hacker)
 
-  accounts Account[]
-  sessions Session[]
+  isOnboarded   Boolean   @default(false)
 
-  applications Application[]
-  attendees    Attendee[]
+  accounts      Account[]
+  sessions      Session[]
+
+  applications  Application[]
+  attendees     Attendee[]
 }
 
 model Account {

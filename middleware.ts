@@ -20,6 +20,7 @@ export default auth((req) => {
 
   const { pathname } = req.nextUrl;
   const isAdmin = req.auth.user.role === Role.Admin;
+  const onboarded = req.auth.user.isOnboarded;
 
   // Redirect if accessing unauthorized pages
   if (pathname.startsWith('/admin') && !isAdmin)
@@ -30,6 +31,17 @@ export default auth((req) => {
   // If root, send to respective dashboard
   if (pathname === '/')
     return RedirectResponse(req, isAdmin ? '/admin' : '/hacker');
+
+  // Handle hacker routes
+  if (pathname.startsWith('/hacker')) {
+    // If not onboarded and not on onboarding page, send to onboarding
+    if (!onboarded && pathname !== '/hacker/onboarding')
+      return RedirectResponse(req, '/hacker/onboarding');
+    
+    // If onboarded and on onboarding page, send to hacker dashboard
+    if (onboarded && pathname === '/hacker/onboarding')
+      return RedirectResponse(req, '/hacker');
+  }
 
   // If no comp, then send back to admin dashboard
   if (pathname === '/admin/comp') return RedirectResponse(req, '/admin');
