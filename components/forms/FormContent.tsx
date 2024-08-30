@@ -28,7 +28,6 @@ import { useForm, UseFormReturnType } from '@mantine/form';
 import { Question } from '@/components/forms/Questions';
 import { notifications } from '@mantine//notifications';
 import Status from '@/components/status';
-import { IconInfoCircle } from '@tabler/icons-react';
 import { questionType } from '@/types/questionTypes';
 import { useDisclosure } from '@mantine/hooks';
 import { PhoneNumberUtil } from 'google-libphonenumber';
@@ -91,7 +90,7 @@ export default function FormContent({
   const [modalOpened, { open, close }] = useDisclosure(false);
   const [submitted, setSubmitted] = useState(false);
   const [status, setStatus] = useState<StatusIndicator>(
-    StatusIndicator.LOADING
+    StatusIndicator.SUCCESS
   );
   const prevValues = useRef<Record<string, any>>({});
   const autosaveTimer = useRef<NodeJS.Timeout>();
@@ -129,6 +128,7 @@ export default function FormContent({
       const prev = prevValues.current;
       if (recordEquals(currentValues, prev)) return;
 
+      setStatus(StatusIndicator.SAVING);
       saveResponse(user.id, userResponse.id, currentValues)
         .then(() => {
           prevValues.current = currentValues;
@@ -325,18 +325,21 @@ export default function FormContent({
       <div />
 
       <section className='grid grid-cols-1 items-center'>
-        <div className='mb-4 flex flex-row'>
-          <Title
-            order={1}
-            styles={{
-              root: {
-                flexGrow: 2,
-              },
-            }}
-          >
-            {prismaForm.title}
-          </Title>
-          <Status status={status} />
+        <div className='mb-8'>
+          <div className='flex flex-row'>
+            <Title
+              order={1}
+              styles={{
+                root: {
+                  flexGrow: 2,
+                },
+              }}
+            >
+              {prismaForm.title}
+            </Title>
+            <Status status={status} />
+          </div>
+          <Text>{prismaForm.description}</Text>
         </div>
 
         <form

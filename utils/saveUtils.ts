@@ -1,15 +1,5 @@
-import { FormSection, Question } from '@/types/forms';
-
-export function arrayEquals(a: string[], b: string[]) {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (a.length !== b.length) return false;
-
-  for (let i = 0; i < a.length; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
+import { Form } from '@prisma/client';
+import { FormSection } from '@/types/forms';
 
 export function recordEquals(a: Record<string, any>, b: Record<string, any>) {
   // Compare the keys
@@ -28,23 +18,35 @@ export function recordEquals(a: Record<string, any>, b: Record<string, any>) {
   return true;
 }
 
-export function questionEquals(a: Question, b: Question) {
-  if (!recordEquals(a.settings, b.settings)) return false;
-  return recordEquals(
-    { ...a, settings: undefined },
-    { ...b, settings: undefined }
-  );
+export function objectEquals(
+  a: Record<string, any>,
+  b: Record<string, any>
+): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return false;
+  if (Object.keys(a).length !== Object.keys(b).length) return false;
+
+  return Object.keys(a).every((key: string) => {
+    if (typeof a[key] !== typeof b[key]) return false;
+    if (Array.isArray(a[key]) && Array.isArray(b[key]))
+      return arrayEquals(a[key], b[key]);
+    if (a[key] instanceof Date && b[key] instanceof Date)
+      return a[key].getTime() === b[key].getTime();
+    if (typeof a[key] === 'object') return objectEquals(a[key], b[key]);
+    return a[key] === b[key];
+  });
 }
 
-export function sectionEquals(a: FormSection, b: FormSection) {
-  if (a.key !== b.key) return false;
-  if (a.title !== b.title) return false;
-  if (a.description !== b.description) return false;
-  if (a.questions.length !== b.questions.length) return false;
+export function arrayEquals<T>(a: T[], b: T[]): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return false;
+  if (a.length !== b.length) return false;
 
-  for (let i = 0; i < a.questions.length; i++) {
-    if (!questionEquals(a.questions[i], b.questions[i])) return false;
-  }
-
-  return true;
+  return a.every((val: T, index: number) => {
+    if (Array.isArray(val) && Array.isArray(b[index]))
+      return arrayEquals(val, b[index] as any);
+    if (typeof val === 'object')
+      return objectEquals(val as any, b[index] as any);
+    return val === b[index];
+  });
 }
