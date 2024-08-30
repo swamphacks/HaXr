@@ -15,6 +15,7 @@ import {
   fileSizes,
   FormErrorTypes,
 } from '@/types/forms';
+import { IconLink } from '@tabler/icons-react';
 import { Form } from '@prisma/client';
 import { FormCreatorContext } from '@/components/formCreator/FormCreator';
 import { notifications } from '@mantine/notifications';
@@ -425,6 +426,31 @@ export default function Settings() {
                 Unpublishing the form will make it unavailable to the public.
                 You can still edit the form settings and questions.
               </p>
+              <div className='mt-2 flex flex-row-reverse items-center gap-2'>
+                <button
+                  onClick={() => {
+                    const domain =
+                      window.location.href.match(/^(https?:\/\/[^\/]+)/);
+                    if (domain === null) {
+                      notifications.show({
+                        title: 'Error',
+                        message: 'There was an error copying to the clipboard.',
+                      });
+                      return;
+                    }
+                    navigator.clipboard.writeText(
+                      `${domain[0]}/hacker/forms/${formContext.form.id}`
+                    );
+                    notifications.show({
+                      title: 'Copied!',
+                      message: 'Form link copied to clipboard',
+                    });
+                  }}
+                >
+                  <IconLink size={20} stroke={1.5} className='text-blue-500' />
+                </button>
+                <p>Share Form</p>
+              </div>
             </>
           ) : (
             <>

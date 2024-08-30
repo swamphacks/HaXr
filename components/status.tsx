@@ -1,26 +1,17 @@
 import { StatusIndicator } from '@/types/forms';
-import Image from 'next/image';
 
 function StatusImage({ status }: { status: StatusIndicator }) {
-  let imgSrc = '';
-
   switch (status) {
     case StatusIndicator.SUCCESS:
-      imgSrc = '/status_indicator/success.svg';
-      break;
+      return <div className='h-4 w-4 rounded-full bg-green-400' />;
     case StatusIndicator.FAILED:
-      imgSrc = '/status_indicator/fail.svg';
-      break;
+      return <div className='h-4 w-4 rounded-full bg-red-500' />;
     case StatusIndicator.SAVING:
     case StatusIndicator.LOADING:
-      imgSrc = '/status_indicator/loading.svg';
-      break;
+      return <div className='h-4 w-4 rounded-full bg-gray-500' />;
     case StatusIndicator.SUBMITTED:
-      imgSrc = '/status_indicator/submitted.svg';
-      break;
+      return <div className='h-4 w-4 rounded-full bg-blue-400' />;
   }
-
-  return <img src={imgSrc} alt='status image' className='h-5 w-5' />;
 }
 
 function StatusText({ status }: { status: StatusIndicator }) {
@@ -30,16 +21,16 @@ function StatusText({ status }: { status: StatusIndicator }) {
       statusText = 'Saved';
       break;
     case StatusIndicator.FAILED:
-      statusText = 'Failed to save';
+      statusText = 'Failed';
       break;
     case StatusIndicator.LOADING:
-      statusText = 'Loading...';
+      statusText = 'Loading';
       break;
     case StatusIndicator.SUBMITTED:
       statusText = 'Submitted';
       break;
     case StatusIndicator.SAVING:
-      statusText = 'Saving...';
+      statusText = 'Saving';
       break;
   }
 
@@ -48,7 +39,7 @@ function StatusText({ status }: { status: StatusIndicator }) {
 
 export default function Status({ status }: { status: StatusIndicator }) {
   return (
-    <div className='flex h-10 w-fit flex-row items-center gap-2 rounded-[20px] border border-solid border-[var(--mantine-color-dark-4)] px-2'>
+    <div className='flex h-10 w-fit flex-row items-center gap-2 rounded-full border border-solid border-[var(--mantine-color-dark-4)] px-3'>
       <StatusImage status={status} />
       <StatusText status={status} />
     </div>
