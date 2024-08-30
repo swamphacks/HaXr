@@ -6,29 +6,50 @@ import {
   SetStateAction,
   MutableRefObject,
 } from 'react';
+import { Prisma, Form } from '@prisma/client';
+import { FormSection } from '@/types/forms';
 
-const useStateWithRef = <T>(
-  initialValue?: T
+const useFormStateWithRefs = (
+  initialValue: Form
 ): [
-  T | undefined,
-  Dispatch<SetStateAction<T | undefined>>,
-  MutableRefObject<T | undefined>,
+  Form,
+  Dispatch<SetStateAction<Form>>,
+  Dispatch<SetStateAction<FormSection[]>>,
+  MutableRefObject<Form>,
 ] => {
-  const [state, setState] = useState<T | undefined>(initialValue);
-  const ref = useRef<T | undefined>(state);
+  const [state, setState] = useState<Form>(initialValue);
+  const formRef = useRef<Form>(state);
 
-  const setStateWithRef: Dispatch<SetStateAction<T | undefined>> = useCallback(
-    (value: SetStateAction<T | undefined>) => {
-      ref.current =
+  const setStateWithRef: Dispatch<SetStateAction<Form>> = useCallback(
+    (value: SetStateAction<Form>) => {
+      formRef.current =
         typeof value === 'function'
-          ? (value as (prevState: T | undefined) => T)(ref.current)
+          ? (value as (prevState: Form) => Form)(formRef.current)
           : value;
-      setState(ref.current);
+      setState(formRef.current);
     },
     []
   );
 
-  return [state, setStateWithRef, ref];
+  const setSections: Dispatch<SetStateAction<FormSection[]>> = useCallback(
+    (value: SetStateAction<FormSection[]>) => {
+      const newSections =
+        typeof value === 'function'
+          ? (value as (prevSections: FormSection[]) => FormSection[])(
+              formRef.current.sections as unknown as FormSection[]
+            )
+          : value;
+
+      formRef.current = {
+        ...formRef.current,
+        sections: newSections as unknown as Prisma.JsonArray,
+      };
+      setState(formRef.current);
+    },
+    []
+  );
+
+  return [state, setStateWithRef, setSections, formRef];
 };
 
-export default useStateWithRef;
+export default useFormStateWithRefs;

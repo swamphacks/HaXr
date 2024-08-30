@@ -7,6 +7,7 @@ import { Button, TextInput, Table, rem } from '@mantine/core';
 import { IconSearch, IconEdit } from '@tabler/icons-react';
 import { CompetitionContext } from '@/components/admin/AdminShell';
 import { createForm } from '@/app/actions/forms';
+import { Title } from '@mantine/core';
 
 function FormRows({
   forms,
@@ -56,43 +57,23 @@ export default function FormsTable({ forms }: { forms: Form[] }) {
 
   return (
     <>
-      <div className='mb-4 flex flex-row items-center'>
-        <TextInput
-          radius='xl'
-          size='sm'
-          placeholder='Search forms'
-          rightSectionWidth={42}
-          leftSection={
-            <IconSearch
-              style={{ width: rem(18), height: rem(18) }}
-              stroke={1.5}
-            />
-          }
-          styles={{
-            root: {
-              flexGrow: 1,
-              paddingRight: rem(5),
-            },
-          }}
-        />
+      <div className='mb-2 flex flex-row'>
         {competition.competition ? (
-          <Button
-            leftSection={<IconEdit size='1rem' />}
-            radius='xl'
-            onClick={handleCreateForm}
-          >
-            Create Form
-          </Button>
-        ) : null}
-      </div>
-      <div className='mb-2 grid grid-cols-[auto_40%]'>
-        <div className='self-center text-[1.4rem]'>
-          {competition.competition ? (
-            <h1>Displaying Forms for {competition.competition.name}</h1>
-          ) : (
-            <h1>Displaying Forms for All Competitions</h1>
-          )}
-        </div>
+          <>
+            <Title order={1} styles={{ root: { flexGrow: 2 } }}>
+              Displaying Forms for {competition.competition.name}
+            </Title>
+            <Button
+              leftSection={<IconEdit size='1rem' />}
+              radius='xl'
+              onClick={handleCreateForm}
+            >
+              Create Form
+            </Button>
+          </>
+        ) : (
+          <Title order={1}>Displaying Forms for All Competitions</Title>
+        )}
       </div>
       <Table highlightOnHover={true}>
         <Table.Thead>

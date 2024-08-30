@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
-import { Button, Tabs, rem, Accordion } from '@mantine/core';
+import { Button, Tabs, rem, Accordion, TextInput } from '@mantine/core';
 import {
   IconForms,
   IconMessageCircle,
@@ -14,95 +14,99 @@ import {
   FormSection,
   FormValidationError,
   FormErrorTypes,
+  FormContext,
 } from '@/types/forms';
-import {
-  getFormForCreator,
-  updateForm,
-  updateFormSettings,
-} from '@/app/actions/forms';
+import { updateForm } from '@/app/actions/forms';
 import { Form } from '@prisma/client';
 import { StatusIndicator } from '@/types/forms';
 import Status from '@/components/status';
-import { sectionEquals, recordEquals } from '@/utils/saveUtils';
-import useStateWithRef from '@/utils/stateWithRef';
+import { objectEquals } from '@/utils/saveUtils';
 import Section from '@/components/formCreator/FormSection';
 import Settings from '@/components/formCreator/FormSettings';
 import ErrorMessage from '@/components/formCreator/ErrorMessage';
+import useFormStateWithRefs from '@/utils/stateWithRef';
 
-export const FormCreatorContext = createContext(null as any);
+export const FormCreatorContext = createContext<FormContext>({} as FormContext);
 
-function ApplicationCreator({
-  form,
-  setForm,
-  sections,
-  setSections,
-}: {
-  form: Form;
-  setForm: any;
-  sections: FormSection[];
-  setSections: any;
-}) {
-  const { a, b, errors, setErrors } = useContext(FormCreatorContext);
+function ApplicationCreator() {
+  const formContext: FormContext = useContext<FormContext>(FormCreatorContext);
   const handleAddSection = () => {
-    setErrors(
-      errors.filter(
+    formContext.setErrors(
+      formContext.errors.filter(
         (error: FormValidationError) => error.type !== FormErrorTypes.NoSections
       )
     );
-    setSections((oldSections: FormSection[]) => {
-      return [
-        ...oldSections,
-        {
-          key: uuidv4(),
-          title: 'Unititled Section',
-          description: '',
-          questions: [],
-        },
-      ];
-    });
+    formContext.setSections([
+      ...(formContext.form.sections as unknown as FormSection[]),
+      {
+        key: uuidv4(),
+        title: 'Untitled Section',
+        description: '',
+        questions: [],
+      },
+    ]);
   };
 
   const handleDeletion = (key: string) => {
-    setSections((oldSections: FormSection[]) => {
-      return oldSections.filter(
+    formContext.setSections(
+      (formContext.form.sections as unknown as FormSection[]).filter(
         (oldSection: FormSection) => oldSection.key !== key
-      );
-    });
+      )
+    );
   };
 
-  const titleError = errors.find(
+  const titleError = formContext.errors.find(
     (error: FormValidationError) => error.type === FormErrorTypes.FormTitle
   );
 
-  const noSectionsError = errors.find(
+  const noSectionsError = formContext.errors.find(
     (error: FormValidationError) => error.type === FormErrorTypes.NoSections
   );
 
   return (
     <div className='grid w-full grid-cols-1 justify-items-center'>
-      <div className='grid w-[700px] grid-cols-1'>
-        <input
-          placeholder='Untitled Form'
-          defaultValue={form.title}
+      <div className='mb-4 grid w-[700px] grid-cols-1 gap-2'>
+        <div>
+          <TextInput
+            label='Form Title'
+            placeholder='Untitled Form'
+            value={formContext.form.title}
+            onChange={(e) => {
+              formContext.setErrors(
+                formContext.errors.filter(
+                  (error: FormValidationError) =>
+                    error.type !== FormErrorTypes.FormTitle
+                )
+              );
+              formContext.setForm((oldForm: Form) => {
+                return { ...oldForm, title: e.target.value };
+              });
+            }}
+            disabled={formContext.form.is_published}
+            styles={{
+              input: { borderColor: titleError ? 'red' : 'var(--input-bd)' },
+            }}
+          />
+          {titleError && <ErrorMessage error={titleError} />}
+        </div>
+        <TextInput
+          label='Description'
+          placeholder='Description'
+          value={formContext.form.description ?? ''}
           onChange={(e) => {
-            setErrors(
-              errors.filter(
+            formContext.setErrors(
+              formContext.errors.filter(
                 (error: FormValidationError) =>
                   error.type !== FormErrorTypes.FormTitle
               )
             );
-            setForm((oldForm: Form) => {
-              return { ...oldForm, title: e.target.value };
+            formContext.setForm((oldForm: Form) => {
+              return { ...oldForm, description: e.target.value };
             });
           }}
-          disabled={form.is_published}
-          className={classes.title}
-          style={{
-            borderColor: titleError ? 'red' : 'var(--mantine-color-dark-3)',
-          }}
+          disabled={formContext.form.is_published}
         />
-        <ErrorMessage error={titleError} />
-        <ErrorMessage error={noSectionsError} />
+        {noSectionsError && <ErrorMessage error={noSectionsError} />}
       </div>
 
       <Accordion
@@ -119,28 +123,30 @@ function ApplicationCreator({
           },
         }}
       >
-        {sections.map((section: FormSection) => {
-          return (
-            <div key={section.key} className='relative flex flex-row'>
-              <Section setSections={setSections} section={section} />
-              {form.is_published ? null : (
-                <button onClick={() => handleDeletion(section.key)}>
-                  <IconX
-                    stroke={1}
-                    className='absolute right-[-40px] top-[18px]'
-                  />
-                </button>
-              )}
-            </div>
-          );
-        })}
+        {(formContext.form.sections as unknown as FormSection[]).map(
+          (section: FormSection) => {
+            return (
+              <div key={section.key} className='relative flex flex-row'>
+                <Section section={section} />
+                {formContext.form.is_published ? null : (
+                  <button onClick={() => handleDeletion(section.key)}>
+                    <IconX
+                      stroke={1}
+                      className='absolute right-[-40px] top-[18px]'
+                    />
+                  </button>
+                )}
+              </div>
+            );
+          }
+        )}
       </Accordion>
 
       <Button
         variant='light'
         color='teal'
         onClick={handleAddSection}
-        disabled={form.is_published}
+        disabled={formContext.form.is_published}
         styles={{ root: { marginTop: '2rem' } }}
       >
         Add Section
@@ -149,99 +155,65 @@ function ApplicationCreator({
   );
 }
 
-export function CreateApplication({ params }: { params: { id: string } }) {
+export function CreateApplication({ initialForm }: { initialForm: Form }) {
   const iconStyle = { width: rem(12), height: rem(12) };
-  const [form, setForm, formRef] = useStateWithRef<Form>();
-  const [sections, setSections, sectionsRef] = useStateWithRef<FormSection[]>(
-    []
-  );
   const [errors, setErrors] = useState<FormValidationError[]>([]);
+  const [form, setForm, setSections, formRef] =
+    useFormStateWithRefs(initialForm);
   const [status, setStatus] = useState<StatusIndicator>(
     StatusIndicator.LOADING
   );
 
   const autosaveTimer = useRef<NodeJS.Timeout>();
-  const prevForm = useRef<Form>();
-  const prevSections = useRef<FormSection[]>([]);
-
-  const sectionsEqual = (section: FormSection[]) => {
-    if (section.length !== prevSections.current.length) return false;
-    return section.every((section: FormSection, index: number) => {
-      return sectionEquals(section, prevSections.current[index]);
-    });
-  };
+  const prevForm = useRef<Form>(initialForm);
 
   const save = async () => {
-    try {
-      if (formRef.current && sectionsRef.current) {
-        // Update the form if there are changes
-        if (!formRef.current.is_published) {
-          if (
-            !recordEquals(
-              { ...formRef.current, sections: undefined },
-              { ...prevForm.current, sections: undefined }
-            ) ||
-            !sectionsEqual(sectionsRef.current)
-          ) {
-            // update refs
-            prevForm.current = formRef.current;
-            prevSections.current = sectionsRef.current;
-            await updateForm(formRef.current, sectionsRef.current);
-            setStatus(StatusIndicator.SUCCESS);
-            console.log('saved');
-          }
-        } else {
-          if (
-            !recordEquals(
-              { ...formRef.current, sections: undefined },
-              { ...prevForm.current, sections: undefined }
-            )
-          ) {
-            prevForm.current = formRef.current;
-            await updateFormSettings(formRef.current);
-            setStatus(StatusIndicator.SUCCESS);
-            console.log('saved settings');
-          }
-        }
-      }
-    } catch (e) {
-      setStatus(StatusIndicator.FAILED);
-      console.log(e);
+    // Extract the settings - we don't want settings to be autosaved
+    const {
+      is_mlh,
+      opens_at,
+      closes_at,
+      required_for_checkin,
+      is_published,
+      ...currForm
+    } = formRef.current;
+    //
+    // prevForm will always hold the initial form settings
+    // make sure formRef goes after prevForm so the attributes are overriden correctly
+    const combinedForm = { ...prevForm.current, ...formRef.current };
+    if (!is_published && !objectEquals(combinedForm, prevForm.current)) {
+      setStatus(StatusIndicator.SAVING);
+      await updateForm(combinedForm).catch((e) => {
+        setStatus(StatusIndicator.FAILED);
+        console.error(e);
+      });
+      prevForm.current = combinedForm;
+      setStatus(StatusIndicator.SUCCESS);
+      console.log('saved');
     }
   };
 
   useEffect(() => {
-    getFormForCreator(params.id)
-      .then((form) => {
-        if (!form) throw new Error('Form not found');
-        setForm(form);
-        setSections(form.sections as unknown as FormSection[]);
-        setStatus(StatusIndicator.SUCCESS);
-        autosaveTimer.current = setInterval(save, 1000);
-      })
-      .catch((e) => {
-        setStatus(StatusIndicator.FAILED);
-        console.error(e);
-      });
-
+    setStatus(StatusIndicator.SUCCESS);
+    autosaveTimer.current = setInterval(save, 1000);
     return () => {
       if (autosaveTimer.current) {
         clearInterval(autosaveTimer.current);
       }
     };
-  }, [params.id]);
+  }, []);
 
   return (
     <FormCreatorContext.Provider
       value={{
-        form,
-        setForm,
-        errors,
-        setErrors,
-        setStatus,
-        sections,
-        autosaveTimer,
-        save,
+        form: form,
+        setForm: setForm,
+        setSections: setSections,
+        errors: errors,
+        setErrors: setErrors,
+        setStatus: setStatus,
+        autosaveTimer: autosaveTimer,
+        save: save,
       }}
     >
       <div className='flex flex-row-reverse'>
@@ -270,22 +242,15 @@ export function CreateApplication({ params }: { params: { id: string } }) {
         </Tabs.List>
 
         <Tabs.Panel value='gallery'>
-          {form && sections ? (
-            <ApplicationCreator
-              form={form}
-              setForm={setForm}
-              sections={sections}
-              setSections={setSections}
-            />
-          ) : null}
+          <ApplicationCreator />
         </Tabs.Panel>
 
         <Tabs.Panel value='messages'>
-          {form ? <h1> Responses tab content </h1> : null}
+          <h1> Responses tab content </h1>
         </Tabs.Panel>
 
         <Tabs.Panel value='settings'>
-          {form && sections ? <Settings /> : null}
+          <Settings />
         </Tabs.Panel>
       </Tabs>
     </FormCreatorContext.Provider>

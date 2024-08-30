@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction, MutableRefObject } from 'react';
+import { Prisma, Form } from '@prisma/client';
 import { questionType } from '@/types/questionTypes';
 
 export enum StatusIndicator {
@@ -112,4 +114,15 @@ export interface FormSettings {
 export interface FileResponse {
   url: string;
   value: string;
+}
+
+export interface FormContext {
+  form: Form;
+  setForm: Dispatch<SetStateAction<Form>>;
+  setSections: Dispatch<SetStateAction<FormSection[]>>;
+  errors: FormValidationError[];
+  setErrors: Dispatch<SetStateAction<FormValidationError[]>>;
+  setStatus: Dispatch<SetStateAction<StatusIndicator>>;
+  autosaveTimer: MutableRefObject<NodeJS.Timeout | undefined>;
+  save: () => void;
 }

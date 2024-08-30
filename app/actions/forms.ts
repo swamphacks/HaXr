@@ -1,6 +1,6 @@
 'use server';
 
-import { Prisma, Form, FormType, Response } from '@prisma/client';
+import { Prisma, Form, Response } from '@prisma/client';
 import { FormSection } from '@/types/forms';
 import { FormSettings } from '@/types/forms';
 import { put, del } from '@vercel/blob';
@@ -136,7 +136,7 @@ export async function createForm(competitionCode: string) {
   });
 }
 
-export async function updateForm(form: Form, sections: FormSection[]) {
+export async function updateForm(form: Form) {
   // ensure the form is not published
   const resp = await prisma.form.update({
     where: {
@@ -145,7 +145,7 @@ export async function updateForm(form: Form, sections: FormSection[]) {
     },
     data: {
       ...form,
-      sections: sections as unknown as Prisma.JsonArray,
+      sections: form.sections as unknown as Prisma.JsonArray,
     },
   });
 
@@ -155,33 +155,32 @@ export async function updateForm(form: Form, sections: FormSection[]) {
 export async function updateFormSettings(form: Form) {
   // remove sections and is_mlh from the form object
   // we don't want to edit questions because the form may be published
-  const clone = (({ id, sections, is_mlh, ...rest }) => rest)(form);
+  const { opens_at, closes_at, required_for_checkin, is_published, ..._ } =
+    form;
 
   const resp = await prisma.form.update({
     where: {
       id: form.id,
     },
     data: {
-      ...clone,
+      opens_at: opens_at,
+      closes_at: closes_at,
+      required_for_checkin: required_for_checkin,
+      is_published: is_published,
     },
   });
 
   return resp;
 }
 
-export async function saveAndPublishForm(
-  form: Form,
-  sections: FormSection[],
-  settings: FormSettings
-) {
+export async function saveAndPublishForm(form: Form) {
   const resp = await prisma.form.update({
     where: {
       id: form.id,
     },
     data: {
       ...form,
-      ...settings,
-      sections: sections as unknown as Prisma.JsonArray,
+      sections: form.sections as Prisma.JsonArray,
       is_published: true,
     },
   });

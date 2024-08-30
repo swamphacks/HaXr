@@ -14,24 +14,17 @@ import {
 import { FormCreatorContext } from '@/components/formCreator/FormCreator';
 import ErrorMessage from '@/components/formCreator/ErrorMessage';
 
-export default function Section({
-  setSections,
-  section,
-}: {
-  setSections: React.Dispatch<React.SetStateAction<FormSection[]>>;
-  section: FormSection;
-}) {
-  const { form, _, errors, setErrors, ...args } =
-    useContext(FormCreatorContext);
+export default function Section({ section }: { section: FormSection }) {
+  const formContext = useContext(FormCreatorContext);
 
   const handleAddQuestion = () => {
-    setErrors(
-      errors.filter(
+    formContext.setErrors(
+      formContext.errors.filter(
         (error: FormValidationError) =>
           error.key !== section.key && error.type !== FormErrorTypes.NoQuestions
       )
     );
-    setSections((oldSections: FormSection[]) => {
+    formContext.setSections((oldSections: FormSection[]) => {
       return oldSections.map((oldSection: FormSection) => {
         if (oldSection.key === section.key) {
           return {
@@ -55,33 +48,39 @@ export default function Section({
     });
   };
 
-  const errorWithSection = errors.find((error: FormValidationError) => {
-    return (
-      error.type === FormErrorTypes.SectionTitle && error.key === section.key
-    );
-  });
+  const errorWithSection = formContext.errors.find(
+    (error: FormValidationError) => {
+      return (
+        error.type === FormErrorTypes.SectionTitle && error.key === section.key
+      );
+    }
+  );
 
-  const noQuestionError = errors.find((error: FormValidationError) => {
-    return (
-      error.type === FormErrorTypes.NoQuestions && error.key === section.key
-    );
-  });
+  const noQuestionError = formContext.errors.find(
+    (error: FormValidationError) => {
+      return (
+        error.type === FormErrorTypes.NoQuestions && error.key === section.key
+      );
+    }
+  );
 
-  const errorInSection = errors.some((error: FormValidationError) => {
-    return section.questions.some((question: FormQuestion) => {
-      return error.key === question.key;
-    });
-  });
+  const errorInSection = formContext.errors.some(
+    (error: FormValidationError) => {
+      return section.questions.some((question: FormQuestion) => {
+        return error.key === question.key;
+      });
+    }
+  );
 
   const handleSectionTitleChange = (e: any) => {
     if (errorWithSection) {
-      setErrors(
-        errors.filter(
+      formContext.setErrors(
+        formContext.errors.filter(
           (error: FormValidationError) => error.key !== errorWithSection.key
         )
       );
     }
-    setSections((oldSections: FormSection[]) => {
+    formContext.setSections((oldSections: FormSection[]) => {
       return oldSections.map((oldSection: FormSection) => {
         if (oldSection.key === section.key) {
           return { ...oldSection, title: e.target.value };
@@ -92,7 +91,7 @@ export default function Section({
   };
 
   const handleSectionDescriptionChange = (e: any) => {
-    setSections((oldSections: FormSection[]) => {
+    formContext.setSections((oldSections: FormSection[]) => {
       return oldSections.map((oldSection: FormSection) => {
         if (oldSection.key === section.key) {
           return { ...oldSection, description: e.target.value };
@@ -130,7 +129,7 @@ export default function Section({
               label='Section	Title'
               defaultValue={section.title}
               placeholder='Untitled Section'
-              disabled={form.is_published}
+              disabled={formContext.form.is_published}
               styles={{
                 input: {
                   borderColor: errorWithSection ? 'red' : 'var(--input-bd)',
@@ -145,7 +144,7 @@ export default function Section({
             label='Section	Description'
             defaultValue={section.description}
             placeholder='Enter Description'
-            disabled={form.is_published}
+            disabled={formContext.form.is_published}
           />
           <ErrorMessage error={noQuestionError} />
 
@@ -154,7 +153,7 @@ export default function Section({
               key={question.key}
               question={question}
               removeQuestion={() => {
-                setSections((oldSections: FormSection[]) => {
+                formContext.setSections((oldSections: FormSection[]) => {
                   return oldSections.map((oldSection: FormSection) => {
                     if (oldSection.key === section.key) {
                       return {
@@ -170,7 +169,7 @@ export default function Section({
                 });
               }}
               setQuestion={(newQuestion: FormQuestion) => {
-                setSections((oldSections: FormSection[]) => {
+                formContext.setSections((oldSections: FormSection[]) => {
                   return oldSections.map((oldSection: FormSection) => {
                     if (oldSection.key === section.key) {
                       return {
@@ -192,7 +191,7 @@ export default function Section({
             />
           ))}
           <Button
-            disabled={form.is_published}
+            disabled={formContext.form.is_published}
             style={{ width: '48rem' }}
             variant='light'
             color='orange'
