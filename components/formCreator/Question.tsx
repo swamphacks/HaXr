@@ -77,7 +77,6 @@ function QuestionSettings({
   };
 
   const handleAcceptedFilesChange = (files: string[]) => {
-    // TODO: Add file type validation
     setQuestion({
       ...question,
       settings: { ...question.settings, acceptedFiles: files as any },
