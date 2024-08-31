@@ -3,8 +3,8 @@ import {
   FormQuestion,
   SelectionQuestion,
   answerChoice,
-  questionType,
-} from '@/types/questionTypes';
+  QuestionType,
+} from '@/types/question';
 
 export function Choice({
   choice,
@@ -55,20 +55,19 @@ export function Choice({
       key={choice.id}
       className='grid touch-none grid-cols-[1.3rem_auto_1.3rem] items-center'
     >
-
       {/* Text Input */}
       <div className='col-start-2 flex flex-row items-center'>
-        {question.type === questionType.multiplechoice ? (
+        {question.type === QuestionType.multiplechoice ? (
           <Radio disabled className='mr-2' />
         ) : null}
-        {question.type === questionType.checkbox ? (
+        {question.type === QuestionType.checkbox ? (
           <Checkbox disabled className='mr-2' />
         ) : null}
         <input
           type='text'
           defaultValue={choice.value}
           onChange={handleTextInput}
-          className='w-full border-[2px] border-solid px-0 bg-transparentk focus:outline-none focus:border-[var(--mantine-color-blue-3)]'
+          className='bg-transparentk w-full border-[2px] border-solid px-0 focus:border-[var(--mantine-color-blue-3)] focus:outline-none'
           disabled={disabled}
         />
       </div>
@@ -92,15 +91,15 @@ export default function Choices({
 }) {
   return (
     <div className='flex flex-col gap-2'>
-        {choices.map((choice: answerChoice) => (
-          <Choice
-            key={choice.id}
-            choice={choice}
-            disabled={disabled}
-            question={question}
-            setQuestions={setQuestions}
-          />
-        ))}
+      {choices.map((choice: answerChoice) => (
+        <Choice
+          key={choice.id}
+          choice={choice}
+          disabled={disabled}
+          question={question}
+          setQuestions={setQuestions}
+        />
+      ))}
     </div>
   );
 }

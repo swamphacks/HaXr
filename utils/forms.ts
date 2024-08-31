@@ -1,5 +1,5 @@
 import { Question, FileType } from '@/types/forms';
-import { questionType } from '@/types/questionTypes';
+import { QuestionType } from '@/types/question';
 
 export function arrayEquals(a: string[], b: string[]) {
   if (a === b) return true;
@@ -59,10 +59,10 @@ export function initializeQuestion(
 ) {
   const resp = responses[question.key];
   switch (question.type) {
-    case questionType.agreement:
+    case QuestionType.agreement:
       transformed[question.key] = resp ?? false;
       break;
-    case questionType.file:
+    case QuestionType.file:
       transformed[question.key] = {
         url: resp?.url ?? '',
         value: resp?.value ?? '',

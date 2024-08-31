@@ -4,7 +4,7 @@ import { useContext } from 'react';
 import { Button, Stack, Accordion, TextInput } from '@mantine/core';
 import QuestionEdit from '@/components/formCreator/Question';
 import { v4 as uuidv4 } from 'uuid';
-import { questionType } from '@/types/questionTypes';
+import { QuestionType } from '@/types/question';
 import {
   Question as FormQuestion,
   FormSection,
@@ -34,7 +34,7 @@ export default function Section({ section }: { section: FormSection }) {
               {
                 title: '',
                 description: '',
-                type: questionType.shortResponse,
+                type: QuestionType.shortResponse,
                 settings: {
                   required: false,
                 },

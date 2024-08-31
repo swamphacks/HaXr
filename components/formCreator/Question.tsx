@@ -10,11 +10,11 @@ import {
   Button,
   MultiSelect,
 } from '@mantine/core';
-import { questionType } from '@/types/questionTypes';
+import { QuestionType } from '@/types/question';
 import {
   Question as FormQuestion,
-  fileTypes,
-  fileSizes,
+  FileTypes,
+  FileSizes,
   Choice,
 } from '@/types/forms';
 import { IconTrash, IconX } from '@tabler/icons-react';
@@ -24,28 +24,28 @@ import { FormCreatorContext } from '@/components/formCreator/FormCreator';
 function getQuestionType(value: string) {
   switch (value) {
     case 'Multiple Choice':
-      return questionType.multiplechoice;
+      return QuestionType.multiplechoice;
     case 'Checkbox':
-      return questionType.checkbox;
+      return QuestionType.checkbox;
     case 'Dropdown':
-      return questionType.dropdown;
+      return QuestionType.dropdown;
     case 'Short Answer':
-      return questionType.shortResponse;
+      return QuestionType.shortResponse;
     case 'Paragraph':
-      return questionType.paragraph;
+      return QuestionType.paragraph;
     case 'File Upload':
-      return questionType.file;
+      return QuestionType.file;
     case 'Agreement':
-      return questionType.agreement;
+      return QuestionType.agreement;
     case 'Phone':
-      return questionType.phone;
+      return QuestionType.phone;
     case 'Email':
-      return questionType.email;
+      return QuestionType.email;
     default:
       console.error(
         `Invalid question type '{value}'. Defaulting to 'Paragraph'`
       );
-      return questionType.paragraph;
+      return QuestionType.paragraph;
   }
 }
 
@@ -93,8 +93,8 @@ function QuestionSettings({
   return (
     <Stack>
       {/* Paragraph and Short Response Settings */}
-      {question.type === questionType.paragraph ||
-      question.type === questionType.shortResponse ? (
+      {question.type === QuestionType.paragraph ||
+      question.type === QuestionType.shortResponse ? (
         <NumberInput
           label='Maximum Characters'
           defaultValue={question.settings.maxChars ?? 1000}
@@ -106,12 +106,12 @@ function QuestionSettings({
       ) : null}
 
       {/* File Type Setting */}
-      {question.type === questionType.file ? (
+      {question.type === QuestionType.file ? (
         <>
           <MultiSelect
             label='File Types'
             placeholder='Pick file types'
-            data={fileTypes}
+            data={FileTypes}
             defaultValue={question.settings.acceptedFiles}
             onChange={handleAcceptedFilesChange}
             disabled={disabled}
@@ -119,7 +119,7 @@ function QuestionSettings({
           />
           <Select
             label='Max File Size'
-            data={fileSizes}
+            data={FileSizes}
             defaultValue={question.settings.maxFileSize}
             disabled={disabled}
             onChange={handleMaxFileSizeChange}
@@ -186,9 +186,9 @@ function Choices({
   };
 
   if (
-    question.type === questionType.multiplechoice ||
-    question.type === questionType.checkbox ||
-    question.type === questionType.dropdown
+    question.type === QuestionType.multiplechoice ||
+    question.type === QuestionType.checkbox ||
+    question.type === QuestionType.dropdown
   ) {
     return (
       <Stack align='left'>
@@ -276,7 +276,7 @@ export default function QuestionEdit({
         />
         <Select
           label='Type'
-          data={Object.values(questionType)}
+          data={Object.values(QuestionType)}
           defaultValue={question.type}
           onChange={handleQuestionTypeChange}
           disabled={form.is_published}

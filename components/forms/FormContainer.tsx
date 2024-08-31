@@ -4,6 +4,60 @@ import { IconInfoCircle } from '@tabler/icons-react';
 import { Form } from '@prisma/client';
 import { FormSection } from '@/types/forms';
 import FormContent from '@/components/forms/FormContent';
+import { mlhSchools } from '@/utils/mlhSchools';
+
+async function fetchMLHSchools(): Promise<string[]> {
+  try {
+    const response = await fetch(
+      'https://raw.githubusercontent.com/MLH/mlh-policies/main/schools.csv'
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to fetch the CSV file: ${response.statusText}`);
+    }
+    const csvText = await response.text();
+    // Split the CSV content into an array of strings, one for each line
+    const csvLines = csvText.split('\n');
+    return csvLines;
+  } catch (error) {
+    console.error('Error fetching the CSV file:', error);
+    throw error;
+  }
+}
+
+async function fetchCountryNames(): Promise<string[]> {
+  try {
+    const response = await fetch(
+      'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv'
+    );
+    if (!response.ok) {
+      throw new Error(`Failed to fetch the CSV file: ${response.statusText}`);
+    }
+    const csvText = await response.text();
+    const csvLines = csvText.split('\n');
+
+    // Extract the header to find the index of the 'name' column
+    const headers = csvLines[0].split(',');
+    const nameIndex = headers.indexOf('name');
+
+    if (nameIndex === -1) {
+      throw new Error('No "name" column found in the CSV file.');
+    }
+
+    // Iterate over the lines and collect the country names
+    const countryNames: string[] = csvLines
+      .slice(1)
+      .map((line) => {
+        const columns = line.split(',');
+        return columns[nameIndex];
+      })
+      .filter((name) => name); // Filter out empty or undefined names
+
+    return countryNames;
+  } catch (error) {
+    console.error('Error fetching or parsing the CSV file:', error);
+    throw error;
+  }
+}
 
 export default async function FormContainer({
   form,
@@ -47,6 +101,12 @@ export default async function FormContainer({
       >
         The form is malformed. Please contact the event organizers.
       </Alert>
+    );
+  }
+
+  if (form.is_mlh) {
+    Promise.all([fetchMLHSchools(), fetchCountryNames()]).then(
+      ([schools, countries]) => {}
     );
   }
 

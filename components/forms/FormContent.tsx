@@ -28,7 +28,7 @@ import { useForm, UseFormReturnType } from '@mantine/form';
 import { Question } from '@/components/forms/Questions';
 import { notifications } from '@mantine//notifications';
 import Status from '@/components/status';
-import { questionType } from '@/types/questionTypes';
+import { QuestionType } from '@/types/question';
 import { useDisclosure } from '@mantine/hooks';
 import { PhoneNumberUtil } from 'google-libphonenumber';
 import { mlhQuestions } from '@/forms/application';
@@ -188,7 +188,7 @@ export default function FormContent({
       }
 
       switch (question.type) {
-        case questionType.email:
+        case QuestionType.email:
           if (isEmpty(response) && question.settings.required) {
             errors[questionKey] = 'Please enter an email';
           }
@@ -196,7 +196,7 @@ export default function FormContent({
             errors[questionKey] = 'Invalid email';
           }
           break;
-        case questionType.phone:
+        case QuestionType.phone:
           if (isEmpty(response) && question.settings.required) {
             errors[questionKey] = 'Please enter a phone number';
           }
@@ -204,8 +204,8 @@ export default function FormContent({
             errors[questionKey] = 'Invalid phone number';
           }
           break;
-        case questionType.paragraph:
-        case questionType.shortResponse:
+        case QuestionType.paragraph:
+        case QuestionType.shortResponse:
           if (isEmpty(response) && question.settings.required) {
             errors[questionKey] = 'Please enter a response';
           }
@@ -216,8 +216,8 @@ export default function FormContent({
             errors[questionKey] = 'Exceeded maximum character limit';
           }
           break;
-        case questionType.dropdown:
-        case questionType.multiplechoice:
+        case QuestionType.dropdown:
+        case QuestionType.multiplechoice:
           if (
             question.choices &&
             !question.choices.map((choice) => choice.value).includes(response)
@@ -225,7 +225,7 @@ export default function FormContent({
             errors[questionKey] = 'Please select a valid choice';
           }
           break;
-        case questionType.checkbox:
+        case QuestionType.checkbox:
           if (
             (!Array.isArray(response) || response.length === 0) &&
             question.settings.required
@@ -233,12 +233,12 @@ export default function FormContent({
             errors[questionKey] = 'Please select at least one option';
           }
           break;
-        case questionType.agreement:
+        case QuestionType.agreement:
           if (!response && question.settings.required) {
             errors[questionKey] = 'Please agree';
           }
           break;
-        case questionType.file:
+        case QuestionType.file:
           // Existing error should already exist if file size is too large
           if (questionKey in currResponse.errors)
             errors[questionKey] = currResponse.errors[questionKey];
