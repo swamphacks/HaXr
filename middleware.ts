@@ -37,7 +37,7 @@ export default auth((req) => {
     // If not onboarded and not on onboarding page, send to onboarding
     if (!onboarded && pathname !== '/hacker/onboarding')
       return RedirectResponse(req, '/hacker/onboarding');
-    
+
     // If onboarded and on onboarding page, send to hacker dashboard
     if (onboarded && pathname === '/hacker/onboarding')
       return RedirectResponse(req, '/hacker');
