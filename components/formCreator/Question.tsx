@@ -10,13 +10,17 @@ import {
   Button,
   MultiSelect,
 } from '@mantine/core';
-import { QuestionType } from '@/types/question';
 import {
-  Question as FormQuestion,
   FileTypes,
   FileSizes,
-  Choice,
+  FormValidationError,
+  FormContext,
 } from '@/types/forms';
+import {
+  Question as FormQuestion,
+  Choice,
+  QuestionType,
+} from '@/types/question';
 import { IconTrash, IconX } from '@tabler/icons-react';
 import { v4 as uuidv4 } from 'uuid';
 import { FormCreatorContext } from '@/components/formCreator/FormCreator';
@@ -229,12 +233,17 @@ export default function QuestionEdit({
   setQuestion: (value: FormQuestion) => void;
   removeQuestion: () => void;
 }) {
-  const { form, _, errors, setErrors, ...other } =
-    useContext(FormCreatorContext);
-  const isError = errors.some((q: FormQuestion) => q.key === question.key);
+  const formContext: FormContext = useContext<FormContext>(FormCreatorContext);
+  const isError = formContext.errors.some(
+    (q: FormValidationError) => q.key === question.key
+  );
 
   const removeError = () => {
-    setErrors(errors.filter((q: FormQuestion) => q.key !== question.key));
+    formContext.setErrors(
+      formContext.errors.filter(
+        (q: FormValidationError) => q.key !== question.key
+      )
+    );
   };
 
   const handleTitleChange = (e: any) => {
@@ -265,30 +274,30 @@ export default function QuestionEdit({
           placeholder='Enter title'
           onChange={handleTitleChange}
           defaultValue={question.title}
-          disabled={form.is_published}
+          disabled={formContext.form.is_published}
         />
         <TextInput
           label='Description'
           placeholder='Enter description'
           onChange={handleDescriptionChange}
           defaultValue={question.description}
-          disabled={form.is_published}
+          disabled={formContext.form.is_published}
         />
         <Select
           label='Type'
           data={Object.values(QuestionType)}
           defaultValue={question.type}
           onChange={handleQuestionTypeChange}
-          disabled={form.is_published}
+          disabled={formContext.form.is_published}
         />
         <Choices
-          disabled={form.is_published}
+          disabled={formContext.form.is_published}
           question={question}
           setQuestion={setQuestion}
         />
         <Divider my='md' label='Settings' />
         <QuestionSettings
-          disabled={form.is_published}
+          disabled={formContext.form.is_published}
           question={question}
           removeQuestion={removeQuestion}
           setQuestion={setQuestion}
@@ -296,7 +305,11 @@ export default function QuestionEdit({
       </div>
       {isError ? (
         <p className='text-sm text-red-500'>
-          {errors.find((q: FormQuestion) => q.key === question.key)?.message}
+          {
+            formContext.errors.find(
+              (q: FormValidationError) => q.key === question.key
+            )?.message
+          }
         </p>
       ) : null}
     </div>

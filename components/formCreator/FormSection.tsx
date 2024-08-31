@@ -4,9 +4,8 @@ import { useContext } from 'react';
 import { Button, Stack, Accordion, TextInput } from '@mantine/core';
 import QuestionEdit from '@/components/formCreator/Question';
 import { v4 as uuidv4 } from 'uuid';
-import { QuestionType } from '@/types/question';
+import { QuestionType, Question as FormQuestion } from '@/types/question';
 import {
-  Question as FormQuestion,
   FormSection,
   FormValidationError,
   FormErrorTypes,

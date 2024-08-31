@@ -10,6 +10,28 @@ export enum QuestionType {
   email = 'Email',
 }
 
+export interface Choice {
+  key: string;
+  value: string;
+}
+
+export interface QuestionSettings {
+  maxChars?: number;
+  acceptedFiles?: FileType[];
+  maxFileSize?: string;
+  required: boolean;
+}
+
+export interface Question {
+  title: string;
+  description?: string;
+  placeholder?: string;
+  type: QuestionType;
+  key: string;
+  choices?: Choice[];
+  settings: QuestionSettings;
+}
+
 export type FileType = {
   type: string;
   extensions: string[];

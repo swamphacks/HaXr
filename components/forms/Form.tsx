@@ -14,7 +14,7 @@ import {
 import { IconInfoCircle } from '@tabler/icons-react';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { QuestionType } from '@/types/question';
+import { QuestionType, Question as QuestionInterface } from '@/types/question';
 import 'react-international-phone/style.css';
 import { PhoneNumberUtil } from 'google-libphonenumber';
 import {
@@ -26,12 +26,11 @@ import {
   getUser,
 } from '@/app/actions/forms';
 import {
-  Question as QuestionInterface,
   FormSection,
   StatusIndicator,
   ShortResponseLength,
+  mlhQuestions,
 } from '@/types/forms';
-import { mlhQuestions } from '@/forms/application';
 import { Form } from '@prisma/client';
 import Status from '@/components/status';
 import {

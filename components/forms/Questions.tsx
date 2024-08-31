@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Question as QuestionInterface, Choice } from '@/types/forms';
+import { Question as QuestionInterface, Choice } from '@/types/question';
 import {
   TextInput,
   Textarea,
@@ -252,7 +252,8 @@ export function Dropdown({
   disabled: boolean;
   form: UseFormReturnType<Record<string, any>>;
 }) {
-  const data = question.choices?.map((choice: Choice) => choice.value) ?? [];
+  const data: string[] =
+    question.choices?.map((choice: Choice) => choice.value) ?? [];
   return (
     <Select
       id={question.key}
@@ -260,11 +261,13 @@ export function Dropdown({
       description={question.description}
       required={question.settings.required}
       placeholder={question.placeholder ?? 'Select an option'}
+      nothingFoundMessage='No options found'
       data={data}
       disabled={disabled}
+      searchable
+      limit={20}
       key={form.key(question.key)}
       {...form.getInputProps(question.key)}
-      searchable
     />
   );
 }
