@@ -35,14 +35,14 @@ export default auth((req) => {
   // Handle hacker routes
   if (pathname.startsWith('/hacker')) {
     // If not onboarded and not on onboarding page, send to onboarding
-    if (!onboarded && pathname !== '/hacker/onboarding')
+    if (!onboarded && pathname !== '/hacker/onboarding') {
       return RedirectResponse(req, '/hacker/onboarding');
-
-    // If onboarded and on onboarding page, send to hacker dashboard
-    if (onboarded && pathname === '/hacker/onboarding')
+    }
+    // If onboarded and on onboarding page or not the dashboard page, send to hacker dashboard
+    if (onboarded && pathname === '/hacker/onboarding') {
       return RedirectResponse(req, '/hacker');
+    }
   }
-
   // If no comp, then send back to admin dashboard
   if (pathname === '/admin/comp') return RedirectResponse(req, '/admin');
 });

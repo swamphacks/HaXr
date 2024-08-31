@@ -1,33 +1,19 @@
 'use client';
 import InformationStep from '@/components/onboarding/InformationStep';
+import Introduction from '@/components/onboarding/Introduction';
 import {
-  Anchor,
   Button,
-  Checkbox,
   Container,
-  FileInput,
   Group,
-  MultiSelect,
   Progress,
-  Radio,
-  RadioGroup,
-  Select,
   Stack,
-  Stepper,
   Text,
-  Textarea,
-  TextInput,
   UnstyledButton,
 } from '@mantine/core';
-import {
-  IconArrowBack,
-  IconArrowLeft,
-  IconArrowLeftBar,
-} from '@tabler/icons-react';
 import { useState } from 'react';
 
 export default function Onboarding() {
-  const [active, setActive] = useState(1);
+  const [active, setActive] = useState(0);
   const nextStep = () =>
     setActive((current) => (current < 5 ? current + 1 : current));
   const prevStep = () =>
@@ -38,17 +24,25 @@ export default function Onboarding() {
       case 1:
         return <InformationStep />;
       case 2:
-        return <Text>Step 2: Interests</Text>;
+        return <InformationStep />;
       case 3:
-        return <Text>Step 3: Roles</Text>;
+        return <InformationStep />;
       case 4:
-        return <Text>Step 4: Allergies</Text>;
+        return <InformationStep />;
       case 5:
-        return <Text>Step 5: Confirmation</Text>;
+        return <InformationStep />;
       default:
-        return null;
+        return <InformationStep />;
     }
   };
+
+  if (active <= 0) {
+    return (
+      <Stack w='100vw' h='100vh' align='center' justify='center' bg='grape'>
+        <Introduction />
+      </Stack>
+    );
+  }
 
   return (
     <Stack w='100vw' h='100vh' align='center' justify='center'>
@@ -64,9 +58,15 @@ export default function Onboarding() {
         </Group>
         <Container>{renderContent()}</Container>
         <Group w='100%' align='center' justify='center'>
-          <Button w='18%' onClick={nextStep}>
-            Save and Continue
-          </Button>
+          {active < 5 ? (
+            <Button w='18%' onClick={nextStep}>
+              Save and Continue
+            </Button>
+          ) : (
+            <Button w='18%' onClick={nextStep}>
+              Submit
+            </Button>
+          )}
         </Group>
       </Stack>
     </Stack>
