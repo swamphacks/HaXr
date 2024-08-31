@@ -14,7 +14,7 @@ import {
 } from '@mantine/core';
 import { uploadFormFile, deleteFile } from '@/app/actions/forms';
 import { UseFormReturnType } from '@mantine/form';
-import { questionType } from '@/types/questionTypes';
+import { QuestionType } from '@/types/question';
 import { ShortResponseLength, MaxParagraphLength } from '@/types/forms';
 import { getMimeTypes } from '@/utils/forms';
 import { notifications } from '@mantine/notifications';
@@ -444,28 +444,28 @@ export function Question({
   disabled: boolean;
 }) {
   switch (question.type) {
-    case questionType.shortResponse:
-    case questionType.email:
+    case QuestionType.shortResponse:
+    case QuestionType.email:
       return (
         <ShortResponse question={question} disabled={disabled} form={form} />
       );
-    case questionType.paragraph:
+    case QuestionType.paragraph:
       return <Paragraph question={question} disabled={disabled} form={form} />;
-    case questionType.multiplechoice:
+    case QuestionType.multiplechoice:
       return (
         <MultipleChoice question={question} disabled={disabled} form={form} />
       );
-    case questionType.checkbox:
+    case QuestionType.checkbox:
       return (
         <FormCheckbox question={question} disabled={disabled} form={form} />
       );
-    case questionType.dropdown:
+    case QuestionType.dropdown:
       return <Dropdown question={question} disabled={disabled} form={form} />;
-    case questionType.agreement:
+    case QuestionType.agreement:
       return <Agreement question={question} disabled={disabled} form={form} />;
-    case questionType.phone:
+    case QuestionType.phone:
       return <Phone question={question} disabled={disabled} form={form} />;
-    case questionType.file:
+    case QuestionType.file:
       return (
         <FileUpload
           competitionCode={competitionCode}

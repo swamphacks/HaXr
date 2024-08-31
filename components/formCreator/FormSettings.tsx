@@ -5,14 +5,14 @@ import { Button, Text, Switch, Divider, Modal } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { DateTimePicker } from '@mantine/dates';
 import { FormValidationError, FormContext } from '@/types/forms';
-import { questionType } from '@/types/questionTypes';
+import { QuestionType } from '@/types/question';
 import { updateFormSettings, saveAndPublishForm } from '@/app/actions/forms';
 import {
   StatusIndicator,
   FormSection,
   Question,
-  fileTypes,
-  fileSizes,
+  FileTypes,
+  FileSizes,
   FormErrorTypes,
 } from '@/types/forms';
 import { IconLink } from '@tabler/icons-react';
@@ -85,12 +85,12 @@ export default function Settings() {
           return;
         }
 
-        if (question.type === questionType.file) {
+        if (question.type === QuestionType.file) {
           const acceptedFiles = question.settings.acceptedFiles ?? [];
           const fileSize = question.settings.maxFileSize ?? '';
 
           // Validate file size
-          if (!fileSizes.includes(fileSize)) {
+          if (!FileSizes.includes(fileSize)) {
             errors.push({
               key: question.key,
               type: FormErrorTypes.Question,
@@ -109,7 +109,7 @@ export default function Settings() {
             return;
           }
           for (const fileType of acceptedFiles) {
-            if (!fileTypes.includes(fileType)) {
+            if (!FileTypes.includes(fileType)) {
               errors.push({
                 key: question.key,
                 type: FormErrorTypes.Question,
@@ -123,9 +123,9 @@ export default function Settings() {
         // Validate choice questions
         if (
           [
-            questionType.multiplechoice,
-            questionType.dropdown,
-            questionType.checkbox,
+            QuestionType.multiplechoice,
+            QuestionType.dropdown,
+            QuestionType.checkbox,
           ].includes(question.type)
         ) {
           const choices = question.choices ?? [];

@@ -14,7 +14,7 @@ import {
 import { IconInfoCircle } from '@tabler/icons-react';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
-import { questionType } from '@/types/questionTypes';
+import { QuestionType } from '@/types/question';
 import 'react-international-phone/style.css';
 import { PhoneNumberUtil } from 'google-libphonenumber';
 import {
@@ -157,7 +157,7 @@ export default function ViewForm({
       }
 
       switch (question.type) {
-        case questionType.email:
+        case QuestionType.email:
           if (isEmpty(response) && question.settings.required) {
             errors[questionKey] = 'Please enter an email';
           }
@@ -165,7 +165,7 @@ export default function ViewForm({
             errors[questionKey] = 'Invalid email';
           }
           break;
-        case questionType.phone:
+        case QuestionType.phone:
           if (isEmpty(response) && question.settings.required) {
             errors[questionKey] = 'Please enter a phone number';
           }
@@ -173,8 +173,8 @@ export default function ViewForm({
             errors[questionKey] = 'Invalid phone number';
           }
           break;
-        case questionType.paragraph:
-        case questionType.shortResponse:
+        case QuestionType.paragraph:
+        case QuestionType.shortResponse:
           if (isEmpty(response) && question.settings.required) {
             errors[questionKey] = 'Please enter a response';
           }
@@ -185,8 +185,8 @@ export default function ViewForm({
             errors[questionKey] = 'Exceeded maximum character limit';
           }
           break;
-        case questionType.dropdown:
-        case questionType.multiplechoice:
+        case QuestionType.dropdown:
+        case QuestionType.multiplechoice:
           if (
             question.choices &&
             !question.choices.map((choice) => choice.value).includes(response)
@@ -194,7 +194,7 @@ export default function ViewForm({
             errors[questionKey] = 'Please select a valid choice';
           }
           break;
-        case questionType.checkbox:
+        case QuestionType.checkbox:
           if (
             (!Array.isArray(response) || response.length === 0) &&
             question.settings.required
@@ -202,12 +202,12 @@ export default function ViewForm({
             errors[questionKey] = 'Please select at least one option';
           }
           break;
-        case questionType.agreement:
+        case QuestionType.agreement:
           if (!response && question.settings.required) {
             errors[questionKey] = 'Please agree';
           }
           break;
-        case questionType.file:
+        case QuestionType.file:
           // Existing error should already exist if file size is too large
           if (questionKey in form.errors)
             errors[questionKey] = form.errors[questionKey];
