@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, MutableRefObject } from 'react';
 import { Form } from '@prisma/client';
-import { QuestionType } from '@/types/question';
+import { Question, QuestionType } from '@/types/question';
 
 export enum StatusIndicator {
   SUCCESS = 'Success',
@@ -22,21 +22,8 @@ export const FileTypes: FileType[] = [
 ];
 
 export const FileSizes = ['1MB', '10MB', '100MB'];
-
 export const ShortResponseLength = 100;
 export const MaxParagraphLength = 10000;
-
-export interface QuestionSettings {
-  maxChars?: number;
-  acceptedFiles?: FileType[];
-  maxFileSize?: string;
-  required: boolean;
-}
-
-export interface Choice {
-  key: string;
-  value: string;
-}
 
 export enum FormErrorTypes {
   Question = 'Question',
@@ -50,16 +37,6 @@ export interface FormValidationError {
   key: string;
   type: FormErrorTypes;
   message: string;
-}
-
-export interface Question {
-  title: string;
-  description?: string;
-  placeholder?: string;
-  type: QuestionType;
-  key: string;
-  choices?: Choice[];
-  settings: QuestionSettings;
 }
 
 export interface FormSection {
@@ -95,7 +72,7 @@ export const mlhQuestions: MLHApplication = {
       {
         title: 'First Name',
         type: QuestionType.shortResponse,
-        key: '1',
+        key: 'First Name',
         settings: {
           required: true,
           maxChars: 100,
@@ -104,7 +81,7 @@ export const mlhQuestions: MLHApplication = {
       {
         title: 'Last Name',
         type: QuestionType.shortResponse,
-        key: '2',
+        key: 'Last Name',
         settings: {
           required: true,
           maxChars: 100,
@@ -113,7 +90,7 @@ export const mlhQuestions: MLHApplication = {
       {
         title: 'Age',
         type: QuestionType.dropdown,
-        key: '3',
+        key: 'Age',
         choices: [
           { key: '1', value: '18-24' },
           { key: '2', value: '25-34' },
@@ -128,24 +105,24 @@ export const mlhQuestions: MLHApplication = {
       },
       {
         title: 'Phone Number',
+        key: 'Phone Number',
         type: QuestionType.phone,
-        key: '4',
         settings: {
           required: true,
         },
       },
       {
         title: 'Email',
+        key: 'Email',
         type: QuestionType.email,
-        key: '5',
         settings: {
           required: true,
         },
       },
       {
         title: 'School',
+        key: 'School',
         type: QuestionType.dropdown,
-        key: '6',
         choices: [
           { key: '1', value: 'University of Florida' },
           { key: '2', value: 'University of South Florida' },
@@ -168,6 +145,7 @@ export const mlhQuestions: MLHApplication = {
       },
       {
         title: 'Level of Study',
+        key: 'Level of Study',
         type: QuestionType.dropdown,
         settings: { required: true },
         choices: [
@@ -193,10 +171,10 @@ export const mlhQuestions: MLHApplication = {
           { key: '10', value: "I'm not currently a student" },
           { key: '11', value: 'Prefer not to answer' },
         ],
-        key: '7',
       },
       {
         title: 'Residence',
+        key: 'Residence',
         type: QuestionType.dropdown,
         settings: { required: true },
         choices: [
@@ -204,10 +182,10 @@ export const mlhQuestions: MLHApplication = {
           { key: '2', value: 'Canada' },
           { key: '3', value: 'Other' },
         ],
-        key: '8',
       },
       {
         title: 'Dietary Restrictions',
+        key: 'Dietary Restrictions',
         type: QuestionType.dropdown,
         settings: { required: false },
         choices: [
@@ -219,17 +197,17 @@ export const mlhQuestions: MLHApplication = {
           { key: '5', value: 'Halal' },
           { key: '6', value: 'Other' },
         ],
-        key: '9',
       },
       {
         title: 'Dietary Restrictions (Other)',
+        key: 'Dietary Restrictions (Other)',
         type: QuestionType.shortResponse,
         settings: { required: false },
-        key: '10',
       },
       {
         title:
           'Do you identify as part of an underrepresented group in the technology industry?',
+        key: 'Do you identify as part of an underrepresented group in the technology industry?',
         type: QuestionType.dropdown,
         settings: { required: false },
         choices: [
@@ -237,10 +215,10 @@ export const mlhQuestions: MLHApplication = {
           { key: '2', value: 'No' },
           { key: '3', value: 'Unsure' },
         ],
-        key: '11',
       },
       {
         title: 'Gender',
+        key: 'Gender',
         type: QuestionType.dropdown,
         settings: { required: false },
         choices: [
@@ -250,10 +228,10 @@ export const mlhQuestions: MLHApplication = {
           { key: '4', value: 'Prefer not to self-describe' },
           { key: '5', value: 'Prefer not to answer' },
         ],
-        key: '12',
       },
       {
         title: 'Pronouns',
+        key: 'Pronouns',
         type: QuestionType.dropdown,
         settings: { required: false },
         choices: [
@@ -265,16 +243,16 @@ export const mlhQuestions: MLHApplication = {
           { key: '6', value: 'Prefer not to answer' },
           { key: '7', value: 'Other' },
         ],
-        key: '12',
       },
       {
         title: 'Pronouns (Other)',
+        key: 'Pronouns (Other)',
         type: QuestionType.shortResponse,
         settings: { required: false },
-        key: '13',
       },
       {
         title: 'Race/Ethnicity',
+        key: 'Race/Ethnicity',
         type: QuestionType.dropdown,
         settings: { required: false },
         choices: [
@@ -297,16 +275,16 @@ export const mlhQuestions: MLHApplication = {
           { key: '18', value: 'Other (please specify)' },
           { key: '19', value: 'Prefer not to answer' },
         ],
-        key: '13',
       },
       {
         title: 'Race/Ethnicity (Other)',
+        key: 'Race/Ethnicity (Other)',
         type: QuestionType.shortResponse,
         settings: { required: false },
-        key: '14',
       },
       {
         title: 'Do you consider yourself to be any of the following?',
+        key: 'Do you consider yourself to be any of the following?',
         type: QuestionType.dropdown,
         settings: { required: false },
         choices: [
@@ -314,12 +292,12 @@ export const mlhQuestions: MLHApplication = {
           { key: '2', value: 'Gay or lesbian' },
           { key: '3', value: 'Bisexual' },
           { key: '4', value: 'Different identity' },
-          { key: '5', value: 'Prefer Not to Answer' },
+          { key: '5', value: 'Prefer not to Answer' },
         ],
-        key: '15',
       },
       {
         title: 'T-shirt size',
+        key: 'T-shirt size',
         type: QuestionType.dropdown,
         settings: { required: false },
         choices: [
@@ -328,10 +306,10 @@ export const mlhQuestions: MLHApplication = {
           { key: '4', value: 'L' },
           { key: '5', value: 'XL' },
         ],
-        key: '16',
       },
       {
         title: 'Major/Field of Study',
+        key: 'Major/Field of Study',
         type: QuestionType.dropdown,
         settings: { required: false },
         choices: [
@@ -385,9 +363,7 @@ export const mlhQuestions: MLHApplication = {
           { key: '12', value: 'Other (please specify)' },
           { key: '13', value: 'Undecided / No Declared Major' },
           { key: '14', value: 'Prefer not to answer' },
-          { key: '15', value: 'Prefer not to answer' },
         ],
-        key: '7',
       },
     ],
   },
@@ -398,16 +374,16 @@ export const mlhQuestions: MLHApplication = {
       {
         title:
           'I agree to the MLH Code of Conduct ("https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md")',
+        key: 'agreement-1',
         type: QuestionType.agreement,
         settings: {
           required: true,
         },
-        key: '13',
       },
       {
         title:
           'I authorize you to share my application/registration information with Major League Hacking for event administration, ranking, and MLH administration in-line with the MLH Privacy Policy ("https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md"). I further agree to the terms of both the MLH Contest Terms and Conditions ("https://github.com/MLH/mlh-policies/blob/main/contest-terms.md") and the MLH Privacy Policy ("https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md").',
-        key: '14',
+        key: 'agreement-2',
         type: QuestionType.agreement,
         settings: {
           required: true,
@@ -416,7 +392,7 @@ export const mlhQuestions: MLHApplication = {
       {
         title:
           'I authorize MLH to send me occasional emails about relevant events, career opportunities, and community announcements.',
-        key: '15',
+        key: 'agreemnt-3',
         type: QuestionType.agreement,
         settings: {
           required: false,

@@ -224,7 +224,6 @@ export async function saveResponse(
   responseId: string,
   responses: Record<string, string>
 ) {
-  console.log(responses);
   return prisma.response.update({
     where: {
       id: responseId,

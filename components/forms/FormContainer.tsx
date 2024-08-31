@@ -1,62 +1,81 @@
+import fs from 'fs';
+import path from 'path';
 import { getFormResponse, getUser } from '@/app/actions/forms';
 import { Alert } from '@mantine/core';
 import { IconInfoCircle } from '@tabler/icons-react';
 import { Form } from '@prisma/client';
-import { FormSection } from '@/types/forms';
+import { FormSection, mlhQuestions } from '@/types/forms';
+import { Choice } from '@/types/question';
 import FormContent from '@/components/forms/FormContent';
-import { mlhSchools } from '@/utils/mlhSchools';
 
-async function fetchMLHSchools(): Promise<string[]> {
-  try {
-    const response = await fetch(
-      'https://raw.githubusercontent.com/MLH/mlh-policies/main/schools.csv'
-    );
-    if (!response.ok) {
-      throw new Error(`Failed to fetch the CSV file: ${response.statusText}`);
-    }
-    const csvText = await response.text();
-    // Split the CSV content into an array of strings, one for each line
-    const csvLines = csvText.split('\n');
-    return csvLines;
-  } catch (error) {
-    console.error('Error fetching the CSV file:', error);
-    throw error;
-  }
+function fetchMLHSchools(): string[] {
+  const filePath = path.join(process.cwd(), 'public', 'form', 'schools.csv');
+  const fileContent = fs.readFileSync(filePath, 'utf-8');
+  const membership = new Set();
+  return fileContent
+    .split('\n')
+    .slice(1)
+    .filter((school) => {
+      if (membership.has(school)) {
+        return false;
+      }
+      membership.add(school);
+      return true;
+    })
+    .map((school) => school.replace(/"/g, ''));
 }
 
-async function fetchCountryNames(): Promise<string[]> {
+function fetchCountryNames(): string[] {
   try {
-    const response = await fetch(
-      'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv'
+    const filePath = path.join(
+      process.cwd(),
+      'public',
+      'form',
+      'countries.csv'
     );
-    if (!response.ok) {
-      throw new Error(`Failed to fetch the CSV file: ${response.statusText}`);
-    }
-    const csvText = await response.text();
-    const csvLines = csvText.split('\n');
-
-    // Extract the header to find the index of the 'name' column
-    const headers = csvLines[0].split(',');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    const lines = fileContent.split('\n');
+    const headers = parseCSVLine(lines[0]);
     const nameIndex = headers.indexOf('name');
-
     if (nameIndex === -1) {
       throw new Error('No "name" column found in the CSV file.');
     }
-
-    // Iterate over the lines and collect the country names
-    const countryNames: string[] = csvLines
+    return lines
       .slice(1)
       .map((line) => {
-        const columns = line.split(',');
+        const columns = parseCSVLine(line);
         return columns[nameIndex];
       })
       .filter((name) => name); // Filter out empty or undefined names
-
-    return countryNames;
   } catch (error) {
     console.error('Error fetching or parsing the CSV file:', error);
     throw error;
   }
+}
+
+// Helper function to parse a CSV line, taking into account quoted fields
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (char === '"') {
+      insideQuotes = !insideQuotes; // Toggle the insideQuotes flag
+    } else if (char === ',' && !insideQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  // Add the last field
+  result.push(current);
+
+  return result.map((field) => field.trim());
 }
 
 export default async function FormContainer({
@@ -106,7 +125,20 @@ export default async function FormContainer({
 
   if (form.is_mlh) {
     Promise.all([fetchMLHSchools(), fetchCountryNames()]).then(
-      ([schools, countries]) => {}
+      ([schools, countries]) => {
+        mlhQuestions.general.questions.forEach((question) => {
+          if (question.title === 'School') {
+            question.choices = schools.map((school, i) => {
+              return { key: i, value: school } as unknown as Choice;
+            });
+          } else if (question.title === 'Residence') {
+            question.choices = countries.map((country, i) => {
+              return { key: i, value: country } as unknown as Choice;
+            });
+            console.log(question.choices);
+          }
+        });
+      }
     );
   }
 
@@ -128,5 +160,12 @@ export default async function FormContainer({
 
   const response = await getFormResponse(form.id, user.id);
 
-  return <FormContent prismaForm={form} user={user} userResponse={response} />;
+  return (
+    <FormContent
+      prismaForm={form}
+      user={user}
+      userResponse={response}
+      mlhQuestions={mlhQuestions}
+    />
+  );
 }

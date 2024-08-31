@@ -1,5 +1,5 @@
-import { Question, FileType } from '@/types/forms';
-import { QuestionType } from '@/types/question';
+import { FileType } from '@/types/forms';
+import { Question, QuestionType } from '@/types/question';
 
 export function arrayEquals(a: string[], b: string[]) {
   if (a === b) return true;

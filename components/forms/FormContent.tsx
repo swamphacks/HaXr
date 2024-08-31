@@ -11,10 +11,10 @@ import {
   Modal,
 } from '@mantine/core';
 import {
-  Question as QuestionInterface,
   FormSection,
   StatusIndicator,
   ShortResponseLength,
+  MLHApplication,
 } from '@/types/forms';
 import {
   isValidEmail,
@@ -26,12 +26,11 @@ import { saveResponse, submitResponse } from '@/app/actions/forms';
 import { Form, User, Response } from '@prisma/client';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { Question } from '@/components/forms/Questions';
-import { notifications } from '@mantine//notifications';
+import { notifications } from '@mantine/notifications';
 import Status from '@/components/status';
-import { QuestionType } from '@/types/question';
+import { QuestionType, Question as QuestionInterface } from '@/types/question';
 import { useDisclosure } from '@mantine/hooks';
 import { PhoneNumberUtil } from 'google-libphonenumber';
-import { mlhQuestions } from '@/forms/application';
 
 function Section({
   section,
@@ -81,10 +80,12 @@ export default function FormContent({
   prismaForm,
   user,
   userResponse,
+  mlhQuestions,
 }: {
   prismaForm: Form;
   user: User;
   userResponse: Response;
+  mlhQuestions: MLHApplication;
 }) {
   const phoneUtil = PhoneNumberUtil.getInstance();
   const [modalOpened, { open, close }] = useDisclosure(false);
@@ -123,22 +124,20 @@ export default function FormContent({
     prevValues.current = transformed;
     currResponse.initialize(transformed);
 
-    const autosave = () => {
+    const autosave = async () => {
       const currentValues = currResponse.getValues();
       const prev = prevValues.current;
       if (recordEquals(currentValues, prev)) return;
 
       setStatus(StatusIndicator.SAVING);
-      saveResponse(user.id, userResponse.id, currentValues)
-        .then(() => {
-          prevValues.current = currentValues;
-          setStatus(StatusIndicator.SUCCESS);
-          console.log('Autosaved');
-        })
-        .catch((err) => {
-          console.error(err);
-          setStatus(StatusIndicator.FAILED);
-        });
+      try {
+        await saveResponse(user.id, userResponse.id, currentValues);
+        setStatus(StatusIndicator.SUCCESS);
+        prevValues.current = currentValues;
+      } catch (err) {
+        console.error(err);
+        setStatus(StatusIndicator.FAILED);
+      }
     };
     autosaveTimer.current = setInterval(autosave, 1000);
 

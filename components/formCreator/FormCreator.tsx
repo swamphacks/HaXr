@@ -14,10 +14,10 @@ import {
   FormValidationError,
   FormErrorTypes,
   FormContext,
+  StatusIndicator,
 } from '@/types/forms';
 import { updateForm } from '@/app/actions/forms';
 import { Form } from '@prisma/client';
-import { StatusIndicator } from '@/types/forms';
 import Status from '@/components/status';
 import { objectEquals } from '@/utils/saveUtils';
 import Section from '@/components/formCreator/FormSection';

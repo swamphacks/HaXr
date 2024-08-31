@@ -5,12 +5,11 @@ import { Button, Text, Switch, Divider, Modal } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { DateTimePicker } from '@mantine/dates';
 import { FormValidationError, FormContext } from '@/types/forms';
-import { QuestionType } from '@/types/question';
+import { QuestionType, Question } from '@/types/question';
 import { updateFormSettings, saveAndPublishForm } from '@/app/actions/forms';
 import {
   StatusIndicator,
   FormSection,
-  Question,
   FileTypes,
   FileSizes,
   FormErrorTypes,
