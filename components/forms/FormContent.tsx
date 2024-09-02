@@ -173,6 +173,7 @@ export default function FormContent({
   userResponse: Response;
   mlhQuestions: MLHApplication;
 }) {
+  console.log(prismaForm.sections);
   const phoneUtil = PhoneNumberUtil.getInstance();
   const [modalOpened, { open, close }] = useDisclosure(false);
   const [submitted, setSubmitted] = useState(false);

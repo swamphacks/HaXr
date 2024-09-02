@@ -9,6 +9,7 @@ export default async function FormView({
 }) {
   const session = await auth();
   const application = await getApplication(params.code);
+  console.log(application?.sections);
 
   return (
     <FormContainer form={application} userEmail={session!.user?.email ?? ''} />

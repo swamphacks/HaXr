@@ -16,6 +16,59 @@ import ErrorMessage from '@/components/formCreator/ErrorMessage';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+export function Questions({ section }: { section: FormSection }) {
+  const formContext = useContext(FormCreatorContext);
+  const removeQuestion = (key: string) => {
+    formContext.setSections((oldSections: FormSection[]) =>
+      oldSections.map((oldSection: FormSection) => {
+        if (oldSection.key === section.key) {
+          return {
+            ...oldSection,
+            questions: oldSection.questions.filter(
+              (oldQuestion: FormQuestion) => oldQuestion.key !== key
+            ),
+          };
+        }
+        return oldSection;
+      })
+    );
+  };
+
+  const setQuestion = (newQuestion: FormQuestion, key: string) => {
+    formContext.setSections((oldSections: FormSection[]) =>
+      oldSections.map((oldSection: FormSection) => {
+        if (oldSection.key === section.key) {
+          return {
+            ...oldSection,
+            questions: oldSection.questions.map((oldQuestion: FormQuestion) => {
+              if (oldQuestion.key === key) {
+                return newQuestion;
+              }
+              return oldQuestion;
+            }),
+          };
+        }
+        return oldSection;
+      })
+    );
+  };
+
+  return (
+    <>
+      {section.questions.map((question: FormQuestion) => (
+        <QuestionEdit
+          key={question.key}
+          question={question}
+          removeQuestion={() => removeQuestion(question.key)}
+          setQuestion={(newQuestion: FormQuestion) =>
+            setQuestion(newQuestion, question.key)
+          }
+        />
+      ))}
+    </>
+  );
+}
+
 export function Section({ section }: { section: FormSection }) {
   const formContext = useContext(FormCreatorContext);
   const sections = formContext.form.sections as unknown as FormSection[];
@@ -111,40 +164,6 @@ export function Section({ section }: { section: FormSection }) {
       });
     });
   };
-  const removeQuestion = (key: string) => {
-    formContext.setSections((oldSections: FormSection[]) =>
-      oldSections.map((oldSection: FormSection) => {
-        if (oldSection.key === section.key) {
-          return {
-            ...oldSection,
-            questions: oldSection.questions.filter(
-              (oldQuestion: FormQuestion) => oldQuestion.key !== key
-            ),
-          };
-        }
-        return oldSection;
-      })
-    );
-  };
-
-  const setQuestion = (newQuestion: FormQuestion, key: string) => {
-    formContext.setSections((oldSections: FormSection[]) =>
-      oldSections.map((oldSection: FormSection) => {
-        if (oldSection.key === section.key) {
-          return {
-            ...oldSection,
-            questions: oldSection.questions.map((oldQuestion: FormQuestion) => {
-              if (oldQuestion.key === key) {
-                return newQuestion;
-              }
-              return oldQuestion;
-            }),
-          };
-        }
-        return oldSection;
-      })
-    );
-  };
 
   const handleSectionDeletion = (key: string) => {
     formContext.setSections(
@@ -158,7 +177,7 @@ export function Section({ section }: { section: FormSection }) {
     <div
       id={section.key}
       key={section.key}
-      className='group relative flex flex-row items-center gap-2'
+      className='group relative flex flex-row items-center'
       style={style}
     >
       <div
@@ -171,9 +190,7 @@ export function Section({ section }: { section: FormSection }) {
       </div>
 
       {formContext.form.is_published ||
-      sections
-        .flatMap((section) => section.questions)
-        .some((question) => question.mlh) ? null : (
+      section.questions.some((question) => question.mlh) ? null : (
         <button onClick={() => handleSectionDeletion(section.key)}>
           <IconX stroke={1} className='absolute right-[-40px] top-[18px]' />
         </button>
@@ -225,16 +242,8 @@ export function Section({ section }: { section: FormSection }) {
             />
             {noQuestionError && <ErrorMessage error={noQuestionError} />}
 
-            {section.questions.map((question: FormQuestion) => (
-              <QuestionEdit
-                key={question.key}
-                question={question}
-                removeQuestion={() => removeQuestion(question.key)}
-                setQuestion={(newQuestion: FormQuestion) =>
-                  setQuestion(newQuestion, question.key)
-                }
-              />
-            ))}
+            <Questions section={section} />
+
             <Button
               disabled={formContext.form.is_published}
               style={{ width: '48rem' }}
