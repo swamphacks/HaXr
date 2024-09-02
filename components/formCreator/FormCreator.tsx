@@ -6,8 +6,22 @@ import {
   IconForms,
   IconMessageCircle,
   IconSettings,
-  IconX,
 } from '@tabler/icons-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { v4 as uuidv4 } from 'uuid';
 import {
   FormSection,
@@ -20,7 +34,7 @@ import { updateForm } from '@/app/actions/forms';
 import { Form } from '@prisma/client';
 import Status from '@/components/status';
 import { objectEquals } from '@/utils/saveUtils';
-import Section from '@/components/formCreator/FormSection';
+import { Section } from '@/components/formCreator/FormSection';
 import Settings from '@/components/formCreator/FormSettings';
 import ErrorMessage from '@/components/formCreator/ErrorMessage';
 import useFormStateWithRefs from '@/utils/stateWithRef';
@@ -29,29 +43,49 @@ export const FormCreatorContext = createContext<FormContext>({} as FormContext);
 
 function ApplicationCreator() {
   const formContext: FormContext = useContext<FormContext>(FormCreatorContext);
+  const sections = formContext.form.sections as unknown as FormSection[];
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over?.id) return;
+
+    if (active.id !== over.id) {
+      formContext.setSections((oldSections: FormSection[]) => {
+        const oldIndex = oldSections.findIndex(
+          (section: FormSection) => section.key === active.id
+        );
+        const newIndex = oldSections.findIndex(
+          (section: FormSection) => section.key === over.id
+        );
+
+        return arrayMove(oldSections, oldIndex, newIndex);
+      });
+    }
+  };
+
   const handleAddSection = () => {
     formContext.setErrors(
       formContext.errors.filter(
         (error: FormValidationError) => error.type !== FormErrorTypes.NoSections
       )
     );
+
     formContext.setSections([
-      ...(formContext.form.sections as unknown as FormSection[]),
+      ...sections,
       {
         key: uuidv4(),
-        title: 'Untitled Section',
+        title: 'Untitled Sections',
         description: '',
         questions: [],
       },
     ]);
-  };
-
-  const handleDeletion = (key: string) => {
-    formContext.setSections(
-      (formContext.form.sections as unknown as FormSection[]).filter(
-        (oldSection: FormSection) => oldSection.key !== key
-      )
-    );
   };
 
   const titleError = formContext.errors.find(
@@ -122,23 +156,20 @@ function ApplicationCreator() {
           },
         }}
       >
-        {(formContext.form.sections as unknown as FormSection[]).map(
-          (section: FormSection) => {
-            return (
-              <div key={section.key} className='relative flex flex-row'>
-                <Section section={section} />
-                {formContext.form.is_published ? null : (
-                  <button onClick={() => handleDeletion(section.key)}>
-                    <IconX
-                      stroke={1}
-                      className='absolute right-[-40px] top-[18px]'
-                    />
-                  </button>
-                )}
-              </div>
-            );
-          }
-        )}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sections.map((q) => q.key)}
+            strategy={verticalListSortingStrategy}
+          >
+            {sections.map((section: FormSection) => {
+              return <Section key={section.key} section={section} />;
+            })}
+          </SortableContext>
+        </DndContext>
       </Accordion>
 
       <Button
@@ -169,7 +200,6 @@ export function CreateApplication({ initialForm }: { initialForm: Form }) {
   const save = async () => {
     // Extract the settings - we don't want settings to be autosaved
     const {
-      is_mlh,
       opens_at,
       closes_at,
       required_for_checkin,
@@ -179,7 +209,7 @@ export function CreateApplication({ initialForm }: { initialForm: Form }) {
     //
     // prevForm will always hold the initial form settings
     // make sure formRef goes after prevForm so the attributes are overriden correctly
-    const combinedForm = { ...prevForm.current, ...formRef.current };
+    const combinedForm = { ...prevForm.current, ...currForm };
     if (!is_published && !objectEquals(combinedForm, prevForm.current)) {
       setStatus(StatusIndicator.SAVING);
       await updateForm(combinedForm).catch((e) => {

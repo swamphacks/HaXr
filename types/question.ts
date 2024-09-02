@@ -1,3 +1,5 @@
+import { FileType } from '@/types/forms';
+
 export enum QuestionType {
   paragraph = 'Paragraph',
   shortResponse = 'Short Answer',
@@ -30,12 +32,12 @@ export interface Question {
   key: string;
   choices?: Choice[];
   settings: QuestionSettings;
+  mlh?: boolean;
 }
 
-export type FileType = {
-  type: string;
-  extensions: string[];
-};
+export interface MLHQuestion extends Question {
+  mlh: boolean;
+}
 
 export interface BaseQuestion {
   title: string;
