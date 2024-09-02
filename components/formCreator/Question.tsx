@@ -15,6 +15,7 @@ import {
   FileSizes,
   FormValidationError,
   FormContext,
+  FileType,
 } from '@/types/forms';
 import {
   Question as FormQuestion,
@@ -214,9 +215,11 @@ function Choices({
             </div>
           );
         })}
-        <Button variant='light' onClick={handleAddChoice} disabled={disabled}>
-          Add Choice
-        </Button>
+        {!disabled && (
+          <Button variant='light' onClick={handleAddChoice}>
+            Add Choice
+          </Button>
+        )}
       </Stack>
     );
   }
@@ -274,7 +277,7 @@ export default function QuestionEdit({
           placeholder='Enter title'
           onChange={handleTitleChange}
           defaultValue={question.title}
-          disabled={formContext.form.is_published}
+          disabled={question.mlh || formContext.form.is_published}
         />
         <TextInput
           label='Description'
@@ -288,16 +291,16 @@ export default function QuestionEdit({
           data={Object.values(QuestionType)}
           defaultValue={question.type}
           onChange={handleQuestionTypeChange}
-          disabled={formContext.form.is_published}
+          disabled={question.mlh || formContext.form.is_published}
         />
         <Choices
-          disabled={formContext.form.is_published}
+          disabled={question.mlh || formContext.form.is_published}
           question={question}
           setQuestion={setQuestion}
         />
         <Divider my='md' label='Settings' />
         <QuestionSettings
-          disabled={formContext.form.is_published}
+          disabled={question.mlh || formContext.form.is_published}
           question={question}
           removeQuestion={removeQuestion}
           setQuestion={setQuestion}

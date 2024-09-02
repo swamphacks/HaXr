@@ -117,7 +117,7 @@ export default function ViewForm({
 
   const isPhoneValid = (phone: string) => {
     try {
-      const umber = phoneUtil.parseAndKeepRawInput(phone, 'US');
+      const number = phoneUtil.parseAndKeepRawInput(phone, 'US');
       return phoneUtil.isValidNumber(number);
     } catch (error) {
       console.log('not valid phone number');

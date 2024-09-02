@@ -13,9 +13,10 @@ import {
   FileTypes,
   FileSizes,
   FormErrorTypes,
+  mlhQuestions,
 } from '@/types/forms';
 import { IconLink } from '@tabler/icons-react';
-import { Form } from '@prisma/client';
+import { Prisma, Form } from '@prisma/client';
 import { FormCreatorContext } from '@/components/formCreator/FormCreator';
 import { notifications } from '@mantine/notifications';
 import { isEmpty } from '@/utils/forms';
@@ -61,6 +62,7 @@ export default function Settings() {
           message: 'Section title cannot be empty',
         });
       }
+
       if (section.questions.length === 0) {
         errors.push({
           key: section.key,
@@ -74,6 +76,7 @@ export default function Settings() {
     sections
       .flatMap((section: FormSection) => section.questions)
       .forEach((question: Question) => {
+        if (question.mlh) return;
         // Verify question title is not empty
         if (isEmpty(question.title)) {
           errors.push({
@@ -144,7 +147,33 @@ export default function Settings() {
   };
 
   const handleIncludeMLH = (e: any) => {
-    formContext.setForm({ ...formContext.form, is_mlh: e.target.checked });
+    if (e.target.checked) {
+      formContext.setForm({
+        ...formContext.form,
+        sections: [
+          {
+            key: 'mlh-general',
+            title: 'General',
+            questions: mlhQuestions.general
+              .questions as unknown as Prisma.JsonArray[],
+          },
+          ...(formContext.form.sections as Prisma.JsonArray),
+          {
+            key: 'mlh-agreement',
+            title: 'Agreements',
+            questions: mlhQuestions.agreements
+              .questions as unknown as Prisma.JsonArray[],
+          },
+        ],
+        is_mlh: true,
+      });
+    } else {
+      formContext.setForm({
+        ...formContext.form,
+        sections: (formContext.form.sections as Prisma.JsonArray).slice(1, -1),
+        is_mlh: false,
+      });
+    }
   };
 
   const handleRequireSubmission = (e: any) => {
