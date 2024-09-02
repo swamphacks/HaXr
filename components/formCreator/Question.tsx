@@ -25,6 +25,8 @@ import {
 import { IconTrash, IconX } from '@tabler/icons-react';
 import { v4 as uuidv4 } from 'uuid';
 import { FormCreatorContext } from '@/components/formCreator/FormCreator';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 function getQuestionType(value: string) {
   switch (value) {
@@ -237,6 +239,7 @@ export default function QuestionEdit({
   removeQuestion: () => void;
 }) {
   const formContext: FormContext = useContext<FormContext>(FormCreatorContext);
+
   const isError = formContext.errors.some(
     (q: FormValidationError) => q.key === question.key
   );
@@ -267,7 +270,7 @@ export default function QuestionEdit({
   };
 
   return (
-    <div className='flex flex-col items-start gap-1'>
+    <div className='relative flex flex-col items-start gap-1'>
       <div
         className='w-[48rem] rounded border  p-4'
         style={{ borderColor: isError ? 'red' : 'var(--mantine-color-dark-4)' }}
