@@ -21,6 +21,8 @@ export default function Onboarding() {
 
   const renderContent = () => {
     switch (active) {
+      case 0:
+        return <InformationStep />;
       case 1:
         return <InformationStep />;
       case 2:
@@ -35,14 +37,6 @@ export default function Onboarding() {
         return <InformationStep />;
     }
   };
-
-  if (active <= 0) {
-    return (
-      <Stack w='100vw' h='100vh' align='center' justify='center' bg='grape'>
-        <Introduction />
-      </Stack>
-    );
-  }
 
   return (
     <Stack w='100vw' h='100vh' align='center' justify='center'>

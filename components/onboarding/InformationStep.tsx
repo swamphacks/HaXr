@@ -1,4 +1,4 @@
-import { Group, Stack, Text, TextInput } from '@mantine/core';
+import { Group, Stack, TextInput } from '@mantine/core';
 
 export default function InformationStep() {
   return (
