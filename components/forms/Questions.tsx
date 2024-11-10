@@ -31,9 +31,7 @@ export function ShortResponse({
   const [response, setResponse] = useState<string>('');
   const handleChange = (e: any) => {
     const val = e.target.value;
-    if (val.length > ShortResponseLength) {
-      return;
-    }
+    if (val.length > ShortResponseLength) return;
     setResponse(val);
     form.setFieldValue(question.key, val);
   };
@@ -116,14 +114,11 @@ export function Paragraph({
     const value = e.target.value;
     const length = value.length;
     setTotalChars(length);
-    if (value.length >= MaxParagraphLength) {
-      return;
-    }
+    if (value.length >= MaxParagraphLength) return;
     setResponse(value);
     form.setFieldValue(question.key, value);
-    if (length > maxChars) {
+    if (length > maxChars)
       form.setFieldError(question.key, 'Exceeded maximum character limit');
-    }
   };
 
   useEffect(() => {
@@ -396,9 +391,7 @@ export function FileUpload({
     const values = form.getValues();
 
     const filename = values[question.key]?.value;
-    if (filename) {
-      setFile(new File([], filename));
-    }
+    if (filename) setFile(new File([], filename));
   }, [form]);
 
   return (
