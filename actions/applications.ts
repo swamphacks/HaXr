@@ -8,7 +8,7 @@ export async function getApplication(
 ): Promise<Application | null> {
   return prisma.application.findUnique({
     where: {
-      compCode_userId: {
+      competitionCode_userId: {
         competitionCode,
         userId,
       },
