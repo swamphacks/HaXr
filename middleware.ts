@@ -20,7 +20,6 @@ export default auth((req) => {
 
   const { pathname } = req.nextUrl;
   const isAdmin = req.auth.user.role === Role.Admin;
-  const onboarded = req.auth.user.isOnboarded;
 
   // Redirect if accessing unauthorized pages
   if (pathname.startsWith('/admin') && !isAdmin)

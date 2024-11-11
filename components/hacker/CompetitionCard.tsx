@@ -1,23 +1,31 @@
+import { getApplication } from '@/actions/applications';
 import { Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
-import { IconArrowRight, IconCalendar, IconMapPin } from '@tabler/icons-react';
-
-interface Props {
-  id: string;
-  name: string;
-  description: string | null;
-  location: string;
-  start_date: Date;
-  end_date: Date;
-}
+import { Competition } from '@prisma/client';
+import {
+  IconArrowRight,
+  IconCalendar,
+  IconChecklist,
+  IconMapPin,
+} from '@tabler/icons-react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function CompetitionCard({
-  id,
-  name,
-  description,
-  location,
-  start_date,
-  end_date,
-}: Props) {
+  competition,
+  mobile,
+}: {
+  competition: Competition;
+  mobile: boolean;
+}) {
+  const [applied, setApplied] = useState(false);
+  const { code, name, start_date, end_date, location, description } =
+    competition;
+
+  const { data: session, status } = useSession();
+
+  const router = useRouter();
+
   const formatDateRange = (startDate: Date, endDate: Date) => {
     const months = [
       'January',
@@ -46,8 +54,18 @@ export default function CompetitionCard({
 
   const active = Date.now() < end_date.getTime();
 
+  useEffect(() => {
+    const fetchApplications = async () => {
+      const app = await getApplication(code, session?.user?.id!);
+
+      setApplied(!!app);
+    };
+
+    fetchApplications();
+  });
+
   return (
-    <Card w='60%'>
+    <Card w={mobile ? '100%' : '60%'}>
       <Group justify='space-between' px={10} py={10}>
         <Stack gap={1}>
           <Title order={3}>{name}</Title>
@@ -68,13 +86,24 @@ export default function CompetitionCard({
             </Group>
           </Group>
         </Stack>
-        <Button
-          color='green'
-          disabled={!active}
-          rightSection={<IconArrowRight />}
-        >
-          Apply
-        </Button>
+        {applied ? (
+          <Button
+            color='yellow'
+            variant='light'
+            rightSection={<IconChecklist />}
+            onClick={() => router.push(`/hacker/application/${code}`)}
+          >
+            Under Review
+          </Button>
+        ) : (
+          <Button
+            color='green'
+            rightSection={<IconArrowRight />}
+            onClick={() => router.push(`/hacker/application/${code}`)}
+          >
+            Apply
+          </Button>
+        )}
       </Group>
     </Card>
   );
