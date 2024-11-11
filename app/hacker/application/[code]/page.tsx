@@ -31,11 +31,7 @@ import { IMaskInput } from 'react-imask';
 import { notifications } from '@mantine/notifications';
 import { uploadResume } from '@/actions/storage';
 import { createApplication, getApplication } from '@/actions/applications';
-import { getSession, useSession } from 'next-auth/react';
-import { Session } from 'next-auth';
-import { auth } from '@/auth';
-import { getAuth } from '@/actions/auth';
-import { updateUserResume } from '@/actions/user';
+import { useSession } from 'next-auth/react';
 
 export interface HackerApplicationFormValues {
   firstName: string;
@@ -252,7 +248,9 @@ export default function HackerApplication({
               <span className='font-bold'>{competition?.name}</span>. We will be
               reaching out to you shortly with more information. If you have any
               questions, please reach out to us at{' '}
-              <span className='font-bold underline'>swamphacks@gmail.com</span>
+              <span className='font-bold underline'>
+                contact@swamphacks.com
+              </span>
             </Text>
 
             <Text size='sm' w={mobile ? '90%' : '70%'} c='cyan'>

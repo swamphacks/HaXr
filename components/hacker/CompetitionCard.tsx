@@ -56,13 +56,14 @@ export default function CompetitionCard({
 
   useEffect(() => {
     const fetchApplications = async () => {
+      if (!session?.user?.id) return;
       const app = await getApplication(code, session?.user?.id!);
 
       setApplied(!!app);
     };
 
     fetchApplications();
-  });
+  }, [code, session?.user?.id]);
 
   return (
     <Card w={mobile ? '100%' : '60%'}>

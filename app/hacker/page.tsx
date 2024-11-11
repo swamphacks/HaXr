@@ -30,9 +30,9 @@ export default function Hacker() {
     <Container>
       <Stack align='center' gap={0} w='100%'>
         <Stack my='xl' align='center' gap={0}>
-          <Title order={mobile ? 2 : 1}>Swamphacks Hacker Portal</Title>
+          <Title order={mobile ? 2 : 1}>SwampHacks Hacker Portal 🐊</Title>
           <Text c='dimmed' size='lg'>
-            Select a hackathon to apply to!
+            Select a hackathon to enter its portal or apply.
           </Text>
         </Stack>
 
@@ -65,6 +65,7 @@ export default function Hacker() {
           </Text>
           <Image
             alt='Sad cat'
+            unoptimized
             loader={() =>
               'https://media.tenor.com/D_yuP4xjddsAAAAM/crying-vaughn-chat.gif'
             }
