@@ -25,6 +25,8 @@ model User {
   image         String?
   role          Role      @default(Hacker)
 
+  resumeUrl     String?
+
   accounts Account[]
   sessions Session[]
 

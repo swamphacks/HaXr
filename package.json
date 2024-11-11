@@ -28,6 +28,7 @@
     "@prisma/adapter-neon": "^5.13.0",
     "@prisma/client": "^5.13.0",
     "@tabler/icons-react": "^3.2.0",
+    "@vercel/blob": "^0.26.0",
     "@zxing/browser": "^0.1.5",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.11",
@@ -39,6 +40,7 @@
     "prettier": "^3.2.5",
     "react": "^18",
     "react-dom": "^18",
+    "react-imask": "^7.6.1",
     "superjson": "^2.2.1",
     "swr": "^2.2.5",
     "yup": "^1.4.0"

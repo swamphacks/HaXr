@@ -14,21 +14,51 @@ import {
   Autocomplete,
   Checkbox,
   MultiSelect,
-  FileInput,
-  Input,
   Button,
   FileButton,
   Text,
-  Textarea,
   Divider,
   Anchor,
+  Alert,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { Competition } from '@prisma/client';
 import { useEffect, useState } from 'react';
-import { DatePicker } from '@mantine/dates';
 import { IconFileUpload } from '@tabler/icons-react';
-import { useForm } from '@mantine/form';
+import { useForm, yupResolver } from '@mantine/form';
+import { applicationConfigurationSchema } from '@/schemas';
+import { IMaskInput } from 'react-imask';
+import { notifications } from '@mantine/notifications';
+import { uploadResume } from '@/actions/storage';
+import { createApplication, getApplication } from '@/actions/applications';
+import { getSession, useSession } from 'next-auth/react';
+import { Session } from 'next-auth';
+import { auth } from '@/auth';
+import { getAuth } from '@/actions/auth';
+import { updateUserResume } from '@/actions/user';
+
+export interface HackerApplicationFormValues {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  age: string;
+  certAge: boolean;
+  school: string;
+  levelOfStudy: string;
+  major: string;
+  graduationMonth: string;
+  graduationYear: string;
+  hackathonExperience: string;
+  teamStatus: string;
+  tshirtSize: string;
+  dietaryRestrictions: string[];
+  referralSource: string[];
+  photoConsent: boolean;
+  inPersonConsent: boolean;
+  codeOfConductConsent: boolean;
+  resumeUrl: string;
+}
 
 export default function HackerApplication({
   params: { code },
@@ -37,8 +67,11 @@ export default function HackerApplication({
 }) {
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [applied, setApplied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
   const mobile = useMediaQuery('(max-width: 50em)');
+  const { data: session, status } = useSession();
 
   const form = useForm({
     initialValues: {
@@ -54,37 +87,28 @@ export default function HackerApplication({
       graduationMonth: '',
       graduationYear: '',
       hackathonExperience: '',
+      teamStatus: '',
       tshirtSize: '',
       dietaryRestrictions: [],
-      resume: null,
-      howDidYouHear: '',
-      personalProjectExperience: '',
-      inventionImpact: '',
-      excitementForHackathon: '',
-      projectIdeas: '',
-      consentPhotoPolicy: false,
-      consentInPersonPolicy: false,
-      consentMLH: false,
-      consentShareInfoWithMLH: false,
-      consentMLHEmails: false,
+      referralSource: [],
+      photoConsent: false,
+      inPersonConsent: false,
+      codeOfConductConsent: false,
     },
-    validate: {
-      firstName: (value) =>
-        value.length < 2 ? 'First name is required' : null,
-      lastName: (value) => (value.length < 2 ? 'Last name is required' : null),
-      email: (value) => (/\S+@\S+\.\S+/.test(value) ? null : 'Invalid email'),
-      phoneNumber: (value) =>
-        value.length < 10 ? 'Invalid phone number' : null,
-      certAge: (value) => (!value ? 'You must certify your age' : null),
-      school: (value) => (value.length < 2 ? 'School is required' : null),
-      levelOfStudy: (value) =>
-        value.length < 2 ? 'Level of study is required' : null,
-      major: (value) => (value.length < 2 ? 'Major is required' : null),
-      graduationMonth: (value) =>
-        !value ? 'Graduation month is required' : null,
-      graduationYear: (value) =>
-        !value ? 'Graduation year is required' : null,
-    },
+    mode: 'uncontrolled',
+    validate: yupResolver(applicationConfigurationSchema),
+    transformValues: (values) => ({
+      ...values,
+      // Clean phone number
+      phoneNumber: values.phoneNumber.replace(/\D/g, ''),
+
+      // Format name fields
+      firstName: values.firstName.trim(),
+      lastName: values.lastName.trim(),
+
+      // Lowercase email
+      email: values.email.trim(),
+    }),
   });
 
   // Fetch data on the client side
@@ -92,28 +116,172 @@ export default function HackerApplication({
     const fetchCompetition = async () => {
       const competitionData = await getCompetition(code);
       setCompetition(competitionData);
+    };
+
+    const fetchApplication = async () => {
+      if (!session?.user?.id) return;
+      const application = await getApplication(code, session.user.id);
+      setApplied(application !== null);
       setLoading(false);
     };
 
     fetchCompetition();
-  }, [code]);
+    fetchApplication();
+  }, [code, session?.user?.id]);
+
+  const onSubmit = async (values: typeof form.values) => {
+    setProcessing(true);
+    if (!file) {
+      notifications.show({
+        title: 'No resume uploaded',
+        message:
+          'Please upload a resume to submit your application. Make sure it is in PDF format.',
+        color: 'red',
+      });
+      setProcessing(false);
+      return;
+    }
+
+    // Check if the file is a PDF
+    if (file.type !== 'application/pdf') {
+      notifications.show({
+        title: 'Invalid file format',
+        message: 'Please upload a file in PDF format.',
+        color: 'red',
+      });
+      setProcessing(false);
+      return;
+    }
+
+    notifications.show({
+      title: 'Processing application',
+      message: 'Please wait while we process your application...',
+      loading: true,
+      autoClose: false,
+      color: 'blue',
+      withCloseButton: false,
+      position: 'bottom-top',
+    });
+
+    let resumeUrl: string;
+    // Upload the resume
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    if (file.size > 4.5 * 1000000) {
+      notifications.show({
+        title: 'File too large',
+        message: 'Please upload a file that is smaller than 4.5MB.',
+        color: 'red',
+      });
+      setProcessing(false);
+      return;
+    }
+
+    try {
+      const result = await uploadResume(
+        formData,
+        values.firstName,
+        values.lastName
+      );
+      resumeUrl = result.url;
+    } catch (error: any) {
+      console.error(error);
+      return;
+    }
+
+    if (!resumeUrl) {
+      notifications.show({
+        title: 'Error uploading resume',
+        message: 'Resume url missing',
+        color: 'red',
+      });
+      setProcessing(false);
+      return;
+    }
+
+    if (!session?.user?.id || !competition?.code) {
+      notifications.show({
+        title: 'Error happened!',
+        message:
+          "Woops! We didn't expect that to happen. Please report this to the SwampHacks team.",
+        color: 'red',
+      });
+      setProcessing(false);
+      return;
+    }
+
+    try {
+      await createApplication(
+        { ...values, resumeUrl },
+        session.user.id,
+        competition.code
+      );
+      notifications.clean();
+      setApplied(true);
+    } catch (error) {
+      notifications.show({
+        title: 'Error submitting application',
+        message:
+          'An error occurred while submitting your application. Please try again.',
+        color: 'red',
+      });
+    }
+
+    setProcessing(false);
+  };
 
   if (loading) return <Spinner />;
+
+  if (applied) {
+    return (
+      <Container size={mobile ? 'lg' : 'md'} py={mobile ? 'sm' : 'lg'} w='100%'>
+        <Paper p={mobile ? 'sm' : 'xl'}>
+          <Stack align='center'>
+            <Title className='text-center' mb={20}>
+              Application Submitted! 🚀
+            </Title>
+
+            <Text size='md' w={mobile ? '90%' : '70%'}>
+              Hello {session?.user?.firstName},
+            </Text>
+
+            <Text size='md' w={mobile ? '90%' : '70%'}>
+              You have a submitted an application for{' '}
+              <span className='font-bold'>{competition?.name}</span>. We will be
+              reaching out to you shortly with more information. If you have any
+              questions, please reach out to us at{' '}
+              <span className='font-bold underline'>swamphacks@gmail.com</span>
+            </Text>
+
+            <Text size='sm' w={mobile ? '90%' : '70%'} c='cyan'>
+              Make sure to keep an eye out on your hacker portal as updates roll
+              out regularly. We can&apos;t wait to see you at the event!
+            </Text>
+
+            <Anchor mt={80} mr={10} underline='always' href='/hacker'>
+              &#8592; Back
+            </Anchor>
+          </Stack>
+        </Paper>
+      </Container>
+    );
+  }
 
   return (
     <Container size={mobile ? 'lg' : 'md'} py={mobile ? 'sm' : 'lg'} w='100%'>
       <Paper p={mobile ? 'sm' : 'xl'}>
-        <form
-          onSubmit={() => {
-            console.log('Attempting submit');
-          }}
-        >
+        <form onSubmit={form.onSubmit(onSubmit)}>
           <Stack align='center'>
-            <Title content='center' mb={20}>
+            <Title content='center' mb={0}>
               {competition?.name} Application 🐊 🔟
             </Title>
+            <Anchor underline='always' href='/hacker'>
+              Back to portal
+            </Anchor>
             <Stack gap={30} w={mobile ? '100%' : '70%'}>
-              <Fieldset legend='Personal Information'>
+              <Fieldset legend='Personal Information' disabled={processing}>
                 <Stack gap={10}>
                   <Group w='100%' justify='center' align='center'>
                     {/* First and last name */}
@@ -122,12 +290,14 @@ export default function HackerApplication({
                       label='First Name'
                       placeholder='John'
                       required
+                      {...form.getInputProps('firstName')}
                     />
                     <TextInput
                       flex={1}
                       label='Last Name'
                       placeholder='Doe'
                       required
+                      {...form.getInputProps('lastName')}
                     />
                   </Group>
 
@@ -136,6 +306,7 @@ export default function HackerApplication({
                     label='Email'
                     placeholder='johndoe@roblox.com'
                     required
+                    {...form.getInputProps('email')}
                   />
                   <Group>
                     <TextInput
@@ -143,6 +314,12 @@ export default function HackerApplication({
                       label='Phone Number'
                       placeholder='(314)-952-6281'
                       required
+                      component={IMaskInput}
+                      //@ts-ignore
+                      // Why doesn't typescript like this :(
+                      mask='(000)-000-0000'
+                      // @ts-check
+                      {...form.getInputProps('phoneNumber')}
                     />
                     <Select
                       required
@@ -151,23 +328,27 @@ export default function HackerApplication({
                       placeholder='Choose your age'
                       data={[
                         'Under 18',
-                        '18-24',
-                        '25-34',
-                        '35-44',
-                        '45-54',
-                        '55-64',
-                        '65 or Above',
+                        '18',
+                        '19',
+                        '20',
+                        '21',
+                        '22',
+                        '23',
+                        '24',
+                        '25+',
                       ]}
+                      {...form.getInputProps('age')}
                     />
                   </Group>
                   <Checkbox
                     mt={20}
                     required
-                    label='I certify that I will be 18 years old before January 24th, 2025. (Required)'
+                    label='I certify that I will be 18 years old before January 25th, 2025. (Required)'
+                    {...form.getInputProps('certAge', { type: 'checkbox' })}
                   />
                 </Stack>
               </Fieldset>
-              <Fieldset legend='Education'>
+              <Fieldset legend='Education' disabled={processing}>
                 <Stack gap={10}>
                   {/* What school + Year + Major + Expexted Grad */}
                   <Autocomplete
@@ -175,6 +356,7 @@ export default function HackerApplication({
                     placeholder='Choose your school'
                     data={schoolData.schools}
                     required
+                    {...form.getInputProps('school')}
                   />
                   <Select
                     label='Level of Study'
@@ -186,12 +368,14 @@ export default function HackerApplication({
                       'Code Bootcamp',
                       'Other',
                     ]}
+                    {...form.getInputProps('levelOfStudy')}
                     required
                   />
                   <TextInput
                     label='Major'
-                    placeholder='Choose your major'
+                    placeholder='Enter your major'
                     required
+                    {...form.getInputProps('major')}
                   />
                   <Group>
                     <Select
@@ -213,6 +397,7 @@ export default function HackerApplication({
                         'November',
                         'December',
                       ]}
+                      {...form.getInputProps('graduationMonth')}
                     />
 
                     <Select
@@ -230,11 +415,12 @@ export default function HackerApplication({
                         '2031',
                         '2032+',
                       ]}
+                      {...form.getInputProps('graduationYear')}
                     />
                   </Group>
                 </Stack>
               </Fieldset>
-              <Fieldset legend='Extra'>
+              <Fieldset legend='Extra' disabled={processing}>
                 <Stack gap={10}>
                   <Select
                     label='How many hackathons have you participated in?'
@@ -248,12 +434,26 @@ export default function HackerApplication({
                       '4',
                       '5 or more',
                     ]}
+                    {...form.getInputProps('hackathonExperience')}
+                  />
+                  <Select
+                    label='Do you already have a team?'
+                    required
+                    placeholder='Select an option'
+                    data={[
+                      "Yes, I'm part of a team",
+                      "No, I'm looking for a team",
+                      'No, but I have a team in mind',
+                      "I'm a lone wolf",
+                    ]}
+                    {...form.getInputProps('teamStatus')}
                   />
                   <Select
                     label='T-Shirt size?'
                     placeholder='Choose an option (Unisex)'
                     required
                     data={['XS', 'S', 'M', 'L', 'XL', 'XXL']}
+                    {...form.getInputProps('tshirtSize')}
                   />
                   <MultiSelect
                     required
@@ -268,6 +468,7 @@ export default function HackerApplication({
                       'Halal',
                       'Other',
                     ]}
+                    {...form.getInputProps('dietaryRestrictions')}
                   />
 
                   <Text size='sm' fw={700} mt={20}>
@@ -280,7 +481,15 @@ export default function HackerApplication({
                     experiences, increasing your chances of being noticed for
                     exciting opportunities.
                   </Text>
-
+                  <Text size='xs' c='yellow'>
+                    We only accept PDFs. Here&apos;s a free{' '}
+                    <Anchor
+                      href='https://www.adobe.com/acrobat/online/convert-pdf.html'
+                      target='_blank'
+                    >
+                      PDF converter!
+                    </Anchor>
+                  </Text>
                   <Group mb={20}>
                     <FileButton onChange={setFile} accept='application/pdf'>
                       {(props) => (
@@ -307,54 +516,7 @@ export default function HackerApplication({
                       'Class Announcement',
                       'Other',
                     ]}
-                  />
-
-                  <Select
-                    label='Have you created a personal project before?'
-                    placeholder='Choose an option'
-                    required
-                    data={[
-                      'Yes',
-                      'No, only school projects',
-                      'No, I have never programmed before',
-                    ]}
-                  />
-                </Stack>
-              </Fieldset>
-
-              <Fieldset legend="Let's get to know you">
-                <Stack gap={10}>
-                  <Textarea
-                    label='What is a past invention or innovation that has greatly shaped or impacted your life?'
-                    required
-                    description='This can be anything from a product, service, or even a concept. (1000 characters MAX)'
-                    placeholder='Write your response here'
-                    autosize
-                    minRows={4}
-                    maxRows={7}
-                    maxLength={1000}
-                  />
-
-                  <Textarea
-                    label='What are you most excited about for this hackathon?'
-                    required
-                    description='We want to know what you get excited for so we can bring you more of it! (500 characters MAX)'
-                    placeholder='Write your response here'
-                    autosize
-                    minRows={3}
-                    maxRows={5}
-                    maxLength={500}
-                  />
-
-                  <Textarea
-                    label='What projects would you like to work on? (Technical or non-technical)'
-                    required
-                    description='Give us an idea of what you are passionate about! (1000 characters MAX)'
-                    placeholder='Write your response here'
-                    autosize
-                    minRows={4}
-                    maxRows={7}
-                    maxLength={1000}
+                    {...form.getInputProps('referralSource')}
                   />
                 </Stack>
               </Fieldset>
@@ -366,96 +528,90 @@ export default function HackerApplication({
                   Consent and Agreement
                 </Text>
 
-                <Checkbox
-                  label={
-                    <Text size='sm'>
-                      I consent to SwampHacks photo and video policy. We will be
-                      taking pictures and recording videos throughout the events
-                      for promotional use.
-                    </Text>
-                  }
-                />
+                <Fieldset unstyled disabled={processing}>
+                  <Stack gap={10}>
+                    <Checkbox
+                      required
+                      label={
+                        <Text size='sm'>
+                          I consent to SwampHacks photo and video policy. We
+                          will be taking pictures and recording videos
+                          throughout the events for promotional use.
+                        </Text>
+                      }
+                      {...form.getInputProps('photoConsent', {
+                        type: 'checkbox',
+                      })}
+                    />
 
-                <Checkbox
-                  label={
-                    <Text size='sm'>
-                      By submitting this application, I recognize that
-                      SwampHacks is an in-person only event and my in-person
-                      attendance is expected if I am offered acceptance. I also
-                      recognize that SwampHacks will be providing free meals but
-                      will not be covering transportation costs.
-                    </Text>
-                  }
-                />
-                <Divider />
-                <Stack gap={0} mb={20} mt={20}>
-                  <Text size='lg' fw={700}>
-                    MLH Policies
-                  </Text>
-                  <Text size='xs'>
-                    We (SWAMPHACKS) are in the process of parterning with MLH
-                    (Major League Hacking). The following 3 checkboxes are for
-                    this partnerships. If we do not follow through with this
-                    partnership your information will NOT be shared.
-                  </Text>
-                </Stack>
+                    <Checkbox
+                      required
+                      label={
+                        <Text size='sm'>
+                          By submitting this application, I recognize that
+                          SwampHacks is an in-person only event and my in-person
+                          attendance is expected if I am offered acceptance. I
+                          also recognize that SwampHacks will be providing free
+                          meals but will not be covering transportation costs.
+                        </Text>
+                      }
+                      {...form.getInputProps('inPersonConsent', {
+                        type: 'checkbox',
+                      })}
+                    />
 
-                <Checkbox
-                  label={
-                    <Text size='sm'>
-                      I agree to the{' '}
-                      <Anchor href='https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md'>
-                        MLH Code of Conduct
-                      </Anchor>
-                    </Text>
-                  }
-                />
-
-                <Checkbox
-                  label={
-                    <Text size='sm'>
-                      I authorize you to share my application/registration
-                      information with Major League Hacking for event
-                      administration, ranking, and MLH administration.
-                      Therefore, I agree to the terms of both the{' '}
-                      <Anchor href='https://github.com/MLH/mlh-policies/blob/main/contest-terms.md'>
-                        MLH Contest Terms and Conditions
-                      </Anchor>{' '}
-                      and Conditions and the{' '}
-                      <Anchor href='https://github.com/MLH/mlh-policies/blob/main/privacy-policy.md'>
-                        MLH Privacy Policy
-                      </Anchor>
-                      .
-                    </Text>
-                  }
-                />
-
-                <Checkbox
-                  label={
-                    <Text size='sm'>
-                      I authorize MLH to send me occasional emails about
-                      relevant events, career opportunities, and community
-                      announcements. (OPTIONAL)
-                    </Text>
-                  }
-                />
+                    <Checkbox
+                      required
+                      label={
+                        <Text size='sm'>
+                          I acknowledge and agree to adhere to the SwampHacks{' '}
+                          <Anchor target='_blank'>Code of Conduct</Anchor> and
+                          commit to upholding the values and guidelines set
+                          forth to ensure a safe, inclusive, and respectful
+                          environment for all participants.
+                        </Text>
+                      }
+                      {...form.getInputProps('codeOfConductConsent', {
+                        type: 'checkbox',
+                      })}
+                    />
+                  </Stack>
+                </Fieldset>
               </Stack>
               <Group>
                 <Button
                   color='green'
                   variant='light'
                   size='lg'
-                  fullWidth
                   type='submit'
-                  onClick={() => alert('Submitted!')}
+                  fullWidth
+                  disabled={processing}
                 >
                   Submit Application
                 </Button>
               </Group>
+              {Object.keys(form.errors).length > 0 && (
+                <Alert
+                  mt={20}
+                  title='Some fields are missing or invalid'
+                  color='red'
+                >
+                  {Object.entries(form.errors).map(([key, value]) => (
+                    <Text key={key} size='sm'>
+                      {value}
+                    </Text>
+                  ))}
+                </Alert>
+              )}
             </Stack>
           </Stack>
         </form>
       </Paper>
+      <Group justify='center' align='center'>
+        <Text size='xs' mt={20} mb={0}>
+          Made with ❤️ by the SwampHacks Team
+        </Text>
+      </Group>
     </Container>
   );
 }

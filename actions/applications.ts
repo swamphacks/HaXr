@@ -1,6 +1,7 @@
 'use server';
 import { Application, Attendee, User } from '@prisma/client';
 import prisma from '@/prisma';
+import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 
 export async function getApplication(
   competitionCode: string,
@@ -42,3 +43,27 @@ export async function getAttendee(
     },
   });
 }
+
+export const createApplication = async (
+  values: HackerApplicationFormValues,
+  userId: string,
+  competitionCode: string
+) => {
+  // Convert to record so prisma is happy LOL
+  const content: Record<string, any> = { ...values };
+
+  try {
+    const application = await prisma.application.create({
+      data: {
+        competitionCode,
+        userId,
+        content,
+      },
+    });
+
+    return application;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error creating application');
+  }
+};
