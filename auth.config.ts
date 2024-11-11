@@ -15,6 +15,7 @@ export default {
           school: null,
           image: avatar_url,
           role: Role.Hacker,
+          isOnboarded: false,
         };
       },
       allowDangerousEmailAccountLinking: true,
