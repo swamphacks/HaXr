@@ -126,7 +126,18 @@ export default function HackerApplication({
   }, [code, session?.user?.id]);
 
   const onSubmit = async (values: typeof form.values) => {
-    setProcessing(true);
+    if (!session?.user?.id || !competition?.code) {
+      notifications.show({
+        title: 'Oops!',
+        message:
+          "This is embarrassing... we're having trouble processing your application. Please refresh, and try again.",
+        color: 'red',
+      });
+      setProcessing(false);
+      return;
+    }
+
+    // Check if a file was uploaded
     if (!file) {
       notifications.show({
         title: 'No resume uploaded',
@@ -138,7 +149,7 @@ export default function HackerApplication({
       return;
     }
 
-    // Check if the file is a PDF
+    // Check that the file is a PDF
     if (file.type !== 'application/pdf') {
       notifications.show({
         title: 'Invalid file format',
@@ -149,6 +160,8 @@ export default function HackerApplication({
       return;
     }
 
+    // Let's get this show on the road
+    setProcessing(true);
     notifications.show({
       title: 'Processing application',
       message: 'Please wait while we process your application...',
@@ -159,9 +172,7 @@ export default function HackerApplication({
       position: 'bottom-top',
     });
 
-    let resumeUrl: string;
     // Upload the resume
-
     const formData = new FormData();
     formData.append('file', file);
 
@@ -175,6 +186,7 @@ export default function HackerApplication({
       return;
     }
 
+    let resumeUrl: string;
     try {
       const result = await uploadResume(
         formData,
@@ -183,25 +195,9 @@ export default function HackerApplication({
       );
       resumeUrl = result.url;
     } catch (error: any) {
-      console.error(error);
-      return;
-    }
-
-    if (!resumeUrl) {
       notifications.show({
         title: 'Error uploading resume',
-        message: 'Resume url missing',
-        color: 'red',
-      });
-      setProcessing(false);
-      return;
-    }
-
-    if (!session?.user?.id || !competition?.code) {
-      notifications.show({
-        title: 'Error happened!',
-        message:
-          "Woops! We didn't expect that to happen. Please report this to the SwampHacks team.",
+        message: error.message,
         color: 'red',
       });
       setProcessing(false);

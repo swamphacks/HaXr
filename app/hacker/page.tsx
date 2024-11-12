@@ -18,7 +18,7 @@ export default function Hacker() {
 
   useEffect(() => {
     const fetchCurrentCompetition = async () => {
-      const comp = await getCompetition('SH-X');
+      const comp = await getCompetitions().then((cs) => cs[0]);
       setCompetition(comp);
       setLoading(false);
     };
