@@ -6,7 +6,10 @@ export default {
   providers: [
     GitHub({
       profile: ({ name, email, avatar_url }: GitHubProfile) => {
-        const [firstName, lastName] = name?.split(' ') ?? ['', ''];
+        let firstName = name ?? 'First Name',
+          lastName = 'Last Name';
+        if (name && name.includes(' ')) [firstName, lastName] = name.split(' ');
+
         return {
           firstName,
           lastName,
@@ -22,13 +25,10 @@ export default {
   ],
   callbacks: {
     jwt({ token, user, session, trigger }) {
-      if (trigger == 'update' && session?.user) {
-        token.user = session.user;
-      }
+      if (trigger == 'update' && session?.user) token.user = session.user;
 
-      if (user) {
-        token.user = user;
-      }
+      if (user) token.user = user;
+
       return token;
     },
     async session({ session, token }) {
