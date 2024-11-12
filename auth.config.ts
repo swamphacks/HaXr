@@ -7,7 +7,7 @@ export default {
     GitHub({
       profile: ({ name, email, avatar_url }: GitHubProfile) => {
         let firstName = name ?? 'First Name',
-          lastName = 'Last Name';
+          lastName = '';
         if (name && name.includes(' ')) [firstName, lastName] = name.split(' ');
 
         return {
