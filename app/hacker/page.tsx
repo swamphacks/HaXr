@@ -2,12 +2,21 @@
 import { getCompetition, getCompetitions } from '@/actions/competition';
 import CompetitionCard from '@/components/hacker/CompetitionCard';
 import UserAvatar from '@/components/UserAvatar';
-import { Alert, Box, Container, Stack, Text, Title } from '@mantine/core';
+import {
+  Alert,
+  Anchor,
+  Box,
+  Container,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { Competition } from '@prisma/client';
 import { IconSpeakerphone } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function Hacker() {
@@ -30,9 +39,9 @@ export default function Hacker() {
     <Container>
       <Stack align='center' gap={0} w='100%'>
         <Stack my='xl' align='center' gap={0}>
-          <Title order={mobile ? 2 : 1}>SwampHacks Hacker Portal 🐊</Title>
+          <Title>SwampHacks Hacker Portal</Title>
           <Text c='dimmed' size='lg'>
-            Select a hackathon to enter its portal or apply.
+            Select a competition to get started.
           </Text>
         </Stack>
 
@@ -44,14 +53,20 @@ export default function Hacker() {
 
         <Stack align='center' w='100%'>
           <Alert
-            title='Portal Announcement'
+            title='Announcement'
             icon={<IconSpeakerphone size={20} />}
             color='yellow'
             w={mobile ? '100%' : '60%'}
           >
-            This portal is currently still being developed so make sure to check
-            back regularly for all the cool new features coming. - Swamphacks
-            Tech
+            This portal is currently still under development. Feel free to{' '}
+            <Anchor href='mailto:tech@swamphacks.com' inherit>
+              contact us
+            </Anchor>{' '}
+            if you have any issues. We will be releasing updates as the event
+            approaches, so stay tuned!
+            <span className='mt-2 block text-right'>
+              <b>SwampHacks Tech Team 🐊</b>
+            </span>
           </Alert>
           {competition && (
             <CompetitionCard mobile={mobile!} competition={competition} />
@@ -59,21 +74,23 @@ export default function Hacker() {
           {mobile && <UserAvatar session={session!} />}
         </Stack>
 
-        <Stack align='center' gap={20} mt={50} w='50%'>
-          <Text fw={700} size='xl'>
-            Wow, much empty.
-          </Text>
-          <Image
-            alt='Sad cat'
-            unoptimized
-            loader={() =>
-              'https://media.tenor.com/D_yuP4xjddsAAAAM/crying-vaughn-chat.gif'
-            }
-            src='https://media.tenor.com/D_yuP4xjddsAAAAM/crying-vaughn-chat.gif'
-            width={200}
-            height={200}
-          />
-        </Stack>
+        {!competition && (
+          <Stack align='center' gap={20} mt={50} w='50%'>
+            <Text fw={700} size='xl'>
+              Wow, much empty.
+            </Text>
+            <Image
+              alt='Sad cat'
+              unoptimized
+              loader={() =>
+                'https://media.tenor.com/D_yuP4xjddsAAAAM/crying-vaughn-chat.gif'
+              }
+              src='https://media.tenor.com/D_yuP4xjddsAAAAM/crying-vaughn-chat.gif'
+              width={200}
+              height={200}
+            />
+          </Stack>
+        )}
       </Stack>
     </Container>
   );

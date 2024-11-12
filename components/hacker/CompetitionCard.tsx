@@ -59,7 +59,7 @@ export default function CompetitionCard({
       if (!session?.user?.id) return;
       const app = await getApplication(code, session?.user?.id!);
 
-      setApplied(!!app);
+      setApplied(app !== null);
     };
 
     fetchApplications();

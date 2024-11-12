@@ -20,11 +20,12 @@ import {
   Divider,
   Anchor,
   Alert,
+  Flex,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { Competition, Status } from '@prisma/client';
 import { useEffect, useState } from 'react';
-import { IconFileUpload } from '@tabler/icons-react';
+import { IconArrowLeft, IconFileUpload } from '@tabler/icons-react';
 import { useForm, yupResolver } from '@mantine/form';
 import { applicationConfigurationSchema } from '@/schemas';
 import { IMaskInput } from 'react-imask';
@@ -278,11 +279,11 @@ export default function HackerApplication({
         <form onSubmit={form.onSubmit(onSubmit)}>
           <Stack align='center'>
             <Title content='center' mb={0}>
-              {competition?.name} Application 🐊 🔟
+              {competition?.name} Application
             </Title>
-            <Anchor underline='always' href='/hacker'>
-              Back to portal
-            </Anchor>
+            {/* <Anchor href='/hacker'>
+              <Title order={4}>(Back to Portal)</Title>
+            </Anchor> */}
             <Stack gap={30} w={mobile ? '100%' : '70%'}>
               <Fieldset legend='Personal Information' disabled={processing}>
                 <Stack gap={10}>
@@ -568,8 +569,13 @@ export default function HackerApplication({
                       label={
                         <Text size='sm'>
                           I acknowledge and agree to adhere to the SwampHacks{' '}
-                          <Anchor target='_blank'>Code of Conduct</Anchor> and
-                          commit to upholding the values and guidelines set
+                          <Anchor
+                            target='_blank'
+                            href='https://github.com/MLH/mlh-policies/blob/main/code-of-conduct.md'
+                          >
+                            Code of Conduct
+                          </Anchor>{' '}
+                          and commit to upholding the values and guidelines set
                           forth to ensure a safe, inclusive, and respectful
                           environment for all participants.
                         </Text>
@@ -581,10 +587,12 @@ export default function HackerApplication({
                   </Stack>
                 </Fieldset>
               </Stack>
-              <Group>
+              <Flex gap='sm'>
+                <Button size='lg' py={0} onClick={() => history.back()}>
+                  <IconArrowLeft />
+                </Button>
                 <Button
                   color='green'
-                  variant='light'
                   size='lg'
                   type='submit'
                   fullWidth
@@ -592,7 +600,7 @@ export default function HackerApplication({
                 >
                   Submit Application
                 </Button>
-              </Group>
+              </Flex>
               {Object.keys(form.errors).length > 0 && (
                 <Alert
                   mt={20}
