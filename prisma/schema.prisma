@@ -25,14 +25,14 @@ model User {
   image         String?
   role          Role      @default(Hacker)
 
-  resumeUrl     String?
+  resumeUrl String?
 
   accounts Account[]
   sessions Session[]
 
   applications Application[]
 
-  attendees    Attendee[]
+  attendees Attendee[]
 }
 
 model Account {
@@ -121,15 +121,17 @@ enum Status {
 }
 
 model Application {
+  id              String @id @default(cuid())
   competitionCode String
   userId          String
 
   content Json
 
+  status      Status      @default(STARTED)
   competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@id([competitionCode, userId])
+  @@unique([competitionCode, userId])
 }
 
 model Attendee {

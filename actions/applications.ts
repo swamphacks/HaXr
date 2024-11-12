@@ -1,5 +1,5 @@
 'use server';
-import { Application, Attendee, User } from '@prisma/client';
+import { Application, Attendee, Status, User } from '@prisma/client';
 import prisma from '@/prisma';
 import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 
@@ -66,4 +66,22 @@ export const createApplication = async (
     console.error(error);
     throw new Error('Error creating application');
   }
+};
+
+export const setApplicationStatus = async (
+  userId: string,
+  competitionCode: string,
+  status: Status
+) => {
+  return prisma.application.update({
+    where: {
+      competitionCode_userId: {
+        competitionCode,
+        userId,
+      },
+    },
+    data: {
+      status,
+    },
+  });
 };

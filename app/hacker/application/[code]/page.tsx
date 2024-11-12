@@ -22,7 +22,7 @@ import {
   Alert,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { Competition } from '@prisma/client';
+import { Competition, Status } from '@prisma/client';
 import { useEffect, useState } from 'react';
 import { IconFileUpload } from '@tabler/icons-react';
 import { useForm, yupResolver } from '@mantine/form';
@@ -30,7 +30,11 @@ import { applicationConfigurationSchema } from '@/schemas';
 import { IMaskInput } from 'react-imask';
 import { notifications } from '@mantine/notifications';
 import { uploadResume } from '@/actions/storage';
-import { createApplication, getApplication } from '@/actions/applications';
+import {
+  createApplication,
+  getApplication,
+  setApplicationStatus,
+} from '@/actions/applications';
 import { useSession } from 'next-auth/react';
 
 export interface HackerApplicationFormValues {
@@ -209,6 +213,11 @@ export default function HackerApplication({
         { ...values, resumeUrl },
         session.user.id,
         competition.code
+      );
+      await setApplicationStatus(
+        session.user.id,
+        competition.code,
+        Status.APPLIED
       );
       notifications.clean();
       setApplied(true);
