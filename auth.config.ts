@@ -6,7 +6,9 @@ export default {
   providers: [
     GitHub({
       profile: ({ name, email, avatar_url, html_url }: GitHubProfile) => {
-        const [firstName, lastName] = name?.split(' ') ?? ['', ''];
+        let firstName = name ?? 'First Name',
+          lastName = '';
+        if (name && name.includes(' ')) [firstName, lastName] = name.split(' ');
         return {
           firstName,
           lastName,
@@ -18,6 +20,7 @@ export default {
           bio: null,
           githubURL: html_url,
           linkedinURL: null,
+          resumeUrl: null,
           skills: [],
         };
       },
