@@ -11,5 +11,6 @@ export declare module '@auth/core/types' {
     githubURL: string | null;
     linkedinURL: string | null;
     skills: string[];
+    resumeUrl: string | null;
   }
 }

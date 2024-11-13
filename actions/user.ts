@@ -22,7 +22,7 @@ const updateUserProfile = async (
 
 /* 
 Order of Operation:
-1. Upload the old avatar to the blob storage
+1. Upload the new avatar to the blob storage
 2. Delete the old avatar from the blob storage
 3. Update the user's avatar in the database
 */
@@ -72,8 +72,7 @@ const deleteUserAvatar = async (user_id: string): Promise<null | undefined> => {
   }
 };
 
-export { updateUserProfile, updateUserAvatar, deleteUserAvatar };
-export const updateUserResume = async (userId: string, resumeUrl: string) => {
+const updateUserResume = async (userId: string, resumeUrl: string) => {
   return await prisma.user.update({
     where: {
       id: userId,
@@ -82,4 +81,11 @@ export const updateUserResume = async (userId: string, resumeUrl: string) => {
       resumeUrl,
     },
   });
+};
+
+export {
+  updateUserProfile,
+  updateUserAvatar,
+  deleteUserAvatar,
+  updateUserResume,
 };

@@ -23,7 +23,7 @@ import {
   Flex,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { Competition, Status } from '@prisma/client';
+import { Competition, Status, User } from '@prisma/client';
 import { useEffect, useState } from 'react';
 import { IconArrowLeft, IconFileUpload } from '@tabler/icons-react';
 import { useForm, yupResolver } from '@mantine/form';
@@ -37,6 +37,8 @@ import {
   setApplicationStatus,
 } from '@/actions/applications';
 import { useSession } from 'next-auth/react';
+import { updateUserProfile } from '@/actions/user';
+import Image from 'next/image';
 
 export interface HackerApplicationFormValues {
   firstName: string;
@@ -72,7 +74,7 @@ export default function HackerApplication({
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const mobile = useMediaQuery('(max-width: 50em)');
-  const { data: session, status } = useSession();
+  const { data: session, update } = useSession();
 
   const form = useForm({
     initialValues: {
@@ -231,10 +233,61 @@ export default function HackerApplication({
       });
     }
 
+    try {
+      const updatedUser = await updateUserProfile(session.user.id, {
+        ...(session.user as User),
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phone: values.phoneNumber,
+        school: values.school,
+        resumeUrl,
+      });
+
+      await update({
+        ...session,
+        user: updatedUser,
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Error updating user information',
+        message:
+          'An error occurred while updating your user information. Please try again.',
+        color: 'red',
+      });
+      setProcessing(false);
+      return;
+    }
+
     setProcessing(false);
   };
 
   if (loading) return <Spinner />;
+
+  if (!competition) {
+    return (
+      <Container size={mobile ? 'lg' : 'md'} py={mobile ? 'sm' : 'lg'} w='100%'>
+        <Paper p={mobile ? 'sm' : 'xl'}>
+          <Stack align='center'>
+            <Title className='text-center' mb={20}>
+              404: Hackathon Not Found
+            </Title>
+            <Image
+              alt='Vro Running'
+              loader={() =>
+                'https://media1.tenor.com/m/KA90qweWuTwAAAAd/vro-vro-cat.gif'
+              }
+              src='https://media1.tenor.com/m/KA90qweWuTwAAAAd/vro-vro-cat.gif'
+              height={300}
+              width={300}
+            />
+            <Anchor mt={5} mr={10} underline='always' href='/hacker'>
+              &#8592; Back
+            </Anchor>
+          </Stack>
+        </Paper>
+      </Container>
+    );
+  }
 
   if (applied) {
     return (
@@ -308,7 +361,7 @@ export default function HackerApplication({
                   {/* Email and phone number */}
                   <TextInput
                     label='Email'
-                    placeholder='johndoe@roblox.com'
+                    placeholder='johndoe@ufl.com'
                     required
                     {...form.getInputProps('email')}
                   />
@@ -583,6 +636,23 @@ export default function HackerApplication({
                       {...form.getInputProps('codeOfConductConsent', {
                         type: 'checkbox',
                       })}
+                    />
+
+                    <Checkbox
+                      required
+                      label={
+                        <Text size='sm'>
+                          I have made a{' '}
+                          <Anchor
+                            href='https://www.devpost.com'
+                            target='_blank'
+                          >
+                            Devpost
+                          </Anchor>{' '}
+                          account and registered for {competition?.name} on
+                          there as well.
+                        </Text>
+                      }
                     />
                   </Stack>
                 </Fieldset>

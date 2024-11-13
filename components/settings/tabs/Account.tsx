@@ -4,9 +4,11 @@ import {
   deleteUserAvatar,
 } from '@/actions/user';
 import { profileConfigurationScheme } from '@/schemas';
+import schoolData from '@/public/data/schools.json';
 import {
   Alert,
   Anchor,
+  Autocomplete,
   Avatar,
   Button,
   Fieldset,
@@ -85,7 +87,6 @@ export default function Account() {
     },
     validate: yupResolver(profileConfigurationScheme),
     onValuesChange: (values: FormPropValues) => {
-      console.log(values);
       if (values.bio) setBioLength(values.bio.length);
       setFormChanged(true);
     },
@@ -97,7 +98,8 @@ export default function Account() {
           return [key, cleanedPhone];
         }
 
-        if (Array.isArray(value)) {
+        // Array and bio COULD be empty strings
+        if (Array.isArray(value) || key === 'bio') {
           // Leave untouched
           return [key, value];
         }
@@ -133,11 +135,18 @@ export default function Account() {
 
     if (!session?.user?.id) {
       console.error('Cannot submit form without session ID.');
+      notifications.show({
+        color: 'red',
+        title: 'Oops! Something went wrong.',
+        message:
+          'A technical error has occurred. Please contact a member of the technical team for assistance.',
+        icon: <IconX />,
+        autoClose: 3000,
+      });
       close();
       return;
     }
 
-    console.log(values);
     const newUserData = await updateUserProfile(session?.user?.id, values);
 
     if (newUserData) {
@@ -181,7 +190,7 @@ export default function Account() {
       notifications.show({
         title: 'Oops! Something went wrong.',
         message:
-          'A technical error has occurred. Please contact a member of the technical team for assistance. (ERR_AUTH_03)',
+          'A technical error has occurred. Please contact a member of the technical team for assistance.',
         icon: <IconX />,
         color: 'red',
         autoClose: 3000,
@@ -305,13 +314,15 @@ export default function Account() {
                   {...form.getInputProps('lastName')}
                 />
               </Group>
-              <TextInput
+              <Autocomplete
                 label='School'
-                key={form.key('school')}
-                placeholder={session?.user?.school || ''}
-                {...form.getInputProps('school')}
                 w='100%'
+                placeholder={session?.user?.school || 'Choose your school'}
+                data={schoolData.schools}
+                key={form.key('school')}
+                {...form.getInputProps('school')}
               />
+
               <Stack w='100%' gap={2}>
                 <Textarea
                   label='Bio'
@@ -401,7 +412,7 @@ export default function Account() {
                 label='Phone'
                 key={form.key('phone')}
                 placeholder={
-                  displayPhone(session?.user?.phone!) || 'Ex. (433)-897-1123'
+                  displayPhone(session?.user?.phone!) || 'Ex. (314)-952-6281'
                 }
                 component={IMaskInput}
                 mask='(000)-000-0000'
@@ -423,7 +434,7 @@ export default function Account() {
               ></Alert>
             )}
             <Text size='xs'>
-              By clicking submit, you agree to Swamphacks&apos;s{' '}
+              By clicking submit, you agree to SwampHacks&apos;s{' '}
               <Anchor>Term&apos;s of Service</Anchor>,{' '}
               <Anchor>Privacy Policy</Anchor>, and{' '}
               <Anchor>Community Guidelines</Anchor>.

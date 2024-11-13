@@ -48,13 +48,13 @@ export default function SettingsModal({ opened, closeModal }: SettingsProps) {
   const tabs: TabItem[] = [
     { value: 'account', label: 'Account', icon: IconSettings },
     { value: 'notifications', label: 'Notifications', icon: IconBellRinging },
-    { value: 'appearance', label: 'Appearance', icon: IconBrush },
+    // { value: 'appearance', label: 'Appearance', icon: IconBrush },
   ];
 
   const tabPanels: TabPanelItem[] = [
     { value: 'account', component: Account },
     { value: 'notifications', component: Notifications },
-    { value: 'appearance', component: Appearance },
+    // { value: 'appearance', component: Appearance },
   ];
 
   const DesktopTabsList = () => (

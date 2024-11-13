@@ -6,7 +6,9 @@ export default function Appearance() {
     <Stack w='100%' h='100%' pr={20} pl={20}>
       <Title order={2}>Appearance</Title>
       <Divider />
-      <Text>This is where you manage how to website looks.</Text>
+      <Text>
+        This is where you manage your appearance on the portal to others.
+      </Text>
     </Stack>
   );
 }
