@@ -1,110 +1,133 @@
-import { getApplication } from '@/actions/applications';
-import { Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
-import { Competition } from '@prisma/client';
+import { CompetitionWithApplication } from '@/actions/applications';
+import { Button, Card, Group, Stack, Text, Title } from '@mantine/core';
+import { Status } from '@prisma/client';
 import {
-  IconArrowRight,
   IconCalendar,
-  IconChecklist,
+  IconChevronRight,
+  IconCircleX,
+  IconConfetti,
   IconMapPin,
+  IconMoodSad,
+  IconZoomMoney,
 } from '@tabler/icons-react';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+
+interface Props {
+  competition: CompetitionWithApplication;
+}
+
+const formatDateTime = (date: Date) =>
+  date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
 export default function CompetitionCard({
-  competition,
-  mobile,
-}: {
-  competition: Competition;
-  mobile: boolean;
-}) {
-  const [applied, setApplied] = useState(false);
-  const { code, name, start_date, end_date, location, description } =
-    competition;
-
-  const { data: session, status } = useSession();
-
+  competition: {
+    code,
+    name,
+    description,
+    location,
+    start_date,
+    end_date,
+    application,
+  },
+}: Props) {
   const router = useRouter();
 
-  const formatDateRange = (startDate: Date, endDate: Date) => {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
+  const startDateStr = formatDateTime(start_date),
+    endDateStr = formatDateTime(end_date),
+    sameDay = startDateStr === endDateStr;
 
-    const startMonth = months[startDate.getMonth()];
-    const startDay = startDate.getDate();
-    const endDay = endDate.getDate();
-    const year = startDate.getFullYear();
+  const StatusButton: Record<Status | 'NOT_STARTED', React.ReactElement> = {
+    NOT_STARTED: (
+      <Button
+        color='green'
+        rightSection={<IconChevronRight />}
+        onClick={() => router.push(`/hacker/application/${code}`)}
+      >
+        Apply
+      </Button>
+    ),
 
-    return `${startMonth} ${startDay}-${endDay}, ${year}`;
+    [Status.STARTED]: (
+      <Button
+        color='blue'
+        rightSection={<IconChevronRight />}
+        onClick={() => router.push(`/hacker/application/${code}`)}
+      >
+        Continue
+      </Button>
+    ),
+    [Status.APPLIED]: (
+      <Button
+        color='yellow'
+        variant='light'
+        rightSection={<IconZoomMoney />}
+        onClick={() => router.push(`/hacker/application/${code}`)}
+      >
+        Under Review
+      </Button>
+    ),
+
+    [Status.REJECTED]: (
+      <Button color='red' variant='light' rightSection={<IconCircleX />}>
+        Rejected
+      </Button>
+    ),
+    [Status.WAITLISTED]: (
+      <Button color='green' rightSection={<IconChevronRight />}>
+        Continue
+      </Button>
+    ),
+    [Status.ACCEPTED]: (
+      <Button
+        color='green'
+        rightSection={<IconChevronRight />}
+        onClick={() => console.log('Please accept the invitation')}
+      >
+        Accepted
+      </Button>
+    ),
+
+    [Status.NOT_ATTENDING]: (
+      <Button color='red' variant='light' rightSection={<IconMoodSad />}>
+        Not Attending
+      </Button>
+    ),
+    [Status.ATTENDING]: (
+      <Button color='green' variant='light' rightSection={<IconConfetti />}>
+        Attending
+      </Button>
+    ),
   };
 
-  const date = formatDateRange(start_date, end_date);
-
-  const active = Date.now() < end_date.getTime();
-
-  useEffect(() => {
-    const fetchApplications = async () => {
-      if (!session?.user?.id) return;
-      const app = await getApplication(code, session?.user?.id!);
-
-      setApplied(app !== null);
-    };
-
-    fetchApplications();
-  }, [code, session?.user?.id]);
-
   return (
-    <Card w={mobile ? '100%' : '60%'}>
+    <Card w='100%'>
       <Group justify='space-between' px={10} py={10}>
-        <Stack gap={1}>
-          <Title order={3}>{name}</Title>
+        <Stack gap='xs'>
+          <Title order={2}>{name}</Title>
           <Text>{description}</Text>
-          <Group mt={5} ml={-1}>
-            <Group gap={5}>
+
+          <Group gap='xl'>
+            <Group gap='xs'>
               <IconMapPin size={20} color='gray' />
               <Text c='dimmed' size='md' mt={3}>
                 {location}
               </Text>
             </Group>
 
-            <Group gap={5}>
+            <Group gap='xs'>
               <IconCalendar size={20} color='gray' />
               <Text c='dimmed' size='md' mt={3}>
-                {date}
+                {sameDay ? startDateStr : `${startDateStr} - ${endDateStr}`}
               </Text>
             </Group>
           </Group>
         </Stack>
-        {applied ? (
-          <Button
-            color='yellow'
-            variant='light'
-            rightSection={<IconChecklist />}
-            onClick={() => router.push(`/hacker/application/${code}`)}
-          >
-            Under Review
-          </Button>
-        ) : (
-          <Button
-            color='green'
-            rightSection={<IconArrowRight />}
-            onClick={() => router.push(`/hacker/application/${code}`)}
-          >
-            Apply
-          </Button>
-        )}
+
+        {StatusButton[application?.status || 'NOT_STARTED']}
       </Group>
     </Card>
   );
