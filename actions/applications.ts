@@ -49,15 +49,12 @@ export const createApplication = async (
   userId: string,
   competitionCode: string
 ) => {
-  // Convert to record so prisma is happy LOL
-  const content: Record<string, any> = { ...values };
-
   try {
     const application = await prisma.application.create({
       data: {
         competitionCode,
         userId,
-        content,
+        content: { ...values },
       },
     });
 
