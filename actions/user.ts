@@ -73,3 +73,13 @@ const deleteUserAvatar = async (user_id: string): Promise<null | undefined> => {
 };
 
 export { updateUserProfile, updateUserAvatar, deleteUserAvatar };
+export const updateUserResume = async (userId: string, resumeUrl: string) => {
+  return await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      resumeUrl,
+    },
+  });
+};

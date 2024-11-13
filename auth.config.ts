@@ -26,13 +26,10 @@ export default {
   ],
   callbacks: {
     jwt({ token, user, session, trigger }) {
-      if (trigger == 'update' && session?.user) {
-        token.user = session.user;
-      }
+      if (trigger == 'update' && session?.user) token.user = session.user;
 
-      if (user) {
-        token.user = user;
-      }
+      if (user) token.user = user;
+
       return token;
     },
     async session({ session, token }) {

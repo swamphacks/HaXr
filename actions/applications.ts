@@ -1,6 +1,7 @@
 'use server';
-import { Application, Attendee, User } from '@prisma/client';
+import { Application, Attendee, Status, User } from '@prisma/client';
 import prisma from '@/prisma';
+import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 
 export async function getApplication(
   competitionCode: string,
@@ -8,7 +9,7 @@ export async function getApplication(
 ): Promise<Application | null> {
   return prisma.application.findUnique({
     where: {
-      compCode_userId: {
+      competitionCode_userId: {
         competitionCode,
         userId,
       },
@@ -42,3 +43,45 @@ export async function getAttendee(
     },
   });
 }
+
+export const createApplication = async (
+  values: HackerApplicationFormValues,
+  userId: string,
+  competitionCode: string
+) => {
+  // Convert to record so prisma is happy LOL
+  const content: Record<string, any> = { ...values };
+
+  try {
+    const application = await prisma.application.create({
+      data: {
+        competitionCode,
+        userId,
+        content,
+      },
+    });
+
+    return application;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error creating application');
+  }
+};
+
+export const setApplicationStatus = async (
+  userId: string,
+  competitionCode: string,
+  status: Status
+) => {
+  return prisma.application.update({
+    where: {
+      competitionCode_userId: {
+        competitionCode,
+        userId,
+      },
+    },
+    data: {
+      status,
+    },
+  });
+};
