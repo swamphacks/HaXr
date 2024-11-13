@@ -21,11 +21,12 @@ import {
   Anchor,
   Alert,
   Flex,
+  rem,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { Competition, Status, User } from '@prisma/client';
 import { useEffect, useState } from 'react';
-import { IconArrowLeft, IconFileUpload } from '@tabler/icons-react';
+import { IconArrowLeft, IconCheck, IconFileUpload } from '@tabler/icons-react';
 import { useForm, yupResolver } from '@mantine/form';
 import { applicationConfigurationSchema } from '@/schemas';
 import { IMaskInput } from 'react-imask';
@@ -140,11 +141,9 @@ export default function HackerApplication({
           "This is embarrassing... we're having trouble processing your application. Please refresh, and try again.",
         color: 'red',
       });
-      setProcessing(false);
       return;
     }
 
-    // Check if a file was uploaded
     if (!file) {
       notifications.show({
         title: 'No resume uploaded',
@@ -152,36 +151,17 @@ export default function HackerApplication({
           'Please upload a resume to submit your application. Make sure it is in PDF format.',
         color: 'red',
       });
-      setProcessing(false);
       return;
     }
 
-    // Check that the file is a PDF
     if (file.type !== 'application/pdf') {
       notifications.show({
         title: 'Invalid file format',
         message: 'Please upload a file in PDF format.',
         color: 'red',
       });
-      setProcessing(false);
       return;
     }
-
-    // Let's get this show on the road
-    setProcessing(true);
-    notifications.show({
-      title: 'Processing application',
-      message: 'Please wait while we process your application...',
-      loading: true,
-      autoClose: false,
-      color: 'blue',
-      withCloseButton: false,
-      position: 'bottom-top',
-    });
-
-    // Upload the resume
-    const formData = new FormData();
-    formData.append('file', file);
 
     if (file.size > 4.5 * 1000000) {
       notifications.show({
@@ -189,76 +169,104 @@ export default function HackerApplication({
         message: 'Please upload a file that is smaller than 4.5MB.',
         color: 'red',
       });
-      setProcessing(false);
       return;
     }
+
+    const notificationId = notifications.show({
+      title: 'Submitting application',
+      message: 'Please wait while we process your application...',
+      color: 'blue',
+      loading: true,
+      autoClose: false,
+      withCloseButton: false,
+    });
+
+    try {
+      setProcessing(true);
+      const resumeUrl = await processApplication(values);
+      setApplied(true);
+      await updatedUserInformation(values, resumeUrl);
+
+      notifications.update({
+        id: notificationId,
+        title: 'Application submitted!',
+        message: 'Thank you for applying to SwampHacks 2025!',
+        color: 'green',
+        autoClose: 3000,
+        loading: false,
+        icon: <IconCheck style={{ width: rem(18), height: rem(18) }} />,
+      });
+    } catch (error: any) {
+      notifications.update({
+        id: notificationId,
+        title: 'Error submitting application',
+        loading: false,
+        message: error,
+        color: 'red',
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const processApplication = async (
+    values: typeof form.values
+  ): Promise<string> => {
+    if (!file || !competition?.code || !session?.user?.id) {
+      throw new Error(
+        'What the heck went wrong? Please refresh and try again.'
+      );
+    }
+    const formData = new FormData();
+    formData.append('file', file);
 
     let resumeUrl: string;
-    try {
-      const result = await uploadResume(
-        formData,
-        values.firstName,
-        values.lastName
+
+    const result = await uploadResume(
+      formData,
+      values.firstName,
+      values.lastName
+    );
+
+    resumeUrl = result.url;
+
+    await createApplication(
+      { ...values, resumeUrl },
+      session.user.id,
+      competition.code
+    );
+
+    await setApplicationStatus(
+      session.user.id,
+      competition.code,
+      Status.APPLIED
+    );
+
+    return resumeUrl;
+  };
+
+  const updatedUserInformation = async (
+    values: typeof form.values,
+    resumeUrl: string
+  ) => {
+    if (!session?.user?.id) {
+      throw new Error(
+        'Woops! Something went wrong on my end... Refresh and try again!'
       );
-      resumeUrl = result.url;
-    } catch (error: any) {
-      notifications.show({
-        title: 'Error uploading resume',
-        message: error.message,
-        color: 'red',
-      });
-      setProcessing(false);
-      return;
     }
+    const updatedUser = await updateUserProfile(session.user.id, {
+      ...(session.user as User),
+      firstName: values.firstName,
+      lastName: values.lastName,
+      phone: values.phoneNumber,
+      school: values.school,
+      resumeUrl,
+    });
 
-    try {
-      await createApplication(
-        { ...values, resumeUrl },
-        session.user.id,
-        competition.code
-      );
-      await setApplicationStatus(
-        session.user.id,
-        competition.code,
-        Status.APPLIED
-      );
-      notifications.clean();
-      setApplied(true);
-    } catch (error) {
-      notifications.show({
-        title: 'Error submitting application',
-        message:
-          'An error occurred while submitting your application. Please try again.',
-        color: 'red',
-      });
-    }
-
-    try {
-      const updatedUser = await updateUserProfile(session.user.id, {
-        ...(session.user as User),
-        firstName: values.firstName,
-        lastName: values.lastName,
-        phone: values.phoneNumber,
-        school: values.school,
-        resumeUrl,
-      });
-
-      await update({
-        ...session,
-        user: updatedUser,
-      });
-    } catch (error) {
-      notifications.show({
-        title: 'Error updating user information',
-        message:
-          'An error occurred while updating your user information. Please try again.',
-        color: 'red',
-      });
-      setProcessing(false);
-      return;
-    }
-
-    setProcessing(false);
+    await update({
+      ...session,
+      user: updatedUser,
+    });
   };
 
   if (loading) return <Spinner />;
