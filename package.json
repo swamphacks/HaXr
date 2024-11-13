@@ -30,6 +30,7 @@
     "@tabler/icons-react": "^3.2.0",
     "@vercel/blob": "^0.26.0",
     "@zxing/browser": "^0.1.5",
+    "aws-sdk": "^2.1692.0",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.11",
     "framer-motion": "^11.11.11",
