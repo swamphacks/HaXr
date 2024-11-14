@@ -1,6 +1,6 @@
 'use server';
 import AWS from 'aws-sdk';
-import React from 'react';
+import { render as renderTemplate, Data as TemplateData } from 'template-file';
 
 const client = new AWS.SES({
   apiVersion: '2010-12-01',
@@ -11,11 +11,11 @@ const client = new AWS.SES({
   },
 });
 
-interface Email {
+export interface Email {
   replyTo?: string | string[];
   to: string | string[];
   subject: string;
-  body: string | React.ReactNode;
+  body: string;
   isHtml?: boolean;
 }
 
@@ -26,7 +26,7 @@ export async function sendEmail({
   body,
   isHtml = false,
 }: Email): Promise<boolean> {
-  const fromAddr = process.env.EMAIL_FROM ?? '';
+  const fromAddr = process.env.EMAIL_FROM;
   if (!fromAddr) {
     console.error('No FROM email address provided');
     return false;
@@ -63,3 +63,16 @@ export async function sendEmail({
 
   return true;
 }
+
+export interface TemplateEmail extends Email {
+  templateData: TemplateData;
+}
+
+/**
+ * @see https://github.com/gsandf/template-file
+ */
+export const sendTemplateEmail = async (e: TemplateEmail): Promise<boolean> =>
+  sendEmail({
+    ...e,
+    body: renderTemplate(e.body, e.templateData),
+  });
