@@ -9,13 +9,12 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { Application, Competition } from '@prisma/client';
-import { IconAward, IconSpeakerphone } from '@tabler/icons-react';
+import { IconSpeakerphone } from '@tabler/icons-react';
 import { Session } from 'next-auth';
-import Image from 'next/image';
 import CompetitionCard from './CompetitionCard';
 import { CompetitionWithApplication } from '@/actions/applications';
 import UserAvatar from '../UserAvatar';
+import Image from 'next/image';
 
 interface Props {
   session: Session;
@@ -75,6 +74,24 @@ export default function HackerDashboard({
               {competitions.map((comp) => (
                 <CompetitionCard key={comp.code} competition={comp} />
               ))}
+
+              {!competitions && (
+                <Stack align='center' gap={20} mt={50} w='50%'>
+                  <Text fw={700} size='xl'>
+                    Wow, much empty.
+                  </Text>
+                  <Image
+                    alt='Sad cat'
+                    unoptimized
+                    loader={() =>
+                      'https://media.tenor.com/D_yuP4xjddsAAAAM/crying-vaughn-chat.gif'
+                    }
+                    src='https://media.tenor.com/D_yuP4xjddsAAAAM/crying-vaughn-chat.gif'
+                    width={200}
+                    height={200}
+                  />
+                </Stack>
+              )}
             </Stack>
           </Stack>
         </Stack>
