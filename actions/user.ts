@@ -1,23 +1,32 @@
 'use server';
 
+import { EditableUser } from '@/components/settings/tabs/Account';
 import prisma from '@/prisma';
 import { type User } from '@prisma/client';
 import { del, put } from '@vercel/blob';
 
 const updateUserProfile = async (
   user_id: string,
+  user: EditableUser
+): Promise<User | null> => {
+  return prisma.user.update({
+    where: {
+      id: user_id,
+    },
+    data: { ...user },
+  });
+};
+
+const updateUser = async (
+  user_id: string,
   user: User
 ): Promise<User | null> => {
-  try {
-    return prisma.user.update({
-      where: {
-        id: user_id,
-      },
-      data: { ...user },
-    });
-  } catch {
-    return null;
-  }
+  return prisma.user.update({
+    where: {
+      id: user_id,
+    },
+    data: { ...user },
+  });
 };
 
 /* 
@@ -88,4 +97,5 @@ export {
   updateUserAvatar,
   deleteUserAvatar,
   updateUserResume,
+  updateUser,
 };

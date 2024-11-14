@@ -1,8 +1,3 @@
-import {
-  updateUserProfile,
-  updateUserAvatar,
-  deleteUserAvatar,
-} from '@/actions/user';
 import { profileConfigurationScheme } from '@/schemas';
 import schoolData from '@/public/data/schools.json';
 import {
@@ -31,29 +26,63 @@ import {
   IconBrandGithub,
   IconBrandLinkedin,
   IconCheck,
-  IconCheckbox,
   IconFileUpload,
   IconNotesOff,
   IconX,
 } from '@tabler/icons-react';
 import { useSession } from 'next-auth/react';
 import React, { useRef, useState } from 'react';
+import { User } from '@prisma/client';
+import { redirect } from 'next/navigation';
+import { updateUserAvatar, updateUserProfile } from '@/actions/user';
 
-interface FormPropValues {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  school?: string;
-  bio?: string;
-  githubURL?: string;
-  linkedinURL?: string;
-  skills: string[];
-}
+export type EditableUser = Pick<
+  User,
+  | 'firstName'
+  | 'lastName'
+  | 'phone'
+  | 'school'
+  | 'bio'
+  | 'githubURL'
+  | 'linkedinURL'
+  | 'skills'
+>;
+
+const stripUser = (user: User | null): EditableUser | null => {
+  if (!user) return null;
+
+  const {
+    firstName,
+    lastName,
+    phone,
+    school,
+    bio,
+    githubURL,
+    linkedinURL,
+    skills,
+  } = user;
+  return {
+    firstName: firstName || '',
+    lastName: lastName || '',
+    phone: phone || '',
+    school: school || '',
+    bio: bio || '',
+    githubURL: githubURL || '',
+    linkedinURL: linkedinURL || '',
+    skills: skills || '',
+  };
+};
 
 export default function Account() {
-  // Component level states
-  const { data: session, status, update } = useSession();
-  const [isLoading, { open, close }] = useDisclosure();
+  // Retrieve session
+  const { data: session, update } = useSession();
+
+  // Check if session, if not redirect to /
+  if (!session || !session.user) redirect('/');
+
+  // Form processing states
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [dirty, setDirty] = useState<boolean>(false);
 
   // Avatar states, loading, and values
   const inputFileRef = useRef<HTMLInputElement>(null);
@@ -62,78 +91,23 @@ export default function Account() {
   const MAX_IMAGE_SIZE_MB = 4.5;
   const MAX_FILE_SIZE_BYTES = 1000000 * MAX_IMAGE_SIZE_MB;
 
-  // Form states for editables
-  const [bioLength, setBioLength] = useState<number>(
-    session?.user?.bio?.length || 0
-  );
-  const [currentSkills, setCurrentSkills] = useState<string[]>(
-    session?.user?.skills || []
-  );
-  const [currentSkillError, setcurrentSkillError] = useState<boolean>(false);
-  const [formChanged, setFormChanged] = useState<boolean | null>(null);
-
-  const displayPhone = (phone: string) => {
-    if (!phone || phone.length !== 10) return null;
-
-    return `(${phone.slice(0, 3)})-${phone.slice(3, 6)}-${phone.slice(6)}`;
-  };
-
   // Form initilization
-  const form = useForm<FormPropValues>({
+  const form = useForm<EditableUser>({
     mode: 'uncontrolled',
-    initialValues: {
-      bio: session?.user?.bio || '',
-      skills: currentSkills,
-    },
+    initialValues: stripUser(session.user) ?? undefined,
     validate: yupResolver(profileConfigurationScheme),
-    onValuesChange: (values: FormPropValues) => {
-      if (values.bio) setBioLength(values.bio.length);
-      setFormChanged(true);
+    onValuesChange: (values: EditableUser) => {
+      setDirty(true);
     },
-    transformValues: (values: FormPropValues) => {
-      const cleanedEntries = Object.entries(values).map(([key, value]) => {
-        if (key === 'phone' && typeof value === 'string') {
-          // Filter pure numbers out of phone number
-          const cleanedPhone = value.replace(/\D/g, '');
-          return [key, cleanedPhone];
-        }
+    transformValues: (values: EditableUser) => {
+      if (values.phone) values.phone = values.phone.replace(/\D/g, '');
 
-        // Array and bio COULD be empty strings
-        if (Array.isArray(value) || key === 'bio') {
-          // Leave untouched
-          return [key, value];
-        }
-
-        if (typeof value === 'string' && value.trim() === '') {
-          // Label empty strings as null for removal later
-          return null;
-        }
-
-        return [key, value];
-      });
-
-      // Filter out null entries (those that were empty strings)
-      return Object.fromEntries(
-        cleanedEntries.filter((entry) => entry !== null)
-      );
+      return values;
     },
   });
 
-  // Utility function to reset form values
-  const resetFormValues = () => {
-    form.reset();
-    form.setFieldValue('bio', session?.user?.bio || '');
-    setBioLength(session?.user?.bio?.length! || 0);
-    setCurrentSkills(session?.user?.skills || []);
-    setFormChanged(false);
-    setcurrentSkillError(false);
-  };
-
-  // Submitting Form
-  const onSubmitForm = async (values: any) => {
-    open();
-
-    if (!session?.user?.id) {
+  const onSubmit = async (values: EditableUser) => {
+    if (!session.user.id) {
       console.error('Cannot submit form without session ID.');
       notifications.show({
         color: 'red',
@@ -143,44 +117,51 @@ export default function Account() {
         icon: <IconX />,
         autoClose: 3000,
       });
-      close();
       return;
     }
 
-    const newUserData = await updateUserProfile(session?.user?.id, values);
+    setProcessing(true);
 
-    if (newUserData) {
-      // Updating session to reflect new user
-      await update({
-        ...session,
-        user: newUserData,
-      });
+    const notificationId = notifications.show({
+      title: 'Updating Profile',
+      message: 'Please wait while we update your profile.',
+      loading: true,
+      autoClose: false,
+    });
 
-      resetFormValues();
+    const newUser = await updateUserProfile(session.user.id, values);
 
-      notifications.show({
-        message: (
-          <Text size='sm'>
-            Your profile updated successfully. You may need to{' '}
-            <Anchor href=''>refresh</Anchor> to see the changes.
-          </Text>
-        ),
-        icon: <IconCheck />,
-        color: 'green',
-        title: 'Public Profile Updated',
-        autoClose: 3000,
-      });
-    } else {
-      notifications.show({
-        message: 'Your profile has not been updated successfully!',
-        icon: <IconX />,
+    if (!newUser) {
+      notifications.update({
+        id: notificationId,
         color: 'red',
-        title: 'Public Profile Update Failed',
+        title: 'Oops! Something went wrong.',
+        message:
+          'A technical error has occurred. Please contact a member of the technical team for assistance.',
+        icon: <IconX />,
+        loading: false,
         autoClose: 3000,
       });
+      setProcessing(false);
+      return;
     }
 
-    close();
+    await update({
+      ...session,
+      user: newUser,
+    });
+
+    setProcessing(false);
+    setDirty(false);
+    notifications.update({
+      id: notificationId,
+      color: 'green',
+      title: 'Profile Updated',
+      message: 'Your profile has been updated successfully.',
+      icon: <IconCheck />,
+      autoClose: 3000,
+      loading: false,
+    });
   };
 
   const onUploadAvatar = async (event: any) => {
@@ -216,7 +197,8 @@ export default function Account() {
     if (file.size > MAX_FILE_SIZE_BYTES) {
       notifications.show({
         title: 'Avatar Update Failed',
-        message: 'Your Avatar image size is too big! Keep it less than 5MB.',
+        message:
+          'Your Avatar image size is too big! Please keep the file size less than 5MB.',
         icon: <IconX />,
         color: 'red',
         autoClose: 3000,
@@ -228,25 +210,7 @@ export default function Account() {
 
     const updatedUserData = await updateUserAvatar(session.user.id, formData);
 
-    if (updatedUserData) {
-      await update({
-        ...session,
-        user: updatedUserData,
-      });
-
-      notifications.show({
-        title: 'Avatar Updated',
-        message: (
-          <Text size='sm'>
-            Your avatar updated successfully. You may need to{' '}
-            <Anchor href=''>refresh</Anchor> to see the changes.
-          </Text>
-        ),
-        icon: <IconCheck />,
-        color: 'green',
-        autoClose: 3000,
-      });
-    } else {
+    if (!updatedUserData) {
       notifications.show({
         title: 'Avatar Update Failed',
         message: 'Your Avatar has not been updated successfully!',
@@ -254,17 +218,36 @@ export default function Account() {
         color: 'red',
         autoClose: 3000,
       });
+      setLoadingAvatar(false);
+      return;
     }
+
+    await update({
+      ...session,
+      user: updatedUserData,
+    });
+
+    notifications.show({
+      title: 'Avatar Updated',
+      message: (
+        <Text size='sm'>
+          Your avatar updated successfully. You may need to{' '}
+          <Anchor href=''>refresh</Anchor> to see the changes.
+        </Text>
+      ),
+      icon: <IconCheck />,
+      color: 'green',
+      autoClose: 3000,
+    });
 
     setLoadingAvatar(false);
   };
 
   return (
     <Stack w='100%' h='100%' pr={20} pl={20} pos='relative'>
-      <Form form={form} onSubmit={onSubmitForm}>
+      <Form form={form} onSubmit={onSubmit}>
         <Stack justify='center' align='center'>
-          <Fieldset legend='Public Profile'>
-            <LoadingOverlay visible={isLoading || status === 'loading'} />
+          <Fieldset legend='Public Profile' disabled={processing}>
             <Stack align='center'>
               <Group
                 className='relative h-fit w-fit rounded-full hover:cursor-pointer'
@@ -302,22 +285,24 @@ export default function Account() {
               </Group>
               <Group wrap='nowrap'>
                 <TextInput
+                  required
                   label='First Name'
+                  placeholder='Albert'
                   key={form.key('firstName')}
-                  placeholder={session?.user?.firstName}
                   {...form.getInputProps('firstName')}
                 />
                 <TextInput
+                  required
                   label='Last Name'
+                  placeholder='Gator'
                   key={form.key('lastName')}
-                  placeholder={session?.user?.lastName}
                   {...form.getInputProps('lastName')}
                 />
               </Group>
               <Autocomplete
                 label='School'
                 w='100%'
-                placeholder={session?.user?.school || 'Choose your school'}
+                placeholder='Ex. University of Florida'
                 data={schoolData.schools}
                 key={form.key('school')}
                 {...form.getInputProps('school')}
@@ -333,51 +318,26 @@ export default function Account() {
                   autosize
                   minRows={3}
                   maxRows={7}
+                  maxLength={1000}
                   {...form.getInputProps('bio')}
                 />
-                <Text size='xs' c={bioLength <= 500 ? 'gray' : 'red.7'}>
-                  Characters: {bioLength}/500.
-                </Text>
               </Stack>
 
               <TagsInput
                 w='100%'
                 label='Skills'
                 placeholder='Type here and hit enter...'
-                value={currentSkills}
                 splitChars={[]}
                 maxTags={15}
-                error={
-                  currentSkillError
-                    ? 'Do not enter skills with more than 15 characters.'
-                    : false
-                }
-                onOptionSubmit={(value: string) => {
-                  if (value.length > 15) {
-                    setcurrentSkillError(true);
-                    return;
-                  }
-                  setcurrentSkillError(false);
-
-                  form.setFieldValue('skills', [...currentSkills, value]);
-                  setCurrentSkills((prev) => [...prev, value]);
-                }}
-                onRemove={(value: string) => {
-                  form.setFieldValue(
-                    'skills',
-                    currentSkills.filter((skill) => skill !== value)
-                  );
-                  setCurrentSkills((prev) =>
-                    prev.filter((skill) => skill !== value)
-                  );
-                }}
+                key={form.key('skills')}
+                {...form.getInputProps('skills')}
               />
 
               <TextInput
                 leftSection={<IconBrandGithub />}
                 label='Github URL'
                 key={form.key('githubURL')}
-                placeholder={session?.user?.githubURL || ''}
+                placeholder='https://github.com/albertgator'
                 {...form.getInputProps('githubURL')}
                 w='100%'
               />
@@ -385,15 +345,15 @@ export default function Account() {
               <TextInput
                 leftSection={<IconBrandLinkedin />}
                 label='Linkedin URL'
+                placeholder='https://linkedin.com/in/albertgator'
                 key={form.key('linkedinURL')}
-                placeholder={session?.user?.linkedinURL || ''}
                 {...form.getInputProps('linkedinURL')}
                 w='100%'
               />
             </Stack>
           </Fieldset>
 
-          <Fieldset legend='Account' w='100%'>
+          <Fieldset legend='Account' w='100%' disabled={processing}>
             <Stack>
               <Tooltip
                 label='You cannot change your email.'
@@ -401,19 +361,16 @@ export default function Account() {
                 position='top-start'
               >
                 <TextInput
+                  required
                   label='Email'
-                  key={form.key('email')}
-                  placeholder={session?.user?.email || ''}
-                  {...form.getInputProps('email')}
+                  placeholder={session?.user?.email}
                   disabled
                 />
               </Tooltip>
               <InputBase
                 label='Phone'
                 key={form.key('phone')}
-                placeholder={
-                  displayPhone(session?.user?.phone!) || 'Ex. (314)-952-6281'
-                }
+                placeholder='Ex. (314)-952-6281'
                 component={IMaskInput}
                 mask='(000)-000-0000'
                 {...form.getInputProps('phone')}
@@ -421,16 +378,12 @@ export default function Account() {
             </Stack>
           </Fieldset>
           <Stack w='95%' gap={10}>
-            {formChanged !== null && (
+            {dirty && (
               <Alert
-                title={
-                  formChanged
-                    ? 'Changes have not been saved.'
-                    : 'Changes saved.'
-                }
+                title='Changes have not been saved'
                 radius='md'
-                color={formChanged ? 'red.6' : 'green.6'}
-                icon={formChanged ? <IconNotesOff /> : <IconCheckbox />}
+                color='red.6'
+                icon={<IconNotesOff />}
               ></Alert>
             )}
             <Text size='xs'>
@@ -439,7 +392,7 @@ export default function Account() {
               <Anchor>Privacy Policy</Anchor>, and{' '}
               <Anchor>Community Guidelines</Anchor>.
             </Text>
-            <Button fullWidth type='submit'>
+            <Button fullWidth type='submit' disabled={processing || !dirty}>
               Save Profile
             </Button>
           </Stack>

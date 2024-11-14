@@ -38,7 +38,7 @@ import {
   setApplicationStatus,
 } from '@/actions/applications';
 import { useSession } from 'next-auth/react';
-import { updateUserProfile } from '@/actions/user';
+import { updateUser, updateUserProfile } from '@/actions/user';
 import Image from 'next/image';
 
 export interface HackerApplicationFormValues {
@@ -254,7 +254,7 @@ export default function HackerApplication({
         'Woops! Something went wrong on my end... Refresh and try again!'
       );
     }
-    const updatedUser = await updateUserProfile(session.user.id, {
+    const updatedUser = await updateUser(session.user.id, {
       ...(session.user as User),
       firstName: values.firstName,
       lastName: values.lastName,

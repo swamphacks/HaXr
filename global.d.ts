@@ -1,17 +1,8 @@
-import { Role } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 
-export declare module '@auth/core/types' {
-  interface User {
-    firstName: string;
-    lastName: string;
-    phone: string | null;
-    school: string | null;
-    role: Role;
-    bio: string | null;
-    githubURL: string | null;
-    linkedinURL: string | null;
-    skills: string[];
-    resumeUrl: string | null;
+export declare module 'next-auth' {
+  interface Session {
+    user: User;
   }
 }
 
