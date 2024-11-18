@@ -13,7 +13,6 @@ import {
 import {
   Icon,
   IconBellRinging,
-  IconBrush,
   IconProps,
   IconSettings,
 } from '@tabler/icons-react';

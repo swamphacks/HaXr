@@ -246,9 +246,10 @@ export default function Account() {
   return (
     <Stack w='100%' h='100%' pr={20} pl={20} pos='relative'>
       <Form form={form} onSubmit={onSubmit}>
-        <Stack justify='center' align='center'>
-          <Fieldset legend='Public Profile' disabled={processing}>
+        <Stack justify='center' align='center' mx='md' my='sm'>
+          <Fieldset legend='Public Profile' w='100%' disabled={processing}>
             <Stack align='center'>
+              {/* Avatar */}
               <Group
                 className='relative h-fit w-fit rounded-full hover:cursor-pointer'
                 justify='center'
@@ -283,12 +284,16 @@ export default function Account() {
                   onChange={onUploadAvatar}
                 />
               </Group>
-              <Group wrap='nowrap'>
+
+              {/* Public Profile Fields */}
+
+              <Group wrap='nowrap' w='100%'>
                 <TextInput
                   required
                   label='First Name'
                   placeholder='Albert'
                   key={form.key('firstName')}
+                  w='100%'
                   {...form.getInputProps('firstName')}
                 />
                 <TextInput
@@ -296,6 +301,7 @@ export default function Account() {
                   label='Last Name'
                   placeholder='Gator'
                   key={form.key('lastName')}
+                  w='100%'
                   {...form.getInputProps('lastName')}
                 />
               </Group>
@@ -376,7 +382,8 @@ export default function Account() {
               />
             </Stack>
           </Fieldset>
-          <Stack w='95%' gap={10}>
+
+          <Stack px='md' gap={10}>
             {dirty && (
               <Alert
                 title='Changes have not been saved'
