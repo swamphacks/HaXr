@@ -1,12 +1,14 @@
 import GitHub, { GitHubProfile } from '@auth/core/providers/github';
 import { NextAuthConfig } from 'next-auth';
-import { Role } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 
 export default {
   providers: [
     GitHub({
-      profile: ({ name, email, avatar_url }: GitHubProfile) => {
-        const [firstName, lastName] = name?.split(' ') ?? ['', ''];
+      profile: ({ name, email, avatar_url, html_url }: GitHubProfile) => {
+        let firstName = name ?? 'First Name',
+          lastName = '';
+        if (name && name.includes(' ')) [firstName, lastName] = name.split(' ');
         return {
           firstName,
           lastName,
@@ -15,29 +17,26 @@ export default {
           school: null,
           image: avatar_url,
           role: Role.Hacker,
+          bio: null,
+          githubURL: html_url,
+          linkedinURL: null,
+          resumeUrl: null,
+          skills: [],
         };
       },
       allowDangerousEmailAccountLinking: true,
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        // User is available during sign-in
-        token.firstName = user.firstName;
-        token.lastName = user.lastName;
-        token.phone = user.phone;
-        token.school = user.school;
-        token.role = user.role;
-      }
+    jwt({ token, user, session, trigger }) {
+      if (trigger == 'update' && session?.user) token.user = session.user;
+
+      if (user) token.user = user;
+
       return token;
     },
     async session({ session, token }) {
-      session.user.firstName = token.firstName as string;
-      session.user.lastName = token.lastName as string;
-      session.user.phone = token.phone as string | null;
-      session.user.school = token.school as string | null;
-      session.user.role = token.role as Role;
+      session.user = token.user as User;
       return session;
     },
   },

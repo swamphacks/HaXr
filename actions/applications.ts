@@ -1,6 +1,13 @@
 'use server';
-import { Application, Attendee, User } from '@prisma/client';
+import {
+  Application,
+  Attendee,
+  Competition,
+  Status,
+  User,
+} from '@prisma/client';
 import prisma from '@/prisma';
+import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 
 export async function getApplication(
   competitionCode: string,
@@ -8,12 +15,39 @@ export async function getApplication(
 ): Promise<Application | null> {
   return prisma.application.findUnique({
     where: {
-      compCode_userId: {
+      competitionCode_userId: {
         competitionCode,
         userId,
       },
     },
   });
+}
+
+export interface CompetitionWithApplication extends Competition {
+  applications: undefined;
+  application: Application | null;
+}
+
+export async function getCompetitionsWithApplications(
+  userId: string
+): Promise<CompetitionWithApplication[]> {
+  return prisma.competition
+    .findMany({
+      include: {
+        applications: {
+          where: {
+            userId,
+          },
+        },
+      },
+    })
+    .then((compWithApp) =>
+      compWithApp.map((comp) => ({
+        ...comp,
+        applications: undefined,
+        application: comp.applications.at(0) ?? null,
+      }))
+    );
 }
 
 export async function getApplicants(
@@ -42,3 +76,42 @@ export async function getAttendee(
     },
   });
 }
+
+export const createApplication = async (
+  values: HackerApplicationFormValues,
+  userId: string,
+  competitionCode: string
+) => {
+  try {
+    const application = await prisma.application.create({
+      data: {
+        competitionCode,
+        userId,
+        content: { ...values },
+      },
+    });
+
+    return application;
+  } catch (error) {
+    console.error(error);
+    throw new Error('Error creating application');
+  }
+};
+
+export const setApplicationStatus = async (
+  userId: string,
+  competitionCode: string,
+  status: Status
+) => {
+  return prisma.application.update({
+    where: {
+      competitionCode_userId: {
+        competitionCode,
+        userId,
+      },
+    },
+    data: {
+      status,
+    },
+  });
+};

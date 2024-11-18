@@ -1,4 +1,34 @@
 import * as yup from 'yup';
+export const profileConfigurationScheme = yup.object().shape({
+  firstName: yup.string(),
+  lastName: yup.string(),
+  school: yup.string(),
+  email: yup.string().email(),
+  phone: yup
+    .string()
+    .test(
+      'is-10-digits',
+      'Must provide a valid phone number with exactly 10 digits.',
+      (value) => {
+        if (!value) return false;
+        const strippedValue = value.replace(/\D/g, ''); // Remove all non-digit characters
+        return strippedValue.length === 10;
+      }
+    ),
+  bio: yup.string().max(500, 'Keep it under 500 characters.'),
+  githubURL: yup
+    .string()
+    .url('Please enter a valid url.')
+    .matches(/github.com/, {
+      message: 'Please enter a valid GitHub URL.',
+    }),
+  linkedinURL: yup
+    .string()
+    .url('Please enter a valid url.')
+    .matches(/linkedin.com/, {
+      message: 'Please enter a valid LinkedIn URL.',
+    }),
+});
 
 export const competitionConfigurationSchema = yup.object().shape({
   code: yup
@@ -53,4 +83,40 @@ export const competitionConfigurationSchema = yup.object().shape({
       yup.ref('start_date'),
       'Hackers must confirm attendance before the competition begins'
     ),
+});
+
+export const applicationConfigurationSchema = yup.object().shape({
+  firstName: yup.string().required('Must provide a first name'),
+  lastName: yup.string().required('Must provide a last name'),
+  email: yup
+    .string()
+    .email('Must be a valid email')
+    .required('Must provide an email address'),
+  phoneNumber: yup
+    .string()
+    .length(14, 'Must provide a valid 10 digit phone number.')
+    .required('Must provide a phone number'),
+  age: yup.string().required('Must provide an age'),
+  certAge: yup.boolean().oneOf([true], 'Must be 18 years or older'),
+  school: yup.string().required('Must provide a school'),
+  levelOfStudy: yup.string().required('Must provide a level of study'),
+  major: yup.string().required('Must provide a major'),
+  graduationMonth: yup.string().required('Must provide a graduation month'),
+  graduationYear: yup.string().required('Must provide a graduation year'),
+  hackathonExperience: yup
+    .string()
+    .required('Must provide hackathon experience'),
+  teamStatus: yup.string().required('Must provide a team status'),
+  tshirtSize: yup.string().required('Must provide a tshirt size'),
+  dietaryRestrictions: yup
+    .array()
+    .required('Must provide dietary restrictions'),
+  referralSource: yup.array().required('Must provide a referral source'),
+  photoConsent: yup.boolean().oneOf([true], 'Must agree to photo consent'),
+  inPersonConsent: yup
+    .boolean()
+    .oneOf([true], 'Must agree to in-person attendance'),
+  codeOfConductConsent: yup
+    .boolean()
+    .oneOf([true], 'Must agree to code of conduct consent'),
 });

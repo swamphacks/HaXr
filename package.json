@@ -28,17 +28,21 @@
     "@prisma/adapter-neon": "^5.13.0",
     "@prisma/client": "^5.13.0",
     "@tabler/icons-react": "^3.2.0",
+    "@vercel/blob": "^0.26.0",
     "@zxing/browser": "^0.1.5",
     "clsx": "^2.1.1",
+    "crypto-js": "^4.2.0",
     "dayjs": "^1.11.11",
-    "framer-motion": "^11.1.9",
+    "framer-motion": "^11.11.11",
     "http-status-codes": "^2.3.0",
+    "imask": "^7.6.1",
     "mantine-react-table": "^2.0.0-beta.5",
     "next": "14.2.2",
     "next-auth": "^5.0.0-beta.17",
     "prettier": "^3.2.5",
     "react": "^18",
     "react-dom": "^18",
+    "react-imask": "^7.6.1",
     "superjson": "^2.2.1",
     "swr": "^2.2.5",
     "yup": "^1.4.0"
@@ -58,6 +62,6 @@
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
-    "vercel": "^34.2.0"
+    "vercel": "^34.4.0"
   }
 }

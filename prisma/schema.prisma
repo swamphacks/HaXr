@@ -24,12 +24,20 @@ model User {
   school        String?
   image         String?
   role          Role      @default(Hacker)
+  accounts      Account[]
+  sessions      Session[]
 
-  accounts Account[]
-  sessions Session[]
+  // Optional
+  bio         String?  @db.Text
+  githubURL   String?
+  linkedinURL String?
+  skills      String[]
+
+  resumeUrl String?
 
   applications Application[]
-  attendees    Attendee[]
+
+  attendees Attendee[]
 }
 
 model Account {
@@ -88,8 +96,8 @@ model Competition {
   confirm_by       DateTime
 
   interestedPeople InterestedPerson[]
-  applications     Application[]
   attendees        Attendee[]
+  applications     Application[]
 }
 
 model InterestedPerson {
@@ -121,13 +129,14 @@ model Application {
   id              String @id @default(cuid())
   competitionCode String
   userId          String
-  status          Status @default(STARTED)
 
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  content Json
+
+  status      Status      @default(STARTED)
   competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
-  attendee    Attendee?
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  @@unique([competitionCode, userId], name: "compCode_userId")
+  @@unique([competitionCode, userId])
 }
 
 model Attendee {
@@ -139,7 +148,6 @@ model Attendee {
 
   competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([competitionCode, userId], name: "compCode_userId")
 }
