@@ -1,5 +1,11 @@
 'use server';
-import { Application, Attendee, Status, User } from '@prisma/client';
+import {
+  Application,
+  Attendee,
+  Competition,
+  Status,
+  User,
+} from '@prisma/client';
 import prisma from '@/prisma';
 import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 
@@ -15,6 +21,33 @@ export async function getApplication(
       },
     },
   });
+}
+
+export interface CompetitionWithApplication extends Competition {
+  applications: undefined;
+  application: Application | null;
+}
+
+export async function getCompetitionsWithApplications(
+  userId: string
+): Promise<CompetitionWithApplication[]> {
+  return prisma.competition
+    .findMany({
+      include: {
+        applications: {
+          where: {
+            userId,
+          },
+        },
+      },
+    })
+    .then((compWithApp) =>
+      compWithApp.map((comp) => ({
+        ...comp,
+        applications: undefined,
+        application: comp.applications.at(0) ?? null,
+      }))
+    );
 }
 
 export async function getApplicants(

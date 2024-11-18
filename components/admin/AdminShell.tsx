@@ -1,10 +1,5 @@
 'use client';
-import React, {
-  createContext,
-  PropsWithChildren,
-  useEffect,
-  useState,
-} from 'react';
+import React, { PropsWithChildren } from 'react';
 import {
   AppShell,
   AppShellHeader,
@@ -12,14 +7,10 @@ import {
   AppShellNavbar,
   AppShellSection,
   Burger,
-  Center,
-  Divider,
   Group,
   Image,
-  Loader,
   NavLink,
   ScrollArea,
-  Select,
   Text,
   Title,
 } from '@mantine/core';
@@ -38,7 +29,7 @@ import {
   IconStatusChange,
   IconTicket,
 } from '@tabler/icons-react';
-import UserProfile from '@/components/UserAvatar';
+import UserAvatar from '@/components/UserAvatar';
 import { Session } from 'next-auth';
 import { useDisclosure } from '@mantine/hooks';
 import { Competition } from '@prisma/client';
@@ -94,7 +85,7 @@ export default function AdminShell({
             <Title order={2}>{comp.name}</Title>
           </Group>
 
-          <UserProfile session={session} />
+          <UserAvatar session={session} />
         </Group>
       </AppShellHeader>
 
