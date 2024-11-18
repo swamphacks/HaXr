@@ -2,7 +2,7 @@
 
 import prisma from '@/prisma';
 import { Competition } from '@prisma/client';
-import { competitionConfigurationSchema } from '@/schemas';
+import { competitionConfigurationSchema } from '@/schemas/admin';
 
 export async function getCompetitions(): Promise<Competition[]> {
   return prisma.competition.findMany({

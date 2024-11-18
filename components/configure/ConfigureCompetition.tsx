@@ -29,7 +29,7 @@ import { DateInput, DateTimePicker } from '@mantine/dates';
 import { Competition } from '@prisma/client';
 import { updateCompetitionConfig } from '@/actions/competition';
 import { notifications } from '@mantine/notifications';
-import { competitionConfigurationSchema } from '@/schemas';
+import { competitionConfigurationSchema } from '@/schemas/admin';
 
 interface Props {
   competition: Competition;

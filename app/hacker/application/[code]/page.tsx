@@ -28,7 +28,7 @@ import { Competition, Status, User } from '@prisma/client';
 import { useEffect, useState } from 'react';
 import { IconArrowLeft, IconCheck, IconFileUpload } from '@tabler/icons-react';
 import { useForm, yupResolver } from '@mantine/form';
-import { applicationConfigurationSchema } from '@/schemas';
+import { applicationSchema } from '@/schemas/hacker';
 import { IMaskInput } from 'react-imask';
 import { notifications } from '@mantine/notifications';
 import { uploadResume } from '@/actions/storage';
@@ -38,7 +38,7 @@ import {
   setApplicationStatus,
 } from '@/actions/applications';
 import { useSession } from 'next-auth/react';
-import { updateUser, updateUserProfile } from '@/actions/user';
+import { updateUser } from '@/actions/user';
 import Image from 'next/image';
 
 export interface HackerApplicationFormValues {
@@ -100,7 +100,7 @@ export default function HackerApplication({
       codeOfConductConsent: false,
     },
     mode: 'uncontrolled',
-    validate: yupResolver(applicationConfigurationSchema),
+    validate: yupResolver(applicationSchema),
     transformValues: (values) => ({
       ...values,
       // Clean phone number

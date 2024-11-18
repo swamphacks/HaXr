@@ -1,4 +1,4 @@
-import { profileConfigurationScheme } from '@/schemas';
+import { profileSchema } from '@/schemas/profile';
 import schoolData from '@/public/data/schools.json';
 import {
   Alert,
@@ -95,7 +95,7 @@ export default function Account() {
   const form = useForm<EditableUser>({
     mode: 'uncontrolled',
     initialValues: stripUser(session.user) ?? undefined,
-    validate: yupResolver(profileConfigurationScheme),
+    validate: yupResolver(profileSchema),
     onValuesChange: (values: EditableUser) => {
       setDirty(true);
     },
