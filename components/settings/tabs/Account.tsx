@@ -335,7 +335,7 @@ export default function Account() {
 
               <TextInput
                 leftSection={<IconBrandGithub />}
-                label='Github URL'
+                label='GitHub URL'
                 key={form.key('githubURL')}
                 placeholder='https://github.com/albertgator'
                 {...form.getInputProps('githubURL')}
@@ -344,7 +344,7 @@ export default function Account() {
 
               <TextInput
                 leftSection={<IconBrandLinkedin />}
-                label='Linkedin URL'
+                label='LinkedIn URL'
                 placeholder='https://linkedin.com/in/albertgator'
                 key={form.key('linkedinURL')}
                 {...form.getInputProps('linkedinURL')}
