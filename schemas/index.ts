@@ -16,8 +16,18 @@ export const profileConfigurationScheme = yup.object().shape({
       }
     ),
   bio: yup.string().max(500, 'Keep it under 500 characters.'),
-  githubURL: yup.string().url('Please enter a valid url.'),
-  linkedinURL: yup.string().url('Please enter a valid url.'),
+  githubURL: yup
+    .string()
+    .url('Please enter a valid url.')
+    .matches(/github.com/, {
+      message: 'Please enter a valid GitHub URL.',
+    }),
+  linkedinURL: yup
+    .string()
+    .url('Please enter a valid url.')
+    .matches(/linkedin.com/, {
+      message: 'Please enter a valid LinkedIn URL.',
+    }),
 });
 
 export const competitionConfigurationSchema = yup.object().shape({
