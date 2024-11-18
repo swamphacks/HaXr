@@ -312,7 +312,6 @@ export default function Account() {
                 <Textarea
                   label='Bio'
                   key={form.key('bio')}
-                  description='(optional)'
                   placeholder='Ex. First Year CS @ UF'
                   w='100%'
                   autosize
@@ -326,7 +325,7 @@ export default function Account() {
               <TagsInput
                 w='100%'
                 label='Skills'
-                placeholder='Type here and hit enter...'
+                placeholder='Enter skills here...'
                 splitChars={[]}
                 maxTags={15}
                 key={form.key('skills')}
