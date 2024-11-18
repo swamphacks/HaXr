@@ -22,15 +22,19 @@ export const profileSchema = yup.object().shape({
     .transform((v) => (v ? v : null))
     .nullable()
     .url('Please enter a valid url.')
-    .matches(/github.com/, {
-      message: 'Please enter a valid GitHub URL.',
-    }),
+    .test(
+      'is-github-url',
+      'Please enter a valid GitHub URL.',
+      (v) => !v || v.includes('github.com')
+    ),
   linkedinURL: yup // Must be empty or a valid LinkedIn URL
     .string()
     .transform((v) => (v ? v : null))
     .nullable()
     .url('Please enter a valid url.')
-    .matches(/linkedin.com/, {
-      message: 'Please enter a valid LinkedIn URL.',
-    }),
+    .test(
+      'is-linkedin-url',
+      'Please enter a valid LinkedIn URL.',
+      (v) => !v || v.includes('linkedin.com')
+    ),
 });
