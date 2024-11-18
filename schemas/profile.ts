@@ -17,14 +17,18 @@ export const profileSchema = yup.object().shape({
       }
     ),
   bio: yup.string().max(500, 'Keep it under 500 characters.'),
-  githubURL: yup
+  githubURL: yup // Must be empty or a valid GitHub URL
     .string()
+    .transform((v) => (v ? v : null))
+    .nullable()
     .url('Please enter a valid url.')
     .matches(/github.com/, {
       message: 'Please enter a valid GitHub URL.',
     }),
-  linkedinURL: yup
+  linkedinURL: yup // Must be empty or a valid LinkedIn URL
     .string()
+    .transform((v) => (v ? v : null))
+    .nullable()
     .url('Please enter a valid url.')
     .matches(/linkedin.com/, {
       message: 'Please enter a valid LinkedIn URL.',
