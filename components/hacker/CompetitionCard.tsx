@@ -29,6 +29,9 @@ export default function CompetitionCard({
     name,
     description,
     location,
+    apply_open, // date
+    apply_close, //dat
+    decision_release, // date
     start_date,
     end_date,
     application,
@@ -102,6 +105,19 @@ export default function CompetitionCard({
       </Button>
     ),
   };
+
+  let status = application?.status || 'NOT_STARTED';
+  const now = new Date();
+
+  // Hidden during review period
+  if (now > apply_open && now < apply_close) {
+    if (
+      status === Status.ACCEPTED ||
+      status === Status.WAITLISTED ||
+      status === Status.REJECTED
+    )
+      status = Status.APPLIED;
+  }
 
   return (
     <Card w='100%'>
