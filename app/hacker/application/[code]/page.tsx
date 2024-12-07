@@ -119,6 +119,23 @@ export default function HackerApplication({
   useEffect(() => {
     const fetchCompetition = async () => {
       const competitionData = await getCompetition(code);
+
+      if (
+        competitionData &&
+        new Date(competitionData.apply_close) < new Date()
+      ) {
+        notifications.show({
+          title: 'Application Closed',
+          message:
+            'Sorry, but applications for this hackathon have closed. Please check back for future events!',
+          color: 'red',
+        });
+
+        // redirect
+        window.location.href = '/hacker';
+        return;
+      }
+
       setCompetition(competitionData);
     };
 
