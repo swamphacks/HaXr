@@ -109,14 +109,11 @@ export default function CompetitionCard({
   let status: Status | 'NOT_STARTED' = application?.status || 'NOT_STARTED';
   const now = new Date();
 
-  // Hidden during review period
+  // Review period
   if (now > apply_open && now < apply_close) {
-    if (
-      status === Status.ACCEPTED ||
-      status === Status.WAITLISTED ||
-      status === Status.REJECTED
-    )
-      status = Status.APPLIED;
+    if (status === 'NOT_STARTED' || status === Status.STARTED)
+      status = Status.NOT_ATTENDING;
+    else status = Status.APPLIED; // Hide
   }
 
   return (
