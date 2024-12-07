@@ -106,7 +106,7 @@ export default function CompetitionCard({
     ),
   };
 
-  let status = application?.status || 'NOT_STARTED';
+  let status: Status | 'NOT_STARTED' = application?.status || 'NOT_STARTED';
   const now = new Date();
 
   // Hidden during review period
@@ -143,7 +143,7 @@ export default function CompetitionCard({
           </Group>
         </Stack>
 
-        {StatusButton[application?.status || 'NOT_STARTED']}
+        {StatusButton[status]}
       </Group>
     </Card>
   );
