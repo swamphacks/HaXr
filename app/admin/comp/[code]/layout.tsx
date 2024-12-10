@@ -3,6 +3,7 @@ import AdminShell from '@/components/admin/AdminShell';
 import { auth } from '@/auth';
 import { getCompetitions } from '@/actions/competition';
 import { redirect } from 'next/navigation';
+import { ApplicationData, getApplicationData } from '@/actions/applications';
 
 interface Props {
   params: {
@@ -16,11 +17,20 @@ export default async function AdminLayout({
 }: PropsWithChildren<Props>) {
   const session = await auth();
 
+  // Get competitions
   const competitions = await getCompetitions();
   if (!competitions.some((c) => c.code === code)) redirect('/admin/comp');
 
+  // Get application data (e.g # of applications, # reviewed, etc)
+  const applicationData: ApplicationData = await getApplicationData(code);
+
   return (
-    <AdminShell session={session!} competitions={competitions} code={code}>
+    <AdminShell
+      session={session!}
+      competitions={competitions}
+      code={code}
+      applicationData={applicationData}
+    >
       {children}
     </AdminShell>
   );

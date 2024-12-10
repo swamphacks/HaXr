@@ -9,7 +9,13 @@ const prismaClientSingleton = () => {
   });
   const adapter = new PrismaNeon(neon);
 
-  return new PrismaClient({ adapter });
+  return new PrismaClient({
+    adapter,
+    log:
+      process.env.NODE_ENV === 'development'
+        ? ['query', 'error', 'warn']
+        : ['error'],
+  });
 };
 
 declare const globalThis: {

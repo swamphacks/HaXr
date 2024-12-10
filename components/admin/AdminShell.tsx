@@ -35,17 +35,20 @@ import { useDisclosure } from '@mantine/hooks';
 import { Competition } from '@prisma/client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ApplicationData } from '@/actions/applications';
 
 interface Props {
   session: Session;
   competitions: Competition[];
   code: string;
+  applicationData: ApplicationData;
 }
 
 export default function AdminShell({
   session,
   competitions,
   code,
+  applicationData,
   children,
 }: PropsWithChildren<Props>) {
   const [opened, { toggle }] = useDisclosure();
@@ -114,16 +117,8 @@ export default function AdminShell({
           >
             <NavLink
               component={Link}
-              label='Edit Form'
-              leftSection={<IconEdit size='1rem' />}
-              href={`/admin/comp/${safeCode}/apps/edit-form`}
-              active={pathname === `/admin/comp/${safeCode}/apps/edit-form`}
-            />
-
-            <NavLink
-              component={Link}
               label='Review'
-              description='75% reviewed (57 remaining)'
+              description={`${((applicationData.reviewed / applicationData.total) * 100).toFixed(0)}% reviewed, ${applicationData.total - applicationData.reviewed} remaining`}
               leftSection={<IconStatusChange size='1rem' />}
               href={`/admin/comp/${safeCode}/apps`}
               active={pathname === `/admin/comp/${safeCode}/apps`}

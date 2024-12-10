@@ -115,3 +115,33 @@ export const setApplicationStatus = async (
     },
   });
 };
+
+// Application data for the admin dashboard
+export interface ApplicationData {
+  total: number;
+  reviewed: number;
+}
+
+export async function getApplicationData(
+  competitionCode: string
+): Promise<ApplicationData> {
+  const total = await prisma.application.count({
+    where: {
+      competitionCode,
+    },
+  });
+
+  const reviewed = await prisma.application.count({
+    where: {
+      competitionCode,
+      status: {
+        notIn: ['STARTED', 'APPLIED'],
+      },
+    },
+  });
+
+  return {
+    total,
+    reviewed,
+  };
+}
