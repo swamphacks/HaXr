@@ -251,13 +251,11 @@ export default function HackerApplication({
       { ...values, resumeUrl },
       session.user.id,
       competition.code
-    );
-
-    await setApplicationStatus(
-      session.user.id,
-      competition.code,
-      Status.APPLIED
-    );
+    )
+      .then(async ({ id }) => {
+        await setApplicationStatus(id, Status.APPLIED);
+      })
+      .catch(console.error);
 
     return resumeUrl;
   };
