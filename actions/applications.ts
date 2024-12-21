@@ -98,17 +98,10 @@ export const createApplication = async (
   }
 };
 
-export const setApplicationStatus = async (
-  userId: string,
-  competitionCode: string,
-  status: Status
-) => {
+export const setApplicationStatus = async (appId: string, status: Status) => {
   return prisma.application.update({
     where: {
-      competitionCode_userId: {
-        competitionCode,
-        userId,
-      },
+      id: appId,
     },
     data: {
       status,

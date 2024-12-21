@@ -1,7 +1,10 @@
 import React, { PropsWithChildren } from 'react';
 import AdminShell from '@/components/admin/AdminShell';
 import { auth } from '@/auth';
-import { getCompetitions } from '@/actions/competition';
+import {
+  getCompetitions,
+  getCompetitionsWithStats,
+} from '@/actions/competition';
 import { redirect } from 'next/navigation';
 
 interface Props {
@@ -16,11 +19,16 @@ export default async function AdminLayout({
 }: PropsWithChildren<Props>) {
   const session = await auth();
 
-  const competitions = await getCompetitions();
-  if (!competitions.some((c) => c.code === code)) redirect('/admin/comp');
+  const competitionsWithStats = await getCompetitionsWithStats();
+  if (!competitionsWithStats.some((c) => c.code === code))
+    redirect('/admin/comp');
 
   return (
-    <AdminShell session={session!} competitions={competitions} code={code}>
+    <AdminShell
+      session={session!}
+      competitions={competitionsWithStats}
+      code={code}
+    >
       {children}
     </AdminShell>
   );

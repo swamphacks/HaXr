@@ -32,13 +32,13 @@ import {
 import UserAvatar from '@/components/UserAvatar';
 import { Session } from 'next-auth';
 import { useDisclosure } from '@mantine/hooks';
-import { Competition } from '@prisma/client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { CompetitionWithStats } from '@/actions/competition';
 
 interface Props {
   session: Session;
-  competitions: Competition[];
+  competitions: CompetitionWithStats[];
   code: string;
 }
 
@@ -52,6 +52,9 @@ export default function AdminShell({
   const pathname = usePathname();
 
   const comp = competitions.find((c) => c.code === code)!;
+  const percentAppsReviewed = Math.round(
+    ((comp.stats.total - comp.stats.remaining) / comp.stats.total) * 100
+  );
 
   const safeCode = encodeURIComponent(code);
 
@@ -123,7 +126,7 @@ export default function AdminShell({
             <NavLink
               component={Link}
               label='Review'
-              description='75% reviewed (57 remaining)'
+              description={`${percentAppsReviewed}% reviewed (${comp.stats.remaining} remaining)`}
               leftSection={<IconStatusChange size='1rem' />}
               href={`/admin/comp/${safeCode}/apps`}
               active={pathname === `/admin/comp/${safeCode}/apps`}
