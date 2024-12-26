@@ -40,6 +40,7 @@ import {
 import { useSession } from 'next-auth/react';
 import { updateUser } from '@/actions/user';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export interface HackerApplicationFormValues {
   firstName: string;
@@ -76,6 +77,7 @@ export default function HackerApplication({
   const [processing, setProcessing] = useState(false);
   const mobile = useMediaQuery('(max-width: 50em)');
   const { data: session, update } = useSession();
+  const router = useRouter();
 
   const form = useForm({
     initialValues: {
@@ -132,7 +134,7 @@ export default function HackerApplication({
         });
 
         // redirect
-        window.location.href = '/hacker';
+        router.push('/hacker');
         return;
       }
 
@@ -148,7 +150,7 @@ export default function HackerApplication({
 
     fetchCompetition();
     fetchApplication();
-  }, [code, session?.user?.id]);
+  }, [code, session?.user?.id, router]);
 
   const onSubmit = async (values: typeof form.values) => {
     if (!session?.user?.id || !competition?.code) {
