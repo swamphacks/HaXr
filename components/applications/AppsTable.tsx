@@ -3,12 +3,14 @@ import { Application, Status, User } from '@prisma/client';
 import {
   MantineReactTable,
   MRT_ColumnDef,
+  MRT_RowSelectionState,
   useMantineReactTable,
 } from 'mantine-react-table';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
-import { Anchor } from '@mantine/core';
+import { Anchor, Button, Menu } from '@mantine/core';
 import { setApplicationStatus } from '@/actions/applications';
+import { IconChevronDown } from '@tabler/icons-react';
 
 type TypedApplicants = Omit<Application, 'content'> & {
   content: HackerApplicationFormValues;
@@ -88,6 +90,43 @@ export default function AppsTable({ applicants }: Props) {
     enableColumnOrdering: true,
     initialState: {
       density: 'xs',
+    },
+    enableRowSelection: true,
+    renderTopToolbarCustomActions: ({ table }) => {
+      const getSelectedAppIds = () =>
+        table.getSelectedRowModel().rows.map((r) => r.original.id);
+
+      return (
+        <Menu>
+          <Menu.Target>
+            <Button rightSection={<IconChevronDown size={18} />}>Status</Button>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            {Object.values(Status).map((status) => (
+              <Menu.Item
+                key={status}
+                tt='capitalize'
+                onClick={async () => {
+                  const update = Promise.all(
+                    getSelectedAppIds().map((appId) =>
+                      setApplicationStatus(appId, status).then(() =>
+                        console.log(appId)
+                      )
+                    )
+                  );
+
+                  alert('Updating statuses... (wait for done alert)');
+                  await update;
+                  alert('Done updating statuses');
+                }}
+              >
+                {status}
+              </Menu.Item>
+            ))}
+          </Menu.Dropdown>
+        </Menu>
+      );
     },
     // enableRowActions: true,
     // renderRowActions: ({ row }) => (
