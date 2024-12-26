@@ -11,6 +11,7 @@ import {
   IconZoomMoney,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
+import { notifications } from '@mantine/notifications';
 
 interface Props {
   competition: CompetitionWithApplication;
@@ -29,9 +30,8 @@ export default function CompetitionCard({
     name,
     description,
     location,
-    apply_open, // date
-    apply_close, //dat
-    decision_release, // date
+    apply_close,
+    decision_release,
     start_date,
     end_date,
     application,
@@ -68,7 +68,14 @@ export default function CompetitionCard({
         color='yellow'
         variant='light'
         rightSection={<IconZoomMoney />}
-        onClick={() => router.push(`/hacker/application/${code}`)}
+        onClick={() =>
+          notifications.show({
+            title: 'Application Submitted',
+            color: 'yellow',
+            message:
+              'Your application has been submitted successfully and is under review. You will be notified of the decision by the release date.',
+          })
+        }
       >
         Under Review
       </Button>
