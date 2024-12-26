@@ -30,14 +30,16 @@
     "@tabler/icons-react": "^3.2.0",
     "@vercel/blob": "^0.26.0",
     "@zxing/browser": "^0.1.5",
+    "aws-sdk": "^2.1692.0",
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.11",
+    "dotenv": "^16.4.7",
     "framer-motion": "^11.11.11",
     "http-status-codes": "^2.3.0",
     "imask": "^7.6.1",
     "mantine-react-table": "^2.0.0-beta.5",
-    "next": "14.2.2",
+    "next": "^14.2.21",
     "next-auth": "^5.0.0-beta.17",
     "prettier": "^3.2.5",
     "react": "^18",
@@ -45,6 +47,7 @@
     "react-imask": "^7.6.1",
     "superjson": "^2.2.1",
     "swr": "^2.2.5",
+    "template-file": "^6.0.1",
     "yup": "^1.4.0"
   },
   "devDependencies": {
@@ -62,6 +65,6 @@
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
-    "vercel": "^34.4.0"
+    "vercel": "^32.3.0"
   }
 }
