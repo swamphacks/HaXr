@@ -25,10 +25,6 @@ export default auth((req) => {
   if (pathname.startsWith('/admin') && !isAdmin)
     return RedirectResponse(req, '/hacker');
 
-  if (pathname.startsWith('/hacker') && isAdmin) {
-    return RedirectResponse(req, '/admin');
-  }
-
   /* Redirects */
 
   // If root, send to respective dashboard

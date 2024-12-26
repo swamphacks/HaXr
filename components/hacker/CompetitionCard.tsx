@@ -109,16 +109,16 @@ export default function CompetitionCard({
   let status: Status | 'NOT_STARTED' = application?.status || 'NOT_STARTED';
   const now = new Date();
 
-  // If before the release date, hide the application status
-  if (now < decision_release) {
-    // If after the application close date, disallow applying
-    if (
-      now > apply_close &&
-      (status === 'NOT_STARTED' || status === Status.STARTED)
-    )
-      status = Status.NOT_ATTENDING;
-    else if (status !== Status.APPLIED) status = 'APPLIED';
-  }
+  // Reject incomplete applications after the deadline
+  if (now > apply_close && ['NOT_STARTED', Status.STARTED].includes(status))
+    status = Status.REJECTED;
+
+  // Hide decision until release
+  if (
+    now < decision_release &&
+    !['NOT_STARTED', Status.STARTED, Status.APPLIED].includes(status)
+  )
+    status = Status.APPLIED;
 
   return (
     <Card w='100%'>
