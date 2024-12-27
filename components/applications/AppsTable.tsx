@@ -3,10 +3,9 @@ import { Application, Status, User } from '@prisma/client';
 import {
   MantineReactTable,
   MRT_ColumnDef,
-  MRT_RowSelectionState,
   useMantineReactTable,
 } from 'mantine-react-table';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 import { Anchor, Button, Menu } from '@mantine/core';
 import { setApplicationStatus } from '@/actions/applications';
