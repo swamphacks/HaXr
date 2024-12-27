@@ -1,13 +1,19 @@
-import { CompetitionWithApplication } from '@/actions/applications';
-import { Button, Card, Group, Stack, Text, Title } from '@mantine/core';
+import {
+  CompetitionWithApplication,
+  confirmAttendance,
+} from '@/actions/applications';
+import { Button, Card, Group, Menu, Stack, Text, Title } from '@mantine/core';
 import { Status } from '@prisma/client';
 import {
   IconCalendar,
+  IconCheck,
+  IconChevronDown,
   IconChevronRight,
-  IconCircleX,
   IconConfetti,
+  IconHourglass,
   IconMapPin,
   IconMoodSad,
+  IconX,
   IconZoomMoney,
 } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
@@ -32,6 +38,7 @@ export default function CompetitionCard({
     location,
     apply_close,
     decision_release,
+    confirm_by,
     start_date,
     end_date,
     application,
@@ -82,23 +89,96 @@ export default function CompetitionCard({
     ),
 
     [Status.REJECTED]: (
-      <Button color='red' variant='light' rightSection={<IconCircleX />}>
+      <Button
+        color='red'
+        variant='light'
+        onClick={() =>
+          notifications.show({
+            title: 'Rejected',
+            color: 'red',
+            message:
+              'We regret to inform you that your application has been rejected. Thank you for applying and we hope to see you at future events!',
+          })
+        }
+      >
         Rejected
       </Button>
     ),
     [Status.WAITLISTED]: (
-      <Button color='green' rightSection={<IconChevronRight />}>
-        Continue
+      <Button
+        color='orange'
+        variant='light'
+        rightSection={<IconChevronRight />}
+        onClick={() =>
+          notifications.show({
+            title: 'Waitlisted',
+            icon: <IconHourglass />,
+            color: 'orange',
+            message:
+              'You have been placed on the waitlist. You will be notified if a spot becomes available.',
+          })
+        }
+      >
+        Waitlisted
       </Button>
     ),
     [Status.ACCEPTED]: (
-      <Button
-        color='green'
-        rightSection={<IconChevronRight />}
-        onClick={() => console.log('Please accept the invitation')}
-      >
-        Accepted
-      </Button>
+      <>
+        <Button color='green' variant='light'>
+          Accepted 🎉
+        </Button>
+
+        <Menu trigger='click-hover' withArrow>
+          <Menu.Target>
+            <Button color='green' rightSection={<IconChevronDown />}>
+              Confirm Attendance
+            </Button>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Item
+              color='green'
+              leftSection={<IconCheck />}
+              onClick={async () => {
+                if (!application) return;
+                await confirmAttendance(application.id, true);
+
+                notifications.show({
+                  title: 'Attendance Confirmed',
+                  icon: <IconConfetti />,
+                  color: 'green',
+                  message:
+                    'Thank you for confirming your attendance. We look forward to seeing you at the event! Be sure to check your email for more information.',
+                });
+
+                router.refresh();
+              }}
+            >
+              Attending
+            </Menu.Item>
+
+            <Menu.Item
+              color='red'
+              leftSection={<IconX />}
+              onClick={async () => {
+                if (!application) return;
+                await confirmAttendance(application.id, false);
+
+                notifications.show({
+                  title: 'Attendance Declined',
+                  color: 'red',
+                  message:
+                    'We are sorry to hear that you cannot attend. Thank you for applying and we hope to see you at future events!',
+                });
+
+                router.refresh();
+              }}
+            >
+              Not Attending
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </>
     ),
 
     [Status.NOT_ATTENDING]: (
@@ -116,16 +196,18 @@ export default function CompetitionCard({
   let status: Status | 'NOT_STARTED' = application?.status || 'NOT_STARTED';
   const now = new Date();
 
-  // Reject incomplete applications after the deadline
+  // People that did not apply get will not be attending
+  // Also, hide any advanced statuses until release date
+  // Lastly, if it's past the confirm by date, set to not attending
   if (now > apply_close && ['NOT_STARTED', Status.STARTED].includes(status))
-    status = Status.REJECTED;
-
-  // Hide decision until release
-  if (
+    status = Status.NOT_ATTENDING;
+  else if (
     now < decision_release &&
     !['NOT_STARTED', Status.STARTED, Status.APPLIED].includes(status)
   )
     status = Status.APPLIED;
+  else if (now > confirm_by && status === Status.ACCEPTED)
+    status = Status.NOT_ATTENDING;
 
   return (
     <Card w='100%'>

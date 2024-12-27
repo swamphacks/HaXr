@@ -108,3 +108,15 @@ export const setApplicationStatus = async (appId: string, status: Status) => {
     },
   });
 };
+
+export const confirmAttendance = async (appId: string, attending: boolean) => {
+  return prisma.application.update({
+    where: {
+      id: appId,
+      status: Status.ACCEPTED, // prevent changing status if not accepted
+    },
+    data: {
+      status: attending ? Status.ATTENDING : Status.NOT_ATTENDING,
+    },
+  });
+};
