@@ -41,13 +41,15 @@ export async function getCompetitionsWithStats(): Promise<
   return getCompetitions().then((comps) =>
     Promise.all(
       comps.map(async (c) => {
-        const remaining = toReview.find((a) => a.competitionCode === c.code)!
-            ._count._all,
-          total = totals.find((a) => a.competitionCode === c.code)!._count._all;
+        // if (!toReview.find((a) => a.competitionCode === c.code))
+        //   console.error(`No applications for ${c.code}`);
+        // const remaining = toReview.find((a) => a.competitionCode === c.code)!
+        //     ._count._all,
+        //   total = totals.find((a) => a.competitionCode === c.code)!._count._all;
 
         return {
           ...c,
-          stats: { remaining, total },
+          stats: { remaining: 69, total: 420 },
         };
       })
     )
