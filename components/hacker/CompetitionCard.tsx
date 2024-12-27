@@ -2,17 +2,29 @@ import {
   CompetitionWithApplication,
   confirmAttendance,
 } from '@/actions/applications';
-import { Button, Card, Group, Menu, Stack, Text, Title } from '@mantine/core';
+import {
+  Button,
+  Card,
+  CopyButton,
+  Group,
+  Menu,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 import { Status } from '@prisma/client';
 import {
   IconCalendar,
   IconCheck,
   IconChevronDown,
   IconChevronRight,
+  IconClipboardCheck,
   IconConfetti,
+  IconForms,
   IconHourglass,
   IconMapPin,
   IconMoodSad,
+  IconQrcode,
   IconX,
   IconZoomMoney,
 } from '@tabler/icons-react';
@@ -187,9 +199,46 @@ export default function CompetitionCard({
       </Button>
     ),
     [Status.ATTENDING]: (
-      <Button color='green' variant='light' rightSection={<IconConfetti />}>
-        Attending
-      </Button>
+      <>
+        <Button color='green' variant='light' rightSection={<IconConfetti />}>
+          Attending
+        </Button>
+
+        <Group>
+          <CopyButton value={application?.id || ''}>
+            {({ copied, copy }) => (
+              <Button
+                variant='light'
+                leftSection={copied ? <IconClipboardCheck /> : <IconForms />}
+                color={copied ? 'green' : 'gray'}
+                onClick={copy}
+              >
+                Application ID
+              </Button>
+            )}
+          </CopyButton>
+
+          <Button
+            leftSection={<IconQrcode />}
+            variant='light'
+            color='gray'
+            onClick={() =>
+              notifications.show({
+                title: 'Check-in',
+                color: 'gray',
+                message:
+                  now < start_date
+                    ? `Check-in will be available on ${formatDateTime(
+                        start_date
+                      )}.`
+                    : 'Not implemented yet.',
+              })
+            }
+          >
+            Check-in
+          </Button>
+        </Group>
+      </>
     ),
   };
 
