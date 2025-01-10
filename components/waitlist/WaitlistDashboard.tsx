@@ -4,12 +4,15 @@ import { Application, Competition, Status } from '@prisma/client';
 import AttendingScreen from './AttendingScreen';
 import IneligibleScreen from './IneligibleScreen';
 import { MAX_SEAT_CAPACITY } from '@/constants/attendance';
-import { updateWaitlistStatusAttending } from '@/actions/applications';
-import { IconCircleX } from '@tabler/icons-react';
+import { promoteFromWaitlist } from '@/actions/applications';
+import { IconCircleX, IconX } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import WaitlistEarlyScreen from './WaitlistEarlyScreen';
 import WaitlistLateScreen from './WaitlistLateScreen';
+import { PromoteError } from '@/types/waitlist';
+import { notifications } from '@mantine/notifications';
+import { getIneligibleReason } from '@/utils/waitlist/ineligible';
 interface Props {
   competition: Competition;
   statusCounts: Record<Status, number>;
@@ -21,6 +24,7 @@ const IneligibleStatuses: Status[] = [
   Status.REJECTED,
   Status.STARTED,
   Status.NOT_ATTENDING,
+  Status.ACCEPTED, // Forfeited spot
 ];
 
 export default function WaitlistDashboard({
@@ -33,37 +37,48 @@ export default function WaitlistDashboard({
   const [error, setError] = useState<string | null>(null);
 
   const onSecureSeat = async () => {
-    setError(null);
     setLoading(true);
+    setError(null);
 
     if (!userApplication) {
-      setError(
-        'We could not find your application. Please refresh the page and try again.'
-      );
+      setError('Something went wrong. Please refresh and try again.');
       setLoading(false);
       return;
     }
 
-    const { application, error } = await updateWaitlistStatusAttending(
-      competition.code,
-      userApplication?.id
-    );
+    const result = await promoteFromWaitlist(userApplication.id);
 
-    if (error) {
-      setError(error);
-      setLoading(false);
-      return;
+    if (result.status === 'error') {
+      switch (result.error) {
+        case PromoteError.INVALID_STATUS:
+          setError('Your application status is not valid.');
+          break;
+        case PromoteError.MAX_CAPACITY_REACHED:
+          setError('Sorry! The competition is full.');
+          break;
+        case PromoteError.APPLICATION_NOT_FOUND:
+          setError('Application not found.');
+          break;
+        case PromoteError.COMPETITION_NOT_FOUND:
+          setError('Competition not found.');
+          break;
+        case PromoteError.BEFORE_CONFIRMATION_DEADLINE:
+          setError('The waitlist is not open yet.');
+          break;
+        case PromoteError.AFTER_COMPETITION_START:
+          setError(
+            'The competition has already started and the waitlist is closed.'
+          );
+          break;
+        default:
+          setError('An unknown error occurred.');
+      }
+    } else {
+      // No need to setLoading(true) here, as we're refreshing the page.
+      router.refresh();
     }
 
-    if (!application) {
-      setError('Something went wrong. Please refresh the page and try.');
-      setLoading(false);
-      return;
-    }
-
-    // Everything went well
     setLoading(false);
-    router.refresh();
   };
 
   // If waitlist isn't open, show the following screen
@@ -78,12 +93,18 @@ export default function WaitlistDashboard({
     !userApplication ||
     IneligibleStatuses.includes(userApplication?.status)
   ) {
-    return (
-      <IneligibleScreen
-        competition={competition}
-        userApplication={userApplication}
-      />
-    );
+    // Redirect to /hacker with proper notification
+    notifications.show({
+      title: 'Error',
+      message: getIneligibleReason(userApplication?.status),
+      color: 'red',
+      icon: <IconX />,
+      autoClose: false,
+      withCloseButton: true,
+    });
+
+    router.replace('/hacker');
+    return null;
   }
 
   if (userApplication.status === Status.ATTENDING) {

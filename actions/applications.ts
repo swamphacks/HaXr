@@ -9,6 +9,12 @@ import {
 import prisma from '@/prisma';
 import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 import { MAX_SEAT_CAPACITY } from '@/constants/attendance';
+import {
+  eligableStatuses,
+  PromoteError,
+  PromoteFromWaitlistResponse,
+  WaitlistErrorResponse,
+} from '@/types/waitlist';
 
 export async function getApplication(
   competitionCode: string,
@@ -156,89 +162,90 @@ export const getCompetitionApplicationStats = async (
   return result;
 };
 
-interface UpdateWaitlistStatusResponse {
-  application: Application | null;
-  error: string | null;
-}
-
-// These are all statuses that should be allowed to run this action
-const eligableStatuses: Status[] = [Status.ACCEPTED, Status.WAITLISTED];
-
 /**
  * Updating waitlist status for a user, checks against constant MAX_SEAT_CAPACITY
  */
-export const updateWaitlistStatusAttending = async (
-  competitionCode: string,
+export const promoteFromWaitlist = async (
   appId: string
-): Promise<UpdateWaitlistStatusResponse> => {
-  // Make sure competition acceptances have closed
+): Promise<PromoteFromWaitlistResponse> => {
+  return prisma.$transaction(async (tx) => {
+    const application = await tx.application.findUnique({
+      where: {
+        id: appId,
+      },
+      include: {
+        competition: true,
+      },
+    });
 
-  const competition = await prisma.competition.findUnique({
-    where: {
-      code: competitionCode,
-    },
+    // Check for existance and eligibility application and competition
+    if (!application) {
+      return {
+        status: 'error',
+        error: PromoteError.APPLICATION_NOT_FOUND,
+      } as WaitlistErrorResponse;
+    }
+
+    if (!application.competition) {
+      return {
+        status: 'error',
+        error: PromoteError.COMPETITION_NOT_FOUND,
+      } as WaitlistErrorResponse;
+    }
+
+    if (!eligableStatuses.includes(application.status)) {
+      return {
+        status: 'error',
+        error: PromoteError.INVALID_STATUS,
+      } as WaitlistErrorResponse;
+    }
+
+    // Check competition timing constraints
+    const currentDate = new Date();
+
+    if (application.competition.confirm_by > currentDate) {
+      return {
+        status: 'error',
+        error: PromoteError.BEFORE_CONFIRMATION_DEADLINE,
+      } as WaitlistErrorResponse;
+    }
+
+    if (application.competition.start_date < currentDate) {
+      return {
+        status: 'error',
+        error: PromoteError.AFTER_COMPETITION_START,
+      } as WaitlistErrorResponse;
+    }
+
+    // Check if the competition MAX_SEAT_CAPACITY has been reached
+    const attendeeCount = await tx.application.count({
+      where: {
+        competitionCode: application.competition.code,
+        status: Status.ATTENDING,
+      },
+    });
+
+    if (attendeeCount >= MAX_SEAT_CAPACITY) {
+      return {
+        status: 'error',
+        error: PromoteError.MAX_CAPACITY_REACHED,
+      } as WaitlistErrorResponse;
+    }
+
+    // Update application status
+    const updatedApplication = await tx.application.update({
+      where: {
+        id: appId,
+      },
+      data: {
+        status: Status.ATTENDING,
+      },
+    });
+
+    // Return success response
+    return {
+      status: 'success',
+      updatedApplication,
+    };
   });
-
-  if (!competition) {
-    return {
-      application: null,
-      error: 'Competition not found. Please try again later.',
-    };
-  }
-
-  if (competition.confirm_by > new Date()) {
-    return {
-      application: null,
-      error: 'Waitlist is not open yet. Please try again later.',
-    };
-  }
-
-  const application = await prisma.application.findUnique({
-    where: {
-      id: appId,
-    },
-  });
-
-  if (!application) {
-    return {
-      application: null,
-      error: 'Application not found. Please try again later.',
-    };
-  }
-
-  if (!eligableStatuses.includes(application.status)) {
-    return {
-      application: null,
-      error:
-        "You can't register for this compeition right now. Refresh the page and try again.",
-    };
-  }
-
-  const attendingCount = await prisma.application.count({
-    where: {
-      competitionCode,
-      status: Status.ATTENDING,
-    },
-  });
-
-  if (attendingCount >= MAX_SEAT_CAPACITY) {
-    return {
-      application: null,
-      error: 'No seats available. Refresh the page to update the seat count.',
-    };
-  }
-
-  const updatedApp = await prisma.application.update({
-    where: {
-      id: appId,
-    },
-    data: {
-      status: Status.ATTENDING,
-    },
-  });
-
-  return {
-    application: updatedApp,
-    error: null,
-  };
 };
