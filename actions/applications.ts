@@ -160,15 +160,17 @@ export const competitionWithApplicationStatusAggregator = async (
   };
 };
 
-/**
- * Updating waitlist status for a user, checks against constant MAX_SEAT_CAPACITY
- */
-
 interface UpdateWaitlistStatusResponse {
   application: Application | null;
   error: string | null;
 }
 
+// These are all statuses that should be allowed to run this action
+const eligableStatuses: Status[] = [Status.ACCEPTED, Status.WAITLISTED];
+
+/**
+ * Updating waitlist status for a user, checks against constant MAX_SEAT_CAPACITY
+ */
 export const updateWaitlistStatusAttending = async (
   competitionCode: string,
   appId: string
@@ -205,6 +207,14 @@ export const updateWaitlistStatusAttending = async (
     return {
       application: null,
       error: 'Application not found. Please try again later.',
+    };
+  }
+
+  if (!eligableStatuses.includes(application.status)) {
+    return {
+      application: null,
+      error:
+        "You can't register for this compeition right now. Refresh the page and try again.",
     };
   }
 
