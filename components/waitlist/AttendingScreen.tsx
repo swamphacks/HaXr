@@ -42,7 +42,11 @@ export default function AttendingScreen({ competition, statusCounts }: Props) {
           <Card shadow='md' radius='md'>
             <Center p='md'>
               <Stack align='center' gap='md'>
-                <Text fw={600} size='1.5vw'>
+                <Text visibleFrom='lg' fw={600} size='1.5vw'>
+                  {MAX_SEAT_CAPACITY - (statusCounts.ATTENDING ?? 0)}
+                </Text>
+
+                <Text hiddenFrom='lg' fw={600} size='3vh'>
                   {MAX_SEAT_CAPACITY - (statusCounts.ATTENDING ?? 0)}
                 </Text>
                 <Text>seats remaining.</Text>
