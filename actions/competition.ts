@@ -2,7 +2,9 @@
 
 import prisma from '@/prisma';
 import { Competition, Status } from '@prisma/client';
-import { competitionConfigurationSchema } from '@/schemas/admin';
+import { competitionConfigurationFormSchema } from '@/schemas/admin';
+import { IconTruckReturn } from '@tabler/icons-react';
+import { get } from 'http';
 
 export async function getCompetitions(): Promise<Competition[]> {
   return prisma.competition.findMany({
@@ -68,17 +70,20 @@ export async function updateCompetitionConfig(
   code: string,
   config: Competition
 ) {
-  if (await competitionConfigurationSchema.isValid(config)) {
-    try {
-      await prisma.competition.update({
-        where: {
-          code: code,
-        },
-        data: { ...config, code }, // Persist code
-      });
+  // fine, ig
+  if (
+    (await competitionConfigurationFormSchema.isValid(config)) &&
+    (await getCompetition(code)) !== null
+  ) {
+    // we want errors that we did not handle to be thrown (5xx)
+    await prisma.competition.update({
+      where: {
+        code: code,
+      },
+      data: { ...config, code }, // Persist code
+    });
 
-      return true;
-    } catch {}
+    return true;
   }
 
   return false;
