@@ -60,7 +60,11 @@ export default function WaitlistLateScreen({ competition }: Props) {
                 We&apos;re rolling in our graves! The waitlist for{' '}
                 {competition.name} closed
               </Text>
-              <Code>{getFormattedTimeDifference(competition.confirm_by)}</Code>
+              <Code>
+                {getFormattedTimeDifference(
+                  competition.waitlist_close ?? competition.start_date
+                )}
+              </Code>
               <Text maw='100%' ta='center'>
                 ago.
               </Text>

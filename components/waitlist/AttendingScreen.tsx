@@ -19,6 +19,7 @@ import {
 } from '@tabler/icons-react';
 import { Competition, Status } from '@prisma/client';
 import { MAX_SEAT_CAPACITY } from '@/constants/attendance';
+import { getSeatsRemaining } from '@/utils/waitlist/seats';
 
 interface Props {
   competition: Competition;
@@ -43,11 +44,11 @@ export default function AttendingScreen({ competition, statusCounts }: Props) {
             <Center p='md'>
               <Stack align='center' gap='md'>
                 <Text visibleFrom='lg' fw={600} size='1.5vw'>
-                  {MAX_SEAT_CAPACITY - (statusCounts.ATTENDING ?? 0)}
+                  {getSeatsRemaining(competition, statusCounts)}
                 </Text>
 
                 <Text hiddenFrom='lg' fw={600} size='3vh'>
-                  {MAX_SEAT_CAPACITY - (statusCounts.ATTENDING ?? 0)}
+                  {getSeatsRemaining(competition, statusCounts)}
                 </Text>
                 <Text>seats remaining.</Text>
 

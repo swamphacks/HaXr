@@ -210,6 +210,26 @@ export const promoteFromWaitlist = async (
       } as WaitlistErrorResponse;
     }
 
+    if (
+      application.competition.waitlist_open &&
+      application.competition.waitlist_open > currentDate
+    ) {
+      return {
+        status: 'error',
+        error: PromoteError.BEFORE_WAITLIST_OPEN,
+      } as WaitlistErrorResponse;
+    }
+
+    if (
+      application.competition.waitlist_close &&
+      application.competition.waitlist_close < currentDate
+    ) {
+      return {
+        status: 'error',
+        error: PromoteError.AFTER_WAITLIST_CLOSE,
+      } as WaitlistErrorResponse;
+    }
+
     if (application.competition.start_date < currentDate) {
       return {
         status: 'error',
@@ -225,7 +245,8 @@ export const promoteFromWaitlist = async (
       },
     });
 
-    if (attendeeCount >= MAX_SEAT_CAPACITY) {
+    // Default to 0 seats if null
+    if (attendeeCount >= (application.competition.max_attendees ?? 0)) {
       return {
         status: 'error',
         error: PromoteError.MAX_CAPACITY_REACHED,

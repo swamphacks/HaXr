@@ -13,6 +13,7 @@ import { notifications } from '@mantine/notifications';
 import { getIneligibleReason } from '@/utils/waitlist/ineligible';
 import useCountdownTimer from '@/hooks/useCountdownTimer';
 import dynamic from 'next/dynamic';
+import { getSeatsRemaining } from '@/utils/waitlist/seats';
 
 // So hydration errors don't occur
 const WaitlistEarlyScreen = dynamic(() => import('./WaitlistEarlyScreen'), {
@@ -44,7 +45,7 @@ export default function WaitlistDashboard({
 
   // Waitlist countdown states
   const { timeLeft, countdownComplete, isInitialized } = useCountdownTimer(
-    competition.confirm_by
+    competition.waitlist_open ?? competition.confirm_by
   );
 
   const onSecureSeat = async () => {
@@ -74,12 +75,18 @@ export default function WaitlistDashboard({
           setError('Competition not found.');
           break;
         case PromoteError.BEFORE_CONFIRMATION_DEADLINE:
-          setError('The waitlist is not open yet.');
+          setError('Accepted applicants must confirm their spot first.');
           break;
         case PromoteError.AFTER_COMPETITION_START:
           setError(
             'The competition has already started and the waitlist is closed.'
           );
+          break;
+        case PromoteError.BEFORE_WAITLIST_OPEN:
+          setError('The waitlist is not open yet.');
+          break;
+        case PromoteError.AFTER_WAITLIST_CLOSE:
+          setError('The waitlist is closed.');
           break;
         default:
           setError('An unknown error occurred.');
@@ -100,7 +107,10 @@ export default function WaitlistDashboard({
   }
 
   // If competition already started, show the following screen
-  if (competition.start_date < new Date())
+  if (
+    competition.start_date < new Date() ||
+    (competition.waitlist_close && competition.waitlist_close < new Date())
+  )
     return <WaitlistLateScreen competition={competition} />;
 
   if (
@@ -134,10 +144,10 @@ export default function WaitlistDashboard({
           {/* Responseive count */}
           <Stack align='center' gap='sm'>
             <Text ta='center' fw={600} size='15vw' visibleFrom='md'>
-              {MAX_SEAT_CAPACITY - (statusCounts.ATTENDING ?? 0)}
+              {getSeatsRemaining(competition, statusCounts)}
             </Text>
             <Text ta='center' fw={600} size='25vw' hiddenFrom='md'>
-              {MAX_SEAT_CAPACITY - (statusCounts.ATTENDING ?? 0)}
+              {getSeatsRemaining(competition, statusCounts)}
             </Text>
 
             {/* Subtext */}
