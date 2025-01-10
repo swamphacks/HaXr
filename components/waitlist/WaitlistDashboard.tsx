@@ -2,17 +2,23 @@
 import { Alert, Button, Center, Container, Stack, Text } from '@mantine/core';
 import { Application, Competition, Status } from '@prisma/client';
 import AttendingScreen from './AttendingScreen';
-import IneligibleScreen from './IneligibleScreen';
 import { MAX_SEAT_CAPACITY } from '@/constants/attendance';
 import { promoteFromWaitlist } from '@/actions/applications';
 import { IconCircleX, IconX } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import WaitlistEarlyScreen from './WaitlistEarlyScreen';
 import WaitlistLateScreen from './WaitlistLateScreen';
 import { PromoteError } from '@/types/waitlist';
 import { notifications } from '@mantine/notifications';
 import { getIneligibleReason } from '@/utils/waitlist/ineligible';
+import useCountdownTimer from '@/hooks/useCountdownTimer';
+import dynamic from 'next/dynamic';
+
+// So hydration errors don't occur
+const WaitlistEarlyScreen = dynamic(() => import('./WaitlistEarlyScreen'), {
+  ssr: false,
+});
+
 interface Props {
   competition: Competition;
   statusCounts: Record<Status, number>;
@@ -35,6 +41,11 @@ export default function WaitlistDashboard({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Waitlist countdown states
+  const { timeLeft, countdownComplete, isInitialized } = useCountdownTimer(
+    competition.confirm_by
+  );
 
   const onSecureSeat = async () => {
     setLoading(true);
@@ -82,8 +93,11 @@ export default function WaitlistDashboard({
   };
 
   // If waitlist isn't open, show the following screen
-  if (competition.confirm_by > new Date())
-    return <WaitlistEarlyScreen competition={competition} />;
+  if (!countdownComplete && isInitialized) {
+    return (
+      <WaitlistEarlyScreen competition={competition} countdown={timeLeft} />
+    );
+  }
 
   // If competition already started, show the following screen
   if (competition.start_date < new Date())

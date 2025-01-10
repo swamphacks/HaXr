@@ -133,15 +133,7 @@ export default function CompetitionCard({
         color='orange'
         variant='light'
         rightSection={<IconChevronRight />}
-        onClick={() =>
-          notifications.show({
-            title: 'Waitlisted',
-            icon: <IconHourglass />,
-            color: 'orange',
-            message:
-              'You have been placed on the waitlist. You will be notified if a spot becomes available.',
-          })
-        }
+        onClick={() => router.push(`/hacker/waitlist/${code}`)}
       >
         Waitlisted
       </Button>
