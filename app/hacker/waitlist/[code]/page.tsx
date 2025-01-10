@@ -1,10 +1,11 @@
 import {
-  competitionWithApplicationStatusAggregator,
   getApplication,
+  getCompetitionApplicationStats,
 } from '@/actions/applications';
+import { getCompetition } from '@/actions/competition';
 import { auth } from '@/auth';
 import WaitlistDashboard from '@/components/waitlist/WaitlistDashboard';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 export default async function WaitlistPage({
   params: { code },
@@ -15,9 +16,12 @@ export default async function WaitlistPage({
   if (!session || !session.user) redirect('/');
 
   // Fetch competition data, application count, and user's application status
-  const { competition, statusCounts } =
-    await competitionWithApplicationStatusAggregator(code);
+  const competition = await getCompetition(code);
+  const statusCounts = await getCompetitionApplicationStats(code);
   const userApp = await getApplication(code, session.user.id);
+
+  // If competition doesn't exist, return 404
+  if (!competition) notFound();
 
   return (
     <WaitlistDashboard

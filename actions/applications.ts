@@ -122,42 +122,38 @@ export const confirmAttendance = async (appId: string, attending: boolean) => {
   });
 };
 
-interface CompetitionWithApplicationStatusAggResponse {
-  competition: Competition;
-  statusCounts: Record<Status, number>;
-}
-
-export const competitionWithApplicationStatusAggregator = async (
+/**
+ * @description Get the application stats for a competition
+ *
+ * @param code : string - The competition code you want to aggregate stats for
+ * @returns Record<Status, number> - A record of status counts for the competition
+ */
+export const getCompetitionApplicationStats = async (
   code: string
-): Promise<CompetitionWithApplicationStatusAggResponse> => {
-  const competition = await prisma.competition.findUnique({
-    where: {
-      code,
-    },
-  });
-
-  if (!competition) {
-    throw new Error('Competition not found');
-  }
-
-  const applications = await prisma.application.findMany({
+): Promise<Record<Status, number>> => {
+  // Group by status then count status field
+  const statusCounts = await prisma.application.groupBy({
+    by: ['status'],
     where: {
       competitionCode: code,
     },
+    _count: {
+      status: true,
+    },
   });
 
-  const statusCounts = applications.reduce(
-    (acc, app) => {
-      acc[app.status] = (acc[app.status] || 0) + 1;
-      return acc;
-    },
-    {} as Record<Status, number>
-  );
+  // Defaultdict of all statuses to 0
+  const result = {} as Record<Status, number>;
+  for (const status of Object.values(Status)) {
+    result[status] = 0;
+  }
 
-  return {
-    competition,
-    statusCounts,
-  };
+  // Fill in the counts
+  for (const { status, _count } of statusCounts) {
+    result[status] = _count.status;
+  }
+
+  return result;
 };
 
 interface UpdateWaitlistStatusResponse {
