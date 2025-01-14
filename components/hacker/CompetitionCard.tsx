@@ -320,7 +320,7 @@ export default function CompetitionCard({
           </Group>
         </Stack>
 
-        {StatusButton[Status.ATTENDING]}
+        {StatusButton[status]}
       </Group>
     </Card>
   );
