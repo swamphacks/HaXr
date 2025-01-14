@@ -8,8 +8,9 @@ import {
   MenuTarget,
   Stack,
   Text,
+  useMantineColorScheme,
 } from '@mantine/core';
-import { IconLogout, IconSettings } from '@tabler/icons-react';
+import { IconLogout, IconMoon2, IconSettings } from '@tabler/icons-react';
 import { serverSignOut } from '@/actions/auth';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import SettingsModal from './settings/SettingsModal';
@@ -22,6 +23,8 @@ export default function UserAvatar({ session }: Readonly<Props>) {
   const isMobile = useMediaQuery(`(max-width: 50em)`);
   const [settingsModalOpen, { open: openModal, close: closeModal }] =
     useDisclosure();
+
+  const { toggleColorScheme } = useMantineColorScheme();
 
   if (!session?.user) return null;
   const { image, firstName, lastName, email } = session.user;
@@ -36,6 +39,9 @@ export default function UserAvatar({ session }: Readonly<Props>) {
         <MenuDropdown>
           <MenuItem leftSection={<IconSettings />} onClick={openModal}>
             Settings
+          </MenuItem>
+          <MenuItem leftSection={<IconMoon2 />} onClick={toggleColorScheme}>
+            Toggle Theme
           </MenuItem>
           <MenuItem
             color='red'

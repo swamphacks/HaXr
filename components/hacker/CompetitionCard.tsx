@@ -51,6 +51,8 @@ export default function CompetitionCard({
     apply_close,
     decision_release,
     confirm_by,
+    waitlist_open,
+    waitlist_close,
     start_date,
     end_date,
     application,
@@ -61,6 +63,8 @@ export default function CompetitionCard({
   const startDateStr = formatDateTime(start_date),
     endDateStr = formatDateTime(end_date),
     sameDay = startDateStr === endDateStr;
+
+  const now = new Date();
 
   const StatusButton: Record<Status | 'NOT_STARTED', React.ReactElement> = {
     NOT_STARTED: (
@@ -116,22 +120,22 @@ export default function CompetitionCard({
         Rejected
       </Button>
     ),
-    [Status.WAITLISTED]: (
+    [Status.WAITLISTED]: !waitlist_open ? (
+      <Button color='orange' variant='light'>
+        Waitlisted
+      </Button>
+    ) : !waitlist_close || now < waitlist_close ? (
       <Button
         color='orange'
         variant='light'
         rightSection={<IconChevronRight />}
-        onClick={() =>
-          notifications.show({
-            title: 'Waitlisted',
-            icon: <IconHourglass />,
-            color: 'orange',
-            message:
-              'You have been placed on the waitlist. You will be notified if a spot becomes available.',
-          })
-        }
+        onClick={() => router.push(`/hacker/waitlist/${code}`)}
       >
-        Waitlisted
+        Waitlist Open
+      </Button>
+    ) : (
+      <Button color='orange' variant='light'>
+        Waitlist Closed
       </Button>
     ),
     [Status.ACCEPTED]: (
@@ -243,7 +247,6 @@ export default function CompetitionCard({
   };
 
   let status: Status | 'NOT_STARTED' = application?.status || 'NOT_STARTED';
-  const now = new Date();
 
   // People that did not apply get will not be attending
   // Also, hide any advanced statuses until release date

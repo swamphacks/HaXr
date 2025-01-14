@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 
-export const competitionConfigurationSchema = yup.object().shape({
+export const competitionConfigurationFormSchema = yup.object().shape({
   code: yup
     .string()
     .required('Must designate a short code identifier (e.g. "x")'),
@@ -53,4 +53,26 @@ export const competitionConfigurationSchema = yup.object().shape({
       yup.ref('start_date'),
       'Hackers must confirm attendance before the competition begins'
     ),
+  waitlist_open: yup
+    .date()
+    .nullable()
+    .min(
+      yup.ref('decision_release'),
+      'Waitlist can only `open after decisions are released'
+    ),
+  waitlist_close: yup
+    .date()
+    .nullable()
+    .min(yup.ref('waitlist_open'), 'Waitlist cannot close before it opens')
+    .when('waitlist_open', {
+      is: null,
+      then: (schema) =>
+        schema.oneOf([null], 'Waitlist cannot close without opening'),
+    }),
+  max_attendees: yup
+    .number()
+    .nullable()
+    .transform((value) => (isNaN(value) ? null : value))
+    .min(1, 'Max attendees must be positive')
+    .integer("Max attendees can't be a decimal"),
 });

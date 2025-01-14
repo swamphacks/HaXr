@@ -6,6 +6,7 @@ import {
   Button,
   Divider,
   Fieldset,
+  NumberInput,
   Stack,
   Textarea,
   TextInput,
@@ -17,9 +18,12 @@ import {
   IconCircleDashedCheck,
   IconConfetti,
   IconEye,
+  IconKeyframe,
+  IconKeyframesFilled,
   IconLink,
   IconMap,
   IconNorthStar,
+  IconUsersGroup,
   IconWriting,
   IconWritingOff,
   IconX,
@@ -29,7 +33,7 @@ import { DateInput, DateTimePicker } from '@mantine/dates';
 import { Competition } from '@prisma/client';
 import { updateCompetitionConfig } from '@/actions/competition';
 import { notifications } from '@mantine/notifications';
-import { competitionConfigurationSchema } from '@/schemas/admin';
+import { competitionConfigurationFormSchema } from '@/schemas/admin';
 
 interface Props {
   competition: Competition;
@@ -38,8 +42,12 @@ interface Props {
 export default function ConfigureCompetition({ competition }: Props) {
   const form = useForm({
     mode: 'uncontrolled',
-    validate: yupResolver(competitionConfigurationSchema),
+    validate: yupResolver(competitionConfigurationFormSchema),
     initialValues: competition,
+    transformValues: (values) => ({
+      ...values,
+      max_attendees: values.max_attendees || null,
+    }),
   });
 
   return (
@@ -149,7 +157,7 @@ export default function ConfigureCompetition({ competition }: Props) {
                 withAsterisk
                 leftSection={<IconCalendar size={16} />}
                 label='Start Date'
-                placeholder='March, 14, 2015'
+                placeholder='March 14, 2015'
                 key={form.key('start_date')}
                 {...form.getInputProps('start_date')}
               />
@@ -158,7 +166,7 @@ export default function ConfigureCompetition({ competition }: Props) {
                 withAsterisk
                 leftSection={<IconCalendar size={16} />}
                 label='End Date'
-                placeholder='March, 15, 2015'
+                placeholder='March 15, 2015'
                 key={form.key('end_date')}
                 {...form.getInputProps('end_date')}
               />
@@ -245,6 +253,39 @@ export default function ConfigureCompetition({ competition }: Props) {
                 placeholder='February 21, 2015 at 11:59 PM'
                 key={form.key('confirm_by')}
                 {...form.getInputProps('confirm_by')}
+              />
+
+              <DateTimePicker
+                clearable
+                leftSection={<IconKeyframesFilled />}
+                label='Waitlist Open'
+                description='Waitlisted applicants can be promoted to attending after this date'
+                valueFormat='MMMM D, YYYY [at] hh:mm A'
+                placeholder='February 22, 2015 at 10:00 AM'
+                key={form.key('waitlist_open')}
+                {...form.getInputProps('waitlist_open')}
+              />
+
+              <DateTimePicker
+                clearable
+                leftSection={<IconKeyframe />}
+                label='Waitlist Close'
+                description='Waitlisted applicants must secure their seat by this date'
+                valueFormat='MMMM D, YYYY [at] hh:mm A'
+                placeholder='March 14, 2015 at 7:00 AM'
+                key={form.key('waitlist_close')}
+                {...form.getInputProps('waitlist_close')}
+              />
+
+              <NumberInput
+                allowDecimal={false}
+                allowNegative={false}
+                leftSection={<IconUsersGroup />}
+                label='Max Attendees (for Waitlist)'
+                description='Waitlisted applicants can be promoted to attending only if there are seats available from this number'
+                placeholder='300'
+                key={form.key('max_attendees')}
+                {...form.getInputProps('max_attendees')}
               />
             </Stack>
           </Fieldset>

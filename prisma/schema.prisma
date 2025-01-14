@@ -94,6 +94,9 @@ model Competition {
   apply_close      DateTime
   decision_release DateTime
   confirm_by       DateTime
+  waitlist_open    DateTime?
+  waitlist_close   DateTime?
+  max_attendees    Int?
 
   interestedPeople InterestedPerson[]
   attendees        Attendee[]

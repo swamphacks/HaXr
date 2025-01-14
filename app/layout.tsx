@@ -1,8 +1,8 @@
 import './globals.css';
-import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
-import '@mantine/notifications/styles.css';
 import 'mantine-react-table/styles.css';
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
 
 import type { Metadata } from 'next';
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
