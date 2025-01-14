@@ -21,7 +21,6 @@ import {
   IconClipboardCheck,
   IconConfetti,
   IconForms,
-  IconHourglass,
   IconMapPin,
   IconMoodSad,
   IconQrcode,
@@ -41,6 +40,20 @@ const formatDateTime = (date: Date) =>
     day: 'numeric',
     year: 'numeric',
   });
+
+type DisplayStatus =
+  | Status
+  | 'NOT_STARTED'
+  | 'MISSED_APPLICATION_DEADLINE'
+  | 'MISSED_CONFIRMATION_DEADLINE';
+
+const AdvancedStatuses: DisplayStatus[] = [
+  Status.REJECTED,
+  Status.WAITLISTED,
+  Status.ACCEPTED,
+  Status.NOT_ATTENDING,
+  Status.ATTENDING,
+];
 
 export default function CompetitionCard({
   competition: {
@@ -66,7 +79,7 @@ export default function CompetitionCard({
 
   const now = new Date();
 
-  const StatusButton: Record<Status | 'NOT_STARTED', React.ReactElement> = {
+  const StatusButton: Record<DisplayStatus, React.ReactElement> = {
     NOT_STARTED: (
       <Button
         color='green'
@@ -84,6 +97,11 @@ export default function CompetitionCard({
         onClick={() => router.push(`/hacker/application/${code}`)}
       >
         Continue
+      </Button>
+    ),
+    ['MISSED_APPLICATION_DEADLINE']: (
+      <Button color='gray' variant='light'>
+        Missed Deadline
       </Button>
     ),
     [Status.APPLIED]: (
@@ -108,6 +126,7 @@ export default function CompetitionCard({
       <Button
         color='red'
         variant='light'
+        rightSection={<IconMoodSad />}
         onClick={() =>
           notifications.show({
             title: 'Rejected',
@@ -202,8 +221,27 @@ export default function CompetitionCard({
         Not Attending
       </Button>
     ),
+
+    ['MISSED_CONFIRMATION_DEADLINE']: (
+      <Button
+        color='red'
+        variant='light'
+        rightSection={<IconMoodSad />}
+        onClick={() =>
+          notifications.show({
+            title: 'Confirmation Deadline Missed',
+            color: 'red',
+            message:
+              'Unfortunately, you missed the confirmation deadline. Thank you for applying and we hope to see you at future events!',
+          })
+        }
+      >
+        Missed Confirmation Deadline
+      </Button>
+    ),
+
     [Status.ATTENDING]: (
-      <>
+      <Group justify='space-between' w='100%'>
         <Button color='green' variant='light' rightSection={<IconConfetti />}>
           Attending
         </Button>
@@ -242,24 +280,21 @@ export default function CompetitionCard({
             Check-in
           </Button>
         </Group>
-      </>
+      </Group>
     ),
   };
 
-  let status: Status | 'NOT_STARTED' = application?.status || 'NOT_STARTED';
+  let status: DisplayStatus = application?.status || 'NOT_STARTED';
 
-  // People that did not apply get will not be attending
-  // Also, hide any advanced statuses until release date
-  // Lastly, if it's past the confirm by date, set to not attending
+  // Display missed application deadline status for applications that were not submitted in time
   if (now > apply_close && ['NOT_STARTED', Status.STARTED].includes(status))
-    status = Status.NOT_ATTENDING;
-  else if (
-    now < decision_release &&
-    !['NOT_STARTED', Status.STARTED, Status.APPLIED].includes(status)
-  )
+    status = 'MISSED_APPLICATION_DEADLINE';
+  // Hide advanced statuses before decision release
+  else if (now < decision_release && AdvancedStatuses.includes(status))
     status = Status.APPLIED;
+  // Display missed confirmation deadline for accepted applications that were not confirmed in time
   else if (now > confirm_by && status === Status.ACCEPTED)
-    status = Status.NOT_ATTENDING;
+    status = 'MISSED_CONFIRMATION_DEADLINE';
 
   return (
     <Card w='100%'>
@@ -285,7 +320,7 @@ export default function CompetitionCard({
           </Group>
         </Stack>
 
-        {StatusButton[status]}
+        {StatusButton[Status.ATTENDING]}
       </Group>
     </Card>
   );
