@@ -1,5 +1,5 @@
 'use client';
-import { CountdownState } from '@/hooks/useCountdownTimer';
+import { LengthOfTime } from '@/hooks/useCountdownTimer';
 import {
   Card,
   Center,
@@ -15,7 +15,7 @@ import { IconHelpHexagon } from '@tabler/icons-react';
 
 interface Props {
   competition: Competition;
-  countdown: CountdownState | null;
+  countdown: LengthOfTime | null;
 }
 
 interface NumberCardProps {
@@ -40,43 +40,13 @@ const NumberCard = ({ num, label }: NumberCardProps) => (
   </Stack>
 );
 
-export default function WaitlistEarlyScreen({ competition, countdown }: Props) {
+export default function WaitlistScreen({ competition, countdown }: Props) {
   if (!countdown) return null;
 
   return (
     <Container h='100vh'>
       <Center h='100%'>
         <Stack align='center'>
-          <Card shadow='xl' radius='lg' maw={{ base: '90%', sm: '100%' }}>
-            <Center h='100%'>
-              <Stack align='center' w='100%' gap='xl' px='xl' py='lg'>
-                <Group
-                  visibleFrom='md'
-                  gap='5vw'
-                  align='flex-start'
-                  wrap='nowrap'
-                >
-                  <NumberCard num={countdown.days} label='Days' />
-                  <NumberCard num={countdown.hours} label='Hours' />
-                  <NumberCard num={countdown.minutes} label='Minutes' />
-                  <NumberCard num={countdown.seconds} label='Seconds' />
-                </Group>
-
-                <Group
-                  hiddenFrom='md'
-                  gap='2vh'
-                  align='flex-start'
-                  wrap='nowrap'
-                >
-                  <NumberCard num={countdown.days} label='Days' />
-                  <NumberCard num={countdown.hours} label='Hours' />
-                  <NumberCard num={countdown.minutes} label='Minutes' />
-                  <NumberCard num={countdown.seconds} label='Seconds' />
-                </Group>
-              </Stack>
-            </Center>
-          </Card>
-
           {/* Description */}
           <Stack ta='center' gap='sm' align='center' mt='xl'>
             <Group visibleFrom='md'>
@@ -94,9 +64,40 @@ export default function WaitlistEarlyScreen({ competition, countdown }: Props) {
               </Tooltip>
             </Group>
 
+            {/* Countdown */}
+            <Card shadow='xl' radius='lg' maw={{ base: '90%', sm: '100%' }}>
+              <Center h='100%'>
+                <Stack align='center' w='100%' gap='xl' px='xl' py='lg'>
+                  <Group
+                    visibleFrom='md'
+                    gap='5vw'
+                    align='flex-start'
+                    wrap='nowrap'
+                  >
+                    <NumberCard num={countdown.days} label='Days' />
+                    <NumberCard num={countdown.hours} label='Hours' />
+                    <NumberCard num={countdown.minutes} label='Minutes' />
+                    <NumberCard num={countdown.seconds} label='Seconds' />
+                  </Group>
+
+                  <Group
+                    hiddenFrom='md'
+                    gap='2vh'
+                    align='flex-start'
+                    wrap='nowrap'
+                  >
+                    <NumberCard num={countdown.days} label='Days' />
+                    <NumberCard num={countdown.hours} label='Hours' />
+                    <NumberCard num={countdown.minutes} label='Minutes' />
+                    <NumberCard num={countdown.seconds} label='Seconds' />
+                  </Group>
+                </Stack>
+              </Center>
+            </Card>
+
             <Group hiddenFrom='md'>
               <Title order={4} fw={500}>
-                {competition.name}&apos;s Waitlist opens in...
+                {competition.name}&apos;s Waitlist is opening soon!
               </Title>
             </Group>
             <Text c='gray.6'>You do not need to refresh.</Text>

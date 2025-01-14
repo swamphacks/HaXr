@@ -1,71 +1,61 @@
 import { useEffect, useState } from 'react';
 
-export interface CountdownState {
+export interface LengthOfTime {
   days: number;
   hours: number;
   minutes: number;
   seconds: number;
+  duration: number;
 }
 
+const tillNow: LengthOfTime = {
+  days: 0,
+  hours: 0,
+  minutes: 0,
+  seconds: 0,
+  duration: 0,
+};
+
+const timeTill = (date: Date): LengthOfTime => {
+  const now = new Date();
+  const diffSeconds = Math.ceil((date.getTime() - now.getTime()) / 1000);
+
+  if (diffSeconds <= 0)
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, duration: 0 };
+
+  return {
+    days: Math.floor(diffSeconds / (60 * 60 * 24)),
+    hours: Math.floor((diffSeconds / (60 * 60)) % 24),
+    minutes: Math.floor((diffSeconds / 60) % 60),
+    seconds: Math.floor(diffSeconds % 60),
+    duration: diffSeconds,
+  };
+};
+
 const useCountdownTimer = (deadline: Date) => {
-  const [countdownComplete, setCountdownComplete] = useState(false);
+  const [complete, setCountdownComplete] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const calculateTimeLeft = (): CountdownState => {
-    const now = new Date();
-    const difference = deadline.getTime() - now.getTime();
-
-    if (difference <= 0) {
-      setCountdownComplete(true);
-      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-    }
-
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((difference / (1000 * 60)) % 60);
-    const seconds = Math.floor((difference / 1000) % 60);
-
-    return { days, hours, minutes, seconds };
-  };
-
-  const [timeLeft, setTimeLeft] = useState<CountdownState>(() => {
+  const [timeLeft, setTimeLeft] = useState<LengthOfTime>(() => {
     // Initial calculation
-    const initial = calculateTimeLeft();
     setIsInitialized(true);
-    return initial;
+    return timeTill(deadline);
   });
 
   useEffect(() => {
-    // Immediate check on mount
-    const checkTime = () => {
-      const updatedTime = calculateTimeLeft();
-      setTimeLeft(updatedTime);
-
-      // Check if countdown is complete
-      const isComplete =
-        updatedTime.days === 0 &&
-        updatedTime.hours === 0 &&
-        updatedTime.minutes === 0 &&
-        updatedTime.seconds === 0;
-
-      if (isComplete) {
-        setCountdownComplete(true);
-      }
-
-      return isComplete;
-    };
-
-    // Initial check
-    const isComplete = checkTime();
-
-    // Only set interval if not complete
-    if (!isComplete) {
-      const interval = setInterval(checkTime, 1000);
-      return () => clearInterval(interval);
+    // Escape if countdown is complete
+    if (timeLeft.duration === 0) {
+      setCountdownComplete(true);
+      return;
     }
-  }, [deadline]);
 
-  return { timeLeft, countdownComplete, isInitialized };
+    // Wait some time and update the time left
+    const timer = setTimeout(() => {
+      setTimeLeft(timeTill(deadline));
+    }, 1000);
+  }, [timeLeft, deadline]);
+
+  return { timeLeft, complete, isInitialized };
 };
 
 export default useCountdownTimer;

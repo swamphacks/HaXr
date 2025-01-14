@@ -8,13 +8,7 @@ import {
 } from '@prisma/client';
 import prisma from '@/prisma';
 import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
-import { MAX_SEAT_CAPACITY } from '@/constants/attendance';
-import {
-  eligableStatuses,
-  PromoteError,
-  PromoteFromWaitlistResponse,
-  WaitlistErrorResponse,
-} from '@/types/waitlist';
+import { PromoteError, PromoteFromWaitlistResponse } from '@/types/waitlist';
 
 export async function getApplication(
   competitionCode: string,
@@ -138,6 +132,7 @@ export const getCompetitionApplicationStats = async (
   code: string
 ): Promise<Record<Status, number>> => {
   // Group by status then count status field
+  // Note: not all statuses may be present in the result
   const statusCounts = await prisma.application.groupBy({
     by: ['status'],
     where: {
@@ -148,16 +143,12 @@ export const getCompetitionApplicationStats = async (
     },
   });
 
-  // Defaultdict of all statuses to 0
-  const result = {} as Record<Status, number>;
-  for (const status of Object.values(Status)) {
-    result[status] = 0;
-  }
-
-  // Fill in the counts
-  for (const { status, _count } of statusCounts) {
-    result[status] = _count.status;
-  }
+  const result = Object.fromEntries(
+    Object.values(Status).map((status) => [
+      status,
+      statusCounts.find((s) => s.status === status)?._count.status ?? 0,
+    ])
+  ) as Record<Status, number>;
 
   return result;
 };
@@ -178,83 +169,59 @@ export const promoteFromWaitlist = async (
       },
     });
 
-    // Check for existance and eligibility application and competition
+    // Check that the application exists
     if (!application) {
       return {
         status: 'error',
         error: PromoteError.APPLICATION_NOT_FOUND,
-      } as WaitlistErrorResponse;
+      };
     }
+    const {
+      status,
+      competition: { code, waitlist_open, waitlist_close, max_attendees },
+    } = application;
 
-    if (!application.competition) {
-      return {
-        status: 'error',
-        error: PromoteError.COMPETITION_NOT_FOUND,
-      } as WaitlistErrorResponse;
-    }
-
-    if (!eligableStatuses.includes(application.status)) {
-      return {
-        status: 'error',
-        error: PromoteError.INVALID_STATUS,
-      } as WaitlistErrorResponse;
-    }
-
-    // Check competition timing constraints
-    const currentDate = new Date();
-
-    if (application.competition.confirm_by > currentDate) {
-      return {
-        status: 'error',
-        error: PromoteError.BEFORE_CONFIRMATION_DEADLINE,
-      } as WaitlistErrorResponse;
-    }
-
-    if (
-      application.competition.waitlist_open &&
-      application.competition.waitlist_open > currentDate
-    ) {
-      return {
-        status: 'error',
-        error: PromoteError.BEFORE_WAITLIST_OPEN,
-      } as WaitlistErrorResponse;
-    }
-
-    if (
-      application.competition.waitlist_close &&
-      application.competition.waitlist_close < currentDate
-    ) {
-      return {
-        status: 'error',
-        error: PromoteError.AFTER_WAITLIST_CLOSE,
-      } as WaitlistErrorResponse;
-    }
-
-    if (application.competition.start_date < currentDate) {
-      return {
-        status: 'error',
-        error: PromoteError.AFTER_COMPETITION_START,
-      } as WaitlistErrorResponse;
-    }
-
-    // Check if the competition MAX_SEAT_CAPACITY has been reached
-    const attendeeCount = await tx.application.count({
+    // (start fetching attending count)
+    const promiseAttendingCount = tx.application.count({
       where: {
-        competitionCode: application.competition.code,
+        competitionCode: code,
         status: Status.ATTENDING,
       },
     });
 
-    // Default to 0 seats if null
-    if (attendeeCount >= (application.competition.max_attendees ?? 0)) {
+    // ... and that they're on the waitlist
+    if (status !== Status.WAITLISTED) {
+      return {
+        status: 'error',
+        error: PromoteError.NOT_ON_WAITLIST,
+      };
+    }
+
+    // ... and we're taking people off the waitlist at this time
+    const now = new Date();
+    if (waitlist_open && now < waitlist_open) {
+      return {
+        status: 'error',
+        error: PromoteError.BEFORE_WAITLIST_OPEN,
+      };
+    } else if (waitlist_close && waitlist_close < now) {
+      return {
+        status: 'error',
+        error: PromoteError.AFTER_WAITLIST_CLOSE,
+      };
+    }
+
+    // ... and there's a spot for them
+    const attendingCount = await promiseAttendingCount;
+    if (max_attendees !== null && attendingCount >= max_attendees) {
       return {
         status: 'error',
         error: PromoteError.MAX_CAPACITY_REACHED,
-      } as WaitlistErrorResponse;
+      };
     }
 
     // Update application status
-    const updatedApplication = await tx.application.update({
+    await tx.application.update({
       where: {
         id: appId,
       },
@@ -266,7 +233,6 @@ export const promoteFromWaitlist = async (
     // Return success response
     return {
       status: 'success',
-      updatedApplication,
     };
   });
 };

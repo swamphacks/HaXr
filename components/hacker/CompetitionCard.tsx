@@ -51,6 +51,8 @@ export default function CompetitionCard({
     apply_close,
     decision_release,
     confirm_by,
+    waitlist_open,
+    waitlist_close,
     start_date,
     end_date,
     application,
@@ -61,9 +63,8 @@ export default function CompetitionCard({
   const startDateStr = formatDateTime(start_date),
     endDateStr = formatDateTime(end_date),
     sameDay = startDateStr === endDateStr;
-  const now = new Date();
 
-  const isWaitlistOpen = now > confirm_by && now < start_date;
+  const now = new Date();
 
   const StatusButton: Record<Status | 'NOT_STARTED', React.ReactElement> = {
     NOT_STARTED: (
@@ -119,9 +120,13 @@ export default function CompetitionCard({
         Rejected
       </Button>
     ),
-    [Status.WAITLISTED]: isWaitlistOpen ? (
+    [Status.WAITLISTED]: !waitlist_open ? (
+      <Button color='orange' variant='light'>
+        Waitlisted
+      </Button>
+    ) : !waitlist_close || now < waitlist_close ? (
       <Button
-        color='green'
+        color='orange'
         variant='light'
         rightSection={<IconChevronRight />}
         onClick={() => router.push(`/hacker/waitlist/${code}`)}
@@ -129,13 +134,8 @@ export default function CompetitionCard({
         Waitlist Open
       </Button>
     ) : (
-      <Button
-        color='orange'
-        variant='light'
-        rightSection={<IconChevronRight />}
-        onClick={() => router.push(`/hacker/waitlist/${code}`)}
-      >
-        Waitlisted
+      <Button color='orange' variant='light'>
+        Waitlist Closed
       </Button>
     ),
     [Status.ACCEPTED]: (

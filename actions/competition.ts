@@ -3,8 +3,6 @@
 import prisma from '@/prisma';
 import { Competition, Status } from '@prisma/client';
 import { competitionConfigurationFormSchema } from '@/schemas/admin';
-import { IconTruckReturn } from '@tabler/icons-react';
-import { get } from 'http';
 
 export async function getCompetitions(): Promise<Competition[]> {
   return prisma.competition.findMany({

@@ -5,7 +5,12 @@ import {
 import { getCompetition } from '@/actions/competition';
 import { auth } from '@/auth';
 import WaitlistDashboard from '@/components/waitlist/WaitlistDashboard';
-import { notFound, redirect } from 'next/navigation';
+import { Competition, Status } from '@prisma/client';
+import { redirect } from 'next/navigation';
+
+export interface CompetitionWithWaitlist extends Competition {
+  waitlist_open: Date;
+}
 
 export default async function WaitlistPage({
   params: { code },
@@ -15,17 +20,20 @@ export default async function WaitlistPage({
   const session = await auth();
   if (!session || !session.user) redirect('/');
 
-  // Fetch competition data, application count, and user's application status
+  // Fetch competition data and competition application stats
   const competition = await getCompetition(code);
-  const statusCounts = await getCompetitionApplicationStats(code);
-  const userApp = await getApplication(code, session.user.id);
+  if (!competition || !competition.waitlist_open) redirect('/hacker');
+  const competitionWithWaitlist = competition as CompetitionWithWaitlist;
 
-  // If competition doesn't exist, return 404
-  if (!competition) notFound();
+  const statusCounts = await getCompetitionApplicationStats(code);
+
+  // Fetch user application
+  const userApp = await getApplication(code, session.user.id);
+  if (!userApp || userApp.status !== Status.WAITLISTED) redirect('/hacker');
 
   return (
     <WaitlistDashboard
-      competition={competition}
+      competition={competitionWithWaitlist}
       statusCounts={statusCounts}
       userApplication={userApp}
     />
