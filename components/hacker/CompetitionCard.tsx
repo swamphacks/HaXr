@@ -150,7 +150,7 @@ export default function CompetitionCard({
         rightSection={<IconChevronRight />}
         onClick={() => router.push(`/hacker/waitlist/${code}`)}
       >
-        Waitlist Open
+        Join Waitlist
       </Button>
     ) : (
       <Button color='orange' variant='light'>
