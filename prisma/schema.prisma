@@ -101,6 +101,7 @@ model Competition {
   interestedPeople InterestedPerson[]
   attendees        Attendee[]
   applications     Application[]
+  redeemables      Redeemable[]
 }
 
 model InterestedPerson {
@@ -159,11 +160,13 @@ model Attendee {
 
 model Redeemable {
   competitionCode String
-  name            String
-  description     String?
-  createdAt       DateTime      @default(now())
+  competition     Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
+
+  name         String
+  description  String?
+  createdAt    DateTime      @default(now())
   // userRedeemables AttendeeRedeemables[]
-  transactions    Transaction[]
+  transactions Transaction[]
 
   @@id([competitionCode, name])
 }

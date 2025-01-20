@@ -1,26 +1,41 @@
 'use server';
 
 import prisma from '@/prisma';
-import { Redeemable } from '@prisma/client';
-import { UpdateRedeemable } from '@/types/redeemable';
+import { Redeemable, Prisma } from '@prisma/client';
+import { UpdateRedeemableBody } from '@/types/redeemable';
 import {
   createRedeemableSchema,
   getRedeemableSchema,
+  updateRedeemableSchema,
 } from '@/schemas/redeemable';
 import { GetRedeemableOptions } from '@/types/redeemable';
 
 export async function getRedeemables(options: GetRedeemableOptions) {
-  await getRedeemableSchema.validate(options);
+  const validatedOptions = await getRedeemableSchema.validate(options);
+  console.log(validatedOptions);
+
+  const canSkip =
+    !!validatedOptions.cursor &&
+    !!validatedOptions.cursor.name &&
+    !!validatedOptions.cursor.name;
   return await prisma.redeemable.findMany({
-    take: options.limit,
-    skip: options.cursor ? 1 : 0,
-    cursor: options.cursor ? { createdAt: options.cursor } : undefined,
+    take: validatedOptions.limit,
+    skip: canSkip ? 1 : 0,
+    cursor: canSkip
+      ? {
+          competitionCode_name: {
+            // only way i could get ts to not complain - canSkip is true if both cursor values are defined
+            competitionCode: validatedOptions!.cursor!.competitionCode ?? '',
+            name: validatedOptions!.cursor!.name ?? '',
+          },
+        }
+      : undefined,
     orderBy: {
-      name: options.sort,
+      name: validatedOptions.sort as Prisma.SortOrder,
     },
     where: {
-      competitionCode: options.competitionCode ?? undefined,
-      name: options.name ?? undefined,
+      competitionCode: validatedOptions.competitionCode,
+      name: validatedOptions.name,
     },
   });
 }
@@ -32,32 +47,33 @@ export async function createRedeemable(schema: Redeemable) {
       ...schema,
     },
   });
-
-  return true;
 }
 
-export async function updateRedeemable(schema: UpdateRedeemable) {
-  await createRedeemableSchema.validate(schema);
+export async function updateRedeemable(
+  compCode: string,
+  name: string,
+  schema: UpdateRedeemableBody
+) {
+  const vSchema = await updateRedeemableSchema.validate(schema);
   await prisma.redeemable.update({
     where: {
       competitionCode_name: {
-        competitionCode: schema.old.competitionCode,
-        name: schema.old.name,
+        competitionCode: compCode,
+        name: name,
       },
     },
     data: {
-      ...schema.new,
+      ...vSchema,
     },
   });
 }
 
-export async function deleteRedeemable(schema: Redeemable) {
-  await createRedeemableSchema.validate(schema);
+export async function deleteRedeemable(competitionCode: string, name: string) {
   await prisma.redeemable.delete({
     where: {
       competitionCode_name: {
-        competitionCode: schema.competitionCode,
-        name: schema.name,
+        competitionCode: competitionCode,
+        name: name,
       },
     },
   });

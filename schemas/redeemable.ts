@@ -1,36 +1,75 @@
 import * as yup from 'yup';
 
-export const createRedeemableSchema = yup.object().shape({
-  name: yup.string().required('Please provide a name'),
-  competitionCode: yup.string().required('Please provide a competition code'),
-  description: yup
-    .string()
-    .optional()
-    .nullable()
-    .max(500, 'Keep it under 500 characters.'),
+yup.addMethod(yup.string, 'nullToUndefined', function nullToUndefined() {
+  return this.transform((value) => (value === null ? undefined : value));
 });
 
-export const updateRedeemableSchema = yup.object().shape({
-  old: createRedeemableSchema.required('Please provide all old values'),
-  new: createRedeemableSchema.required('Please provide all new values'),
-});
+const descriptionLength = 500;
+const descriptionError = `Keep it under ${descriptionLength} characters.`;
 
-export const getRedeemableSchema = yup.object().shape({
-  competitionCode: yup.string().optional().nullable(),
-  name: yup.string().optional().nullable(),
-  limit: yup
-    .number()
-    .optional()
-    .nullable()
-    .default(50)
-    .min(1, 'Limit must be at least 1')
-    .max(1000, 'Limit must be at most 1000'),
-  cursor: yup.string().optional().nullable(),
-  sort: yup
-    .string()
-    .optional()
-    .nullable()
-    .lowercase()
-    .default('desc')
-    .oneOf(['asc', 'desc']),
-});
+export const createRedeemableSchema = yup
+  .object()
+  .strict(true)
+  .noUnknown()
+  .shape({
+    name: yup
+      .string()
+      .trim()
+      .min(1, 'Name must be at leaset 1 character')
+      .required('Please provide a name'),
+    competitionCode: yup
+      .string()
+      .trim()
+      .min(1, 'Competition code must be at least 1 character')
+      .required('Please provide a competition code'),
+    description: yup
+      .string()
+      .trim()
+      .nullable()
+      .optional()
+      .max(descriptionLength, descriptionError),
+  });
+
+export const updateRedeemableSchema = yup
+  .object()
+  .strict(true)
+  .noUnknown()
+  .shape({
+    name: yup.string().optional().min(1, 'Name must be at least 1 character'),
+    competitionCode: yup
+      .string()
+      .optional()
+      .trim()
+      .min(1, 'Competition code must be at least 1 character'),
+    description: yup
+      .string()
+      .trim()
+      .nullable()
+      .optional()
+      .max(descriptionLength, descriptionError),
+  });
+
+export const getRedeemableSchema = yup
+  .object()
+  .strict(true)
+  .noUnknown()
+  .shape({
+    competitionCode: yup.string().trim().optional(),
+    name: yup.string().trim().optional(),
+    limit: yup
+      .number()
+      .integer()
+      .default(() => 50)
+      .min(1, 'Limit must be at least 1')
+      .max(1000, 'Limit must be at most 1000'),
+    sort: yup
+      .string()
+      .trim()
+      .default(() => 'desc')
+      .lowercase()
+      .oneOf(['asc', 'desc']),
+    cursor: yup.object().optional().shape({
+      competitionCode: yup.string().trim().optional(),
+      name: yup.string().trim().optional(),
+    }),
+  });
