@@ -149,8 +149,50 @@ model Attendee {
   badgeId         String?  @unique
   checkedInAt     DateTime @default(now())
 
-  competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  competition  Competition   @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  // attendeeRedeemables AttendeeRedeemables[]
+  transactions Transaction[]
 
   @@unique([competitionCode, userId], name: "compCode_userId")
+}
+
+model Redeemable {
+  competitionCode String
+  name            String
+  description     String?
+  // userRedeemables AttendeeRedeemables[]
+  transactions    Transaction[]
+
+  @@id([competitionCode, name])
+}
+
+// model AttendeeRedeemables {
+//   competitionCode String
+//
+//   redeemable     Redeemable @relation(fields: [competitionCode, redeemableName], references: [competitionCode, name], onDelete: Cascade, onUpdate: Cascade)
+//   redeemableName String
+//
+//   attendee Attendee @relation(fields: [competitionCode, userId], references: [competitionCode, userId], onDelete: Cascade, onUpdate: Cascade)
+//   userId   String
+//
+//   quantity    Int
+//   Transaction Transaction[]
+//
+//   @@id([competitionCode, userId, redeemableName])
+// }
+
+model Transaction {
+  id              String @id @default(cuid())
+  competitionCode String
+
+  // attendeeRedeemable AttendeeRedeemables @relation(fields: [competitionCode, userId, redeemableName], references: [competitionCode, userId, redeemableName], onDelete: Cascade, onUpdate: Cascade)
+  attendee Attendee @relation(fields: [competitionCode, userId], references: [competitionCode, userId], onDelete: Cascade, onUpdate: Cascade)
+  userId   String
+
+  redeemable     Redeemable @relation(fields: [competitionCode, redeemableName], references: [competitionCode, name], onDelete: Cascade, onUpdate: Cascade)
+  redeemableName String
+
+  quantity     Int
+  transactedAt DateTime @default(now())
 }
