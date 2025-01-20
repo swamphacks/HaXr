@@ -1,18 +1,28 @@
 'use server';
 
 import prisma from '@/prisma';
-import { Prisma, Redeemable } from '@prisma/client';
+import { Redeemable } from '@prisma/client';
 import { UpdateRedeemable } from '@/types/redeemable';
-import { createRedeemableSchema } from '@/schemas/redeemable';
+import {
+  createRedeemableSchema,
+  getRedeemableSchema,
+} from '@/schemas/redeemable';
+import { GetRedeemableOptions } from '@/types/redeemable';
 
-export async function getRedeemables(competitionCode: string | null) {
-  if (competitionCode) {
-    return await prisma.redeemable.findMany({
-      where: {
-        competitionCode,
-      },
-    });
-  } else return await prisma.redeemable.findMany({});
+export async function getRedeemables(options: GetRedeemableOptions) {
+  await getRedeemableSchema.validate(options);
+  return await prisma.redeemable.findMany({
+    take: options.limit,
+    skip: options.cursor ? 1 : 0,
+    cursor: options.cursor ? { createdAt: options.cursor } : undefined,
+    orderBy: {
+      name: options.sort,
+    },
+    where: {
+      competitionCode: options.competitionCode ?? undefined,
+      name: options.name ?? undefined,
+    },
+  });
 }
 
 export async function createRedeemable(schema: Redeemable) {
