@@ -5,6 +5,7 @@ export const createRedeemableSchema = yup.object().shape({
   competitionCode: yup.string().required('Please provide a competition code'),
   description: yup
     .string()
+    .optional()
     .nullable()
     .max(500, 'Keep it under 500 characters.'),
 });
