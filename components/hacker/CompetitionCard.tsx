@@ -1,8 +1,10 @@
 import {
   CompetitionWithApplication,
   confirmAttendance,
+  setApplicationStatus,
 } from '@/actions/applications';
 import {
+  ActionIcon,
   Button,
   Card,
   CopyButton,
@@ -245,9 +247,45 @@ export default function CompetitionCard({ competition }: Props) {
 
     [Status.ATTENDING]: (
       <Group justify='space-between' w='100%'>
-        <Button color='green' variant='light' rightSection={<IconConfetti />}>
-          Attending
-        </Button>
+        <Menu>
+          <Menu.Target>
+            <Button
+              color='green'
+              variant='light'
+              leftSection={<IconConfetti />}
+              rightSection={<IconChevronDown />}
+            >
+              Attending
+            </Button>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Item
+              color='red'
+              onClick={async () => {
+                if (
+                  application &&
+                  confirm('Are you sure you want to give up your spot?')
+                ) {
+                  // TODO add error handling
+                  await setApplicationStatus(
+                    application.id,
+                    Status.NOT_ATTENDING
+                  );
+
+                  notifications.show({
+                    title: 'Status Updated',
+                    message:
+                      'Your spot has been released. Thank you for letting us know and we hope to see you at future events!',
+                  });
+                  router.refresh();
+                }
+              }}
+            >
+              I can no longer attend.
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
 
         <Group>
           <CopyButton value={application?.id || ''}>
@@ -277,8 +315,6 @@ export default function CompetitionCard({ competition }: Props) {
   };
 
   let status: DisplayStatus = application?.status || 'NOT_STARTED';
-
-  console.log('status', status);
 
   // Display missed application deadline status for applications that were not submitted in time
   if (now > apply_close && ['NOT_STARTED', Status.STARTED].includes(status))
@@ -321,7 +357,7 @@ export default function CompetitionCard({ competition }: Props) {
             </Group>
           </Stack>
 
-          {StatusButton[status]}
+          {StatusButton[Status.ATTENDING]}
         </Group>
       </Card>
     </>
