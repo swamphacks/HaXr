@@ -14,6 +14,17 @@ import {
 } from '@/schemas/redeemable';
 import { GetRedeemableOptions, TransactionInfo } from '@/types/redeemable';
 
+export async function getRedeemable(code: string, name: string) {
+  return await prisma.redeemable.findUniqueOrThrow({
+    where: {
+      competitionCode_name: {
+        competitionCode: code,
+        name: name,
+      },
+    },
+  });
+}
+
 export async function getRedeemables(options: GetRedeemableOptions) {
   const validatedOptions = await getRedeemableSchema.validate(options);
   console.log(validatedOptions);
