@@ -140,6 +140,8 @@ model Application {
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   attendee    Attendee?
 
+  updatedAt DateTime @default(now()) @updatedAt
+
   @@unique([competitionCode, userId])
 }
 
