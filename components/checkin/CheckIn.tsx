@@ -13,7 +13,7 @@ import { TypedApplication } from '@/app/hacker/application/[code]/page';
 
 interface Props {
   comp: string;
-  applicants: (TypedApplication & { user: User; attendee?: Attendee })[];
+  applicants: (TypedApplication & { user: User; attendee: Attendee | null })[];
 }
 
 export default function CheckIn({ comp, applicants }: Props) {

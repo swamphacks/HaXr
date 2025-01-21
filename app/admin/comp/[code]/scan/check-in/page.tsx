@@ -1,6 +1,8 @@
 import CheckIn from '@/components/checkin/CheckIn';
 import { getCheckInApplicants } from '@/actions/scanning';
 import { TypedApplication } from '@/app/hacker/application/[code]/page';
+import { getCheckInApplicants } from '@/actions/scanning';
+import { TypedApplication } from '@/app/hacker/application/[code]/page';
 
 interface Props {
   params: {
