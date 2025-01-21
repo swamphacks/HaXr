@@ -165,32 +165,15 @@ model Redeemable {
   name         String
   description  String?
   createdAt    DateTime      @default(now())
-  // userRedeemables AttendeeRedeemables[]
   transactions Transaction[]
 
   @@id([competitionCode, name])
 }
 
-// model AttendeeRedeemables {
-//   competitionCode String
-//
-//   redeemable     Redeemable @relation(fields: [competitionCode, redeemableName], references: [competitionCode, name], onDelete: Cascade, onUpdate: Cascade)
-//   redeemableName String
-//
-//   attendee Attendee @relation(fields: [competitionCode, userId], references: [competitionCode, userId], onDelete: Cascade, onUpdate: Cascade)
-//   userId   String
-//
-//   quantity    Int
-//   Transaction Transaction[]
-//
-//   @@id([competitionCode, userId, redeemableName])
-// }
-
 model Transaction {
   id              String @id @default(cuid())
   competitionCode String
 
-  // attendeeRedeemable AttendeeRedeemables @relation(fields: [competitionCode, userId, redeemableName], references: [competitionCode, userId, redeemableName], onDelete: Cascade, onUpdate: Cascade)
   attendee Attendee @relation(fields: [competitionCode, userId], references: [competitionCode, userId], onDelete: Cascade, onUpdate: Cascade)
   userId   String
 

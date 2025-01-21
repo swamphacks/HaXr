@@ -73,3 +73,45 @@ export const getRedeemableSchema = yup
       name: yup.string().trim().optional(),
     }),
   });
+
+export const createTransactionSchema = yup
+  .object()
+  .strict(true)
+  .noUnknown()
+  .shape({
+    competitionCode: yup
+      .string()
+      .trim()
+      .required('Please provide a competition code'),
+    userId: yup.string().trim().required('Please provide a user ID'),
+    redeemableName: yup
+      .string()
+      .trim()
+      .required('Please provide a redeemable name'),
+    quantity: yup.number().integer().required('Please provide a quantity'),
+  });
+
+export const getTransactionSchema = yup
+  .object()
+  .strict(true)
+  .noUnknown()
+  .shape({
+    limit: yup
+      .number()
+      .integer()
+      .optional()
+      .default(50)
+      .positive()
+      .max(1000, 'Limit must be at most 1000'),
+    cursor: yup.string().optional().nullable(),
+    sort: yup
+      .string()
+      .optional()
+      .trim()
+      .lowercase()
+      .default('desc')
+      .oneOf(['asc', 'desc']),
+    competitionCode: yup.string().trim().optional(),
+    userId: yup.string().trim().optional(),
+    redeemableName: yup.string().trim().optional(),
+  });

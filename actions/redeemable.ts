@@ -2,13 +2,17 @@
 
 import prisma from '@/prisma';
 import { Redeemable, Prisma } from '@prisma/client';
-import { UpdateRedeemableBody } from '@/types/redeemable';
+import {
+  UpdateRedeemableBody,
+  InsufficientFundsError,
+} from '@/types/redeemable';
 import {
   createRedeemableSchema,
   getRedeemableSchema,
   updateRedeemableSchema,
+  createTransactionSchema,
 } from '@/schemas/redeemable';
-import { GetRedeemableOptions } from '@/types/redeemable';
+import { GetRedeemableOptions, TransactionInfo } from '@/types/redeemable';
 
 export async function getRedeemables(options: GetRedeemableOptions) {
   const validatedOptions = await getRedeemableSchema.validate(options);
@@ -76,5 +80,49 @@ export async function deleteRedeemable(competitionCode: string, name: string) {
         name: name,
       },
     },
+  });
+}
+
+export async function createTransaction(
+  competitionCode: string,
+  redeemableName: string,
+  info: TransactionInfo
+) {
+  const vInfo = await createTransactionSchema.validate(info);
+
+  // Giving user a redeemable
+  if (info.quantity > 0) {
+    await prisma.transaction.create({
+      data: {
+        ...vInfo,
+      },
+    });
+    return;
+  }
+
+  // User is redeeming a redeemable - use db transactions
+  await prisma.$transaction(async (tx) => {
+    // Calculate user balance
+    const balance = await tx.transaction.aggregate({
+      _sum: {
+        quantity: true,
+      },
+      where: {
+        competitionCode: vInfo.competitionCode,
+        userId: vInfo.userId,
+        redeemableName: vInfo.redeemableName,
+      },
+    });
+
+    if ((balance._sum.quantity ?? 0) + info.quantity < 0)
+      throw new InsufficientFundsError(
+        'Cannot redeem redeemable due to insufficient funds'
+      );
+
+    await tx.transaction.create({
+      data: {
+        ...info,
+      },
+    });
   });
 }
