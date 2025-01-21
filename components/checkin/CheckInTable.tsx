@@ -12,13 +12,15 @@ import { checkOut } from '@/actions/scanning';
 import { notifications } from '@mantine/notifications';
 
 interface Props {
-  applicants: (TypedApplication & { user: User; attendee?: Attendee })[];
+  applicants: (TypedApplication & { user: User; attendee: Attendee | null })[];
   selectUser: (userId: string) => void;
 }
 
 export default function CheckInTable({ applicants, selectUser }: Props) {
   const columns = useMemo<
-    MRT_ColumnDef<TypedApplication & { user: User; attendee?: Attendee }>[]
+    MRT_ColumnDef<
+      TypedApplication & { user: User; attendee: Attendee | null }
+    >[]
   >(
     () => [
       {
@@ -90,6 +92,8 @@ export default function CheckInTable({ applicants, selectUser }: Props) {
       </ActionIcon.Group>
     ),
   });
+
+  console.log(applicants.filter((a) => a.user.firstName == 'Robert'));
 
   return <MantineReactTable table={table} />;
 }
