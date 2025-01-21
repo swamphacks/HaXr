@@ -1,25 +1,29 @@
-import { Application, Status, User } from '@prisma/client';
+import { Application, Attendee, Status, User } from '@prisma/client';
 import {
   MantineReactTable,
   type MRT_ColumnDef,
   useMantineReactTable,
 } from 'mantine-react-table';
 import { useMemo } from 'react';
-import { ActionIcon, Avatar, Group } from '@mantine/core';
-import { IconDoorEnter } from '@tabler/icons-react';
-import { AppStatus } from '@/components/applications/AppStatus';
+import { ActionIcon, Avatar, Code, Group, Notification } from '@mantine/core';
+import { IconDoorEnter, IconDoorExit, IconPencil } from '@tabler/icons-react';
+import { TypedApplication } from '@/app/hacker/application/[code]/page';
+import { checkOut } from '@/actions/scanning';
+import { notifications } from '@mantine/notifications';
 
 interface Props {
-  applicants: (Application & { user: User })[];
+  applicants: (TypedApplication & { user: User; attendee?: Attendee })[];
   selectUser: (userId: string) => void;
 }
 
 export default function CheckInTable({ applicants, selectUser }: Props) {
-  const columns = useMemo<MRT_ColumnDef<Application & { user: User }>[]>(
+  const columns = useMemo<
+    MRT_ColumnDef<TypedApplication & { user: User; attendee?: Attendee }>[]
+  >(
     () => [
       {
-        accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
         header: 'Name',
+        accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
         filterVariant: 'autocomplete',
         Cell: ({ renderedCellValue, row }) => (
           <Group wrap='nowrap'>
@@ -29,18 +33,21 @@ export default function CheckInTable({ applicants, selectUser }: Props) {
         ),
       },
       {
-        accessorKey: 'user.email',
         header: 'Email',
+        accessorKey: 'content.email',
       },
       {
-        accessorKey: 'user.phone',
-        header: 'Phone #',
+        header: 'Checked-in At',
+        accessorKey: 'attendee.checkInAt',
+        Cell: ({ row }) =>
+          row.original.attendee
+            ? new Date(row.original.attendee.checkedInAt).toLocaleString()
+            : 'Not checked in',
       },
       {
-        accessorKey: 'status',
-        header: 'Status',
-        filterVariant: 'select',
-        Cell: ({ cell }) => AppStatus[cell.getValue<Status>()],
+        header: 'Badge ID',
+        accessorKey: 'attendee.badgeId',
+        Cell: ({ renderedCellValue }) => <Code>{renderedCellValue}</Code>,
       },
     ],
     []
@@ -54,16 +61,61 @@ export default function CheckInTable({ applicants, selectUser }: Props) {
     },
     enableRowActions: true,
     renderRowActions: ({ row }) => (
-      <Group justify='center'>
-        <ActionIcon
-          variant='subtle'
-          onClick={() => selectUser(row.original.user.id)}
-        >
-          <IconDoorEnter />
-        </ActionIcon>
-      </Group>
+      <ActionIcon.Group>
+        {!row.original.attendee ? (
+          <ActionIcon onClick={() => selectUser(row.original.user.id)}>
+            <IconDoorEnter />
+          </ActionIcon>
+        ) : (
+          <>
+            <ActionIcon onClick={() => selectUser(row.original.user.id)}>
+              {!row.original.attendee ? <IconDoorEnter /> : <IconPencil />}
+            </ActionIcon>
+
+            <ActionIcon
+              color='red'
+              onClick={() =>
+                removeAttendee(
+                  row.original as TypedApplication & {
+                    user: User;
+                    attendee: Attendee;
+                  }
+                )
+              }
+            >
+              <IconDoorExit />
+            </ActionIcon>
+          </>
+        )}
+      </ActionIcon.Group>
     ),
   });
 
   return <MantineReactTable table={table} />;
 }
+
+const removeAttendee = async ({
+  attendee: { applicationId },
+  content: { firstName, lastName },
+}: TypedApplication & { user: User; attendee: Attendee }) => {
+  if (
+    confirm(
+      'Are you sure you want to remove this attendee? This will permanently delete any related attendee data.'
+    )
+  ) {
+    const result = await checkOut(applicationId);
+    if (result.ok) {
+      notifications.show({
+        title: 'Check-out Successful',
+        message: `Successfully removed un-checked-in ${firstName} ${lastName}.`,
+        color: 'green',
+      });
+    } else {
+      notifications.show({
+        title: 'Check-out Failed',
+        message: `Failed to remove un-checked-in ${firstName} ${lastName}. ${result.error}}`,
+        color: 'red',
+      });
+    }
+  }
+};

@@ -1,28 +1,32 @@
 'use client';
-import { Application, Status, User } from '@prisma/client';
+import { Status, User } from '@prisma/client';
 import {
   MantineReactTable,
   MRT_ColumnDef,
   useMantineReactTable,
 } from 'mantine-react-table';
 import { useMemo } from 'react';
-import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
-import { Anchor, Button, Menu } from '@mantine/core';
+import { TypedApplication as TypedApplication } from '@/app/hacker/application/[code]/page';
+import {
+  ActionIcon,
+  Anchor,
+  Button,
+  CopyButton,
+  Group,
+  Menu,
+  Tooltip,
+} from '@mantine/core';
 import { setApplicationStatus } from '@/actions/applications';
-import { IconChevronDown } from '@tabler/icons-react';
-
-type TypedApplicants = Omit<Application, 'content'> & {
-  content: HackerApplicationFormValues;
-};
+import { IconChevronDown, IconNumber } from '@tabler/icons-react';
 
 interface Props {
-  applicants: (TypedApplicants & {
+  applicants: (TypedApplication & {
     user: User;
   })[];
 }
 
 export default function AppsTable({ applicants }: Props) {
-  const columns = useMemo<MRT_ColumnDef<TypedApplicants & { user: User }>[]>(
+  const columns = useMemo<MRT_ColumnDef<TypedApplication & { user: User }>[]>(
     () => [
       {
         header: 'Name',
@@ -76,6 +80,17 @@ export default function AppsTable({ applicants }: Props) {
           },
         }),
       },
+
+      {
+        header: 'Email',
+        accessorKey: 'content.email',
+      },
+
+      {
+        header: 'Dietary Restrictions',
+        accessorFn: ({ content: { dietaryRestrictions } }) =>
+          dietaryRestrictions.join(', '),
+      },
     ],
     []
   );
@@ -127,19 +142,31 @@ export default function AppsTable({ applicants }: Props) {
         </Menu>
       );
     },
-    // enableRowActions: true,
-    // renderRowActions: ({ row }) => (
-    //   <Group justify='center'>
-    //     <ActionIcon
-    //       variant='subtle'
-    //       onClick={() => selectUser(row.original.user.id)}
-    //       title='Check In'
-    //       aria-label='Check In'
-    //     >
-    //       <IconDoorEnter />
-    //     </ActionIcon>
-    //   </Group>
-    // ),
+    enableRowActions: true,
+    renderRowActions: ({ row }) => (
+      <Group justify='center'>
+        <CopyButton value={row.original.id}>
+          {({ copied, copy }) => (
+            <Tooltip
+              label={
+                !copied ? (
+                  <>
+                    <b>ID:</b> {row.original.id}
+                  </>
+                ) : (
+                  'Copied!'
+                )
+              }
+              withArrow
+            >
+              <ActionIcon color={!copied ? 'gray' : 'blue'} onClick={copy}>
+                <IconNumber />
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </CopyButton>
+      </Group>
+    ),
   });
 
   return <MantineReactTable table={table} />;

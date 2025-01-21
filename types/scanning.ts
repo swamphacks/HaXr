@@ -42,3 +42,14 @@ export interface CheckInFailure {
 }
 
 export type CheckInResponse = CheckInSuccess | CheckInFailure;
+
+export type CheckOutSuccess = {
+  ok: true;
+};
+
+export interface CheckOutFailure {
+  ok: false;
+  error: string;
+}
+
+export type CheckOutResponse = CheckOutSuccess | CheckOutFailure;
