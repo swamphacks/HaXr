@@ -125,10 +125,11 @@ export async function createTransaction(
       },
     });
 
-    if ((balance._sum.quantity ?? 0) + info.quantity < 0)
+    if ((balance._sum.quantity ?? 0) + info.quantity < 0) {
       throw new InsufficientFundsError(
         'Cannot redeem redeemable due to insufficient funds'
       );
+    }
 
     await tx.transaction.create({
       data: {
