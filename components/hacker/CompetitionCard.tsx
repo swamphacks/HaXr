@@ -357,7 +357,7 @@ export default function CompetitionCard({ competition }: Props) {
             </Group>
           </Stack>
 
-          {StatusButton[Status.ATTENDING]}
+          {StatusButton[status]}
         </Group>
       </Card>
     </>
