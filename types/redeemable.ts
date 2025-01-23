@@ -6,8 +6,8 @@ export type CreateRedeemableResponse = {
   statusText?: string;
   data: Redeemable | null;
 };
-
 export type UpdateRedeemableResponse = CreateRedeemableResponse;
+export type GetRedeemableResponse = CreateRedeemableResponse;
 
 export type DeleteRedeemableResponse = {
   status: number;

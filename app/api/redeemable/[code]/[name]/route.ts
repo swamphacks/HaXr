@@ -1,4 +1,3 @@
-import { ValidationError } from 'yup';
 import { NextResponse } from 'next/server';
 import {
   updateRedeemable,
@@ -6,7 +5,6 @@ import {
   getRedeemable,
 } from '@/actions/redeemable';
 import { Prisma } from '@prisma/client';
-import { isRecordNotFoundError } from '@/utils/prisma';
 import { UpdateRedeemableBody } from '@/types/redeemable';
 
 /* Update a redeemable */
@@ -17,16 +15,18 @@ export async function PUT(
   try {
     const resp = await updateRedeemable(params.code, params.name, {
       ...(await request.json()),
-      competitionCode: params.code,
-      name: params.name,
     } as UpdateRedeemableBody);
     return new NextResponse(null, {
       status: resp.status,
       statusText: resp.statusText,
     });
   } catch (e) {
-    if (e instanceof SyntaxError)
-      return new Response(null, { status: 400, statusText: 'Invalid JSON' });
+    if (e instanceof SyntaxError) {
+      return new NextResponse(null, {
+        status: 400,
+        statusText: 'Invalid JSON',
+      });
+    }
     throw e;
   }
 }
@@ -46,17 +46,13 @@ export async function GET(
   request: Request,
   { params }: { params: { code: string; name: string } }
 ) {
-  try {
-    const redeemable = await getRedeemable(params.code, params.name);
-    return NextResponse.json(redeemable);
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      switch (e.code) {
-        case 'P2025':
-          return new Response(null, { status: 404 });
-      }
-    }
-
-    throw e;
+  const resp = await getRedeemable(params.code, params.name);
+  if (resp.status === 200) return NextResponse.json(resp.data);
+  {
   }
+
+  return new NextResponse(null, {
+    status: resp.status,
+    statusText: resp.statusText,
+  });
 }

@@ -1,8 +1,6 @@
 import { ValidationError } from 'yup';
 import { NextResponse } from 'next/server';
 import { createRedeemable, getRedeemables } from '@/actions/redeemable';
-import { Prisma } from '@prisma/client';
-import { isRecordNotFoundError } from '@/utils/prisma';
 import { GetRedeemableOptions } from '@/types/redeemable';
 
 export async function POST(request: Request) {
@@ -43,7 +41,7 @@ export async function GET(request: Request) {
     return NextResponse.json(await getRedeemables(options));
   } catch (e) {
     if (e instanceof ValidationError)
-      return new Response(null, { status: 400, statusText: e.message });
+      return new NextResponse(null, { status: 400, statusText: e.message });
     throw e;
   }
 }

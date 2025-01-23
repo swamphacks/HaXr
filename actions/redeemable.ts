@@ -9,6 +9,7 @@ import {
   CreateRedeemableResponse,
   UpdateRedeemableResponse,
   DeleteRedeemableResponse,
+  GetRedeemableResponse,
   InsufficientFundsError,
   GetRedeemableOptions,
   TransactionInfo,
@@ -20,8 +21,11 @@ import {
   createTransactionSchema,
 } from '@/schemas/redeemable';
 
-export async function getRedeemable(code: string, name: string) {
-  return await prisma.redeemable.findUniqueOrThrow({
+export async function getRedeemable(
+  code: string,
+  name: string
+): Promise<GetRedeemableResponse> {
+  const resp = await prisma.redeemable.findUnique({
     where: {
       competitionCode_name: {
         competitionCode: code,
@@ -29,6 +33,10 @@ export async function getRedeemable(code: string, name: string) {
       },
     },
   });
+
+  if (!resp) return { status: 404, data: null };
+
+  return { status: 200, data: resp };
 }
 
 export async function getRedeemables(options: GetRedeemableOptions) {
@@ -129,6 +137,12 @@ export async function updateRedeemable(
           return {
             status: 404,
             statusText: 'Competition does not exist',
+            data: null,
+          };
+        case 'P2025':
+          return {
+            status: 404,
+            statusText: 'Redeemable does not exist',
             data: null,
           };
       }
