@@ -25,7 +25,6 @@ export const createRedeemableSchema = yup
     description: yup
       .string()
       .trim()
-      .nullable()
       .optional()
       .max(descriptionLength, descriptionError),
   });
@@ -44,7 +43,6 @@ export const updateRedeemableSchema = yup
     description: yup
       .string()
       .trim()
-      .nullable()
       .optional()
       .max(descriptionLength, descriptionError),
   });

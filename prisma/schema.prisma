@@ -163,7 +163,7 @@ model Redeemable {
   competition     Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
 
   name         String
-  description  String?
+  description  String        @default("")
   createdAt    DateTime      @default(now())
   transactions Transaction[]
 
