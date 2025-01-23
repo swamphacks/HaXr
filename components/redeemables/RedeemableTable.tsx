@@ -152,10 +152,7 @@ export default function RedeemableTable({ compCode, redeemables }: Props) {
       confirmProps: { color: 'red' },
       onConfirm: async () => {
         try {
-          const resp = await deleteRedeemable(
-            row.original.competitionCode,
-            row.original.name
-          );
+          const resp = await deleteRedeemable(compCode, row.original.name);
           if (resp.status === 204) {
             const newData = [...data];
             newData.splice(row.index, 1);
