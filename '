@@ -186,20 +186,14 @@ export default function RedeemableTable({ compCode, redeemables }: Props) {
 		onEditingRowSave: handleSaveRow,
 		onCreatingRowSave: handleCreateRow,
 		renderTopToolbarCustomActions: ({ table }) => (
-			<Button
-				styles={{
-					root: {
-						'--button-padding-x': '12px',
-					}
-				}}
-				variant="light" onClick={() => table.setCreatingRow(true)}>
-				Create
+			<Button variant="light" onClick={() => table.setCreatingRow(true)}>
+				<span className="mr-1"><IconPlus /></span> Create Redeemable
 			</Button>
 		),
 		renderRowActions: ({ row, table }) => (
 			<Flex gap="sm">
-				<Button color="yellow" styles={{ root: { '--button-padding-x': '3px', '--button-height': '32px' } }} onClick={() => table.setEditingRow(row)}><IconEdit color="white" /></Button>
-				<Button color="red" styles={{ root: { '--button-padding-x': '3px', '--button-height': '32px' } }} onClick={() => openDeleteConfirmModal(row)}><IconTrash color="white" /></Button>
+				<button className="bg-orange-500 rounded-md p-0.5" onClick={() => table.setEditingRow(row)}><IconEdit color="white" /></button>
+				<button className="bg-red-500 rounded-md p-0.5" onClick={() => openDeleteConfirmModal(row)}><IconTrash color="white" /></button>
 			</Flex>
 		),
 	});
