@@ -23,6 +23,7 @@
     "@mantine/dates": "^7.9.0",
     "@mantine/form": "^7.9.0",
     "@mantine/hooks": "^7.8.1",
+    "@mantine/modals": "^7.16.1",
     "@mantine/notifications": "^7.9.2",
     "@neondatabase/serverless": "^0.9.1",
     "@prisma/adapter-neon": "^5.13.0",

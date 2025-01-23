@@ -5,10 +5,11 @@ import { ValidationError } from 'yup';
 import { Prisma } from '@prisma/client';
 import {
 	CreateRedeemableBody,
-	InsufficientFundsError,
+	UpdateRedeemableBody,
 	CreateRedeemableResponse,
 	UpdateRedeemableResponse,
-	UpdateRedeemableBody,
+	DeleteRedeemableResponse,
+	InsufficientFundsError,
 	GetRedeemableOptions,
 	TransactionInfo,
 } from '@/types/redeemable';
@@ -60,7 +61,9 @@ export async function getRedeemables(options: GetRedeemableOptions) {
 	});
 }
 
-export async function createRedeemable(schema: CreateRedeemableBody): Promise<CreateRedeemableResponse> {
+export async function createRedeemable(
+	schema: CreateRedeemableBody
+): Promise<CreateRedeemableResponse> {
 	try {
 		await createRedeemableSchema.validate(schema);
 		const resp = await prisma.redeemable.create({
@@ -68,7 +71,7 @@ export async function createRedeemable(schema: CreateRedeemableBody): Promise<Cr
 				...schema,
 			},
 		});
-		return { status: 201, data: resp }
+		return { status: 201, data: resp };
 	} catch (e) {
 		if (e instanceof ValidationError)
 			return { status: 400, statusText: e.message, data: null };
@@ -92,8 +95,11 @@ export async function createRedeemable(schema: CreateRedeemableBody): Promise<Cr
 	}
 }
 
-
-export async function updateRedeemable(prevCode: string, prevName: string, schema: UpdateRedeemableBody): Promise<UpdateRedeemableResponse> {
+export async function updateRedeemable(
+	prevCode: string,
+	prevName: string,
+	schema: UpdateRedeemableBody
+): Promise<UpdateRedeemableResponse> {
 	try {
 		const vSchema = await updateRedeemableSchema.validate(schema);
 		const resp = await prisma.redeemable.update({
@@ -107,7 +113,7 @@ export async function updateRedeemable(prevCode: string, prevName: string, schem
 				...vSchema,
 			},
 		});
-		return { status: 204, data: resp }
+		return { status: 204, data: resp };
 	} catch (e) {
 		if (e instanceof ValidationError)
 			return { status: 400, statusText: e.message, data: null };
@@ -131,15 +137,21 @@ export async function updateRedeemable(prevCode: string, prevName: string, schem
 	}
 }
 
-export async function deleteRedeemable(competitionCode: string, name: string) {
-	await prisma.redeemable.delete({
-		where: {
-			competitionCode_name: {
-				competitionCode: competitionCode,
-				name: name,
+export async function deleteRedeemable(competitionCode: string, name: string): Promise<DeleteRedeemableResponse> {
+	try {
+		await prisma.redeemable.delete({
+			where: {
+				competitionCode_name: {
+					competitionCode: competitionCode,
+					name: name,
+				},
 			},
-		},
-	});
+		});
+		return { status: 204 };
+	} catch (e) {
+		if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') return { status: 404, statusText: 'Redeemable does not exist' };
+		throw e;
+	}
 }
 
 export async function createTransaction(

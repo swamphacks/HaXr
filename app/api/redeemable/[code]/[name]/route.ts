@@ -15,11 +15,14 @@ export async function PUT(
 	{ params }: { params: { code: string; name: string } }
 ) {
 	try {
-		const resp = await updateRedeemable({
-			...(await request.json()),
-			competitionCode: params.code,
-			name: params.name,
-		} as UpdateRedeemableBody);
+		const resp = await updateRedeemable(
+			params.code,
+			params.name,
+			{
+				...(await request.json()),
+				competitionCode: params.code,
+				name: params.name,
+			} as UpdateRedeemableBody);
 		return new NextResponse(null, { status: resp.status, statusText: resp.statusText });
 	} catch (e) {
 		if (e instanceof SyntaxError)
@@ -32,13 +35,8 @@ export async function DELETE(
 	request: Request,
 	{ params }: { params: { code: string; name: string } }
 ) {
-	try {
-		await deleteRedeemable(params.code, params.name);
-		return new NextResponse(null, { status: 204 });
-	} catch (e) {
-		if (isRecordNotFoundError(e)) return new Response(null, { status: 404 });
-		throw e;
-	}
+	const resp = await deleteRedeemable(params.code, params.name);
+	return new NextResponse(null, { status: resp.status, statusText: resp.statusText });
 }
 
 export async function GET(

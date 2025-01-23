@@ -9,6 +9,11 @@ export type CreateRedeemableResponse = {
 
 export type UpdateRedeemableResponse = CreateRedeemableResponse;
 
+export type DeleteRedeemableResponse = {
+	status: number;
+	statusText?: string;
+};
+
 export type GetRedeemableOptionsCursor = {
 	competitionCode?: string;
 	name?: string;

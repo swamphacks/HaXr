@@ -10,32 +10,35 @@ import Head from 'next/head';
 import { SessionProvider } from 'next-auth/react';
 import { DatesProvider } from '@mantine/dates';
 import { Notifications } from '@mantine/notifications';
+import { ModalsProvider } from '@mantine/modals';
 
 export const metadata: Metadata = {
-  title: 'SwampHacks Portal',
-  description: 'SwampHacks portal for Hackers and Admins!',
+	title: 'SwampHacks Portal',
+	description: 'SwampHacks portal for Hackers and Admins!',
 };
 
 export default function RootLayout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  return (
-    <SessionProvider>
-      <html lang='en'>
-        <Head>
-          <ColorSchemeScript />
-        </Head>
-        <body>
-          <MantineProvider defaultColorScheme='dark'>
-            <DatesProvider settings={{ timezone: 'EST' }}>
-              <Notifications />
-              {children}
-            </DatesProvider>
-          </MantineProvider>
-        </body>
-      </html>
-    </SessionProvider>
-  );
+	return (
+		<SessionProvider>
+			<html lang='en'>
+				<Head>
+					<ColorSchemeScript />
+				</Head>
+				<body>
+					<MantineProvider defaultColorScheme='dark'>
+						<ModalsProvider>
+							<DatesProvider settings={{ timezone: 'EST' }}>
+								<Notifications />
+								{children}
+							</DatesProvider>
+						</ModalsProvider>
+					</MantineProvider>
+				</body>
+			</html>
+		</SessionProvider>
+	);
 }
