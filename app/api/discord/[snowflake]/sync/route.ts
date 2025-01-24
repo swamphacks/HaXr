@@ -1,7 +1,7 @@
 import { getUserCompetitionRoles } from '@/actions/discord';
 import { NextRequest, NextResponse } from 'next/server';
 
-const SECRET_ACCESS_KEY = process.env.SECRET_ACCESS_KEY as string;
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN as string;
 
 /**
  * Gets the user's Discord profile from the Discord API. Needs to be done on server in order to not expose the token.
@@ -23,7 +23,7 @@ export async function GET(
 
   const token = authHeader.replace('Bot ', '');
 
-  if (token !== SECRET_ACCESS_KEY)
+  if (token !== DISCORD_BOT_TOKEN)
     return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 });
 
   const roles = await getUserCompetitionRoles(snowflake);

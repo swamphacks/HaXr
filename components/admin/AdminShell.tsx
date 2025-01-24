@@ -26,6 +26,7 @@ import {
   IconLego,
   IconQrcode,
   IconSettings,
+  IconSocial,
   IconStatusChange,
   IconTicket,
 } from '@tabler/icons-react';
@@ -103,12 +104,30 @@ export default function AdminShell({
           />
 
           <NavLink
-            component={Link}
             label='Configuration'
             leftSection={<IconSettings size='1rem' />}
-            href={`/admin/comp/${safeCode}/configure`}
-            active={pathname === `/admin/comp/${safeCode}/configure`}
-          />
+            defaultOpened={pathname.startsWith(
+              `/admin/comp/${safeCode}/configure`
+            )}
+          >
+            <NavLink
+              component={Link}
+              label='General'
+              leftSection={<IconSettings size='1rem' />}
+              href={`/admin/comp/${safeCode}/configure/general`}
+              active={pathname === `/admin/comp/${safeCode}/configure/general`}
+            />
+
+            <NavLink
+              component={Link}
+              label='Social Links'
+              leftSection={<IconSocial size='1rem' />}
+              href={`/admin/comp/${safeCode}/configure/social-links`}
+              active={
+                pathname === `/admin/comp/${safeCode}/configure/social-links`
+              }
+            />
+          </NavLink>
 
           <NavLink
             label='Applications'

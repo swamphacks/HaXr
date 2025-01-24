@@ -62,3 +62,28 @@ export const getUserCompetitionRoles = async (
     result: 'success',
   };
 };
+
+export const getCompetitionDiscordId = async (code: string) => {
+  return prisma.competition.findUnique({
+    where: {
+      code,
+    },
+    select: {
+      attendeeDiscordRoleId: true,
+    },
+  });
+};
+
+export const setCompetitionDiscordId = async (
+  code: string,
+  roleId: string | null
+) => {
+  return prisma.competition.update({
+    where: {
+      code,
+    },
+    data: {
+      attendeeDiscordRoleId: roleId,
+    },
+  });
+};
