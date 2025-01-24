@@ -1,23 +1,28 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { Redeemable, User, Application, Attendee } from '@prisma/client';
+import { useCallback, useState, useMemo } from 'react';
+import { Redeemable, User } from '@prisma/client';
 import { modals } from '@mantine/modals';
+import { Button } from '@mantine/core';
+import { LoadingOverlay, Select, NumberInput, Stack } from '@mantine/core';
 import {
-  LoadingOverlay,
-  Select,
-  Flex,
-  NumberInput,
-  Stack,
-} from '@mantine/core';
+  IconScan,
+  IconUser,
+  IconCoin,
+  IconLego,
+  IconGavel,
+} from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { GetAttendeesResponse } from '@/types/application';
 import { onTransactionConfirm } from '@/utils/redeemable';
-import AttendeeTable from '@/components/redeemables/AttendeeTable';
 import { notifications } from '@mantine/notifications';
 import { getAttendeeByBadgeId } from '@/actions/applications';
 import QrScanner from '@/components/scan/QrScanner';
-import TransactionModal from '@/components/redeemables/TransactionModal';
+import {
+  MantineReactTable,
+  useMantineReactTable,
+  type MRT_ColumnDef,
+} from 'mantine-react-table';
 
 const actions = ['Redeem', 'Grant'];
 
@@ -41,6 +46,60 @@ export default function ScanRedeemable({
   const [quantity, setQuantity] = useState<number | null>(1);
   const [action, setAction] = useState<string | null>(actions[0]);
 
+  const openConfirmModal = useCallback(
+    (user: User) => {
+      if (!redeemableName || !quantity || !action) {
+        notifications.show({
+          color: 'red',
+          title: 'Missing fields',
+          message: 'Please select a redeemable, quantity, and action',
+        });
+        return;
+      }
+
+      modals.openConfirmModal({
+        title: 'Confirm Transaction',
+        children: (
+          <div className='grid grid-cols-[20px_auto] gap-2'>
+            <div className='col-start-1'>
+              <IconLego strokeWidth={2} width={20} color='#5f6ef5' />
+            </div>
+            <h1>{redeemableName}</h1>
+
+            <div className='col-start-1'>
+              <IconGavel strokeWidth={2} width={20} color='#f5a35f' />
+            </div>
+            <h1>{action}</h1>
+
+            <div className='col-start-1'>
+              <IconCoin
+                width={20}
+                color={action === 'Grant' ? '#5ff573' : '#f55f64'}
+              />
+            </div>
+            <h1>{quantity}</h1>
+
+            <div className='col-start-1'>
+              <IconUser width={20} color='#995ff5' />
+            </div>
+            <h1>{`${user.firstName} ${user.lastName}`}</h1>
+          </div>
+        ),
+        labels: { confirm: 'Confirm', cancel: 'Cancel' },
+        confirmProps: { color: 'red' },
+        onConfirm: async () =>
+          await onTransactionConfirm(
+            user,
+            compCode,
+            redeemableName,
+            action,
+            quantity
+          ),
+      });
+    },
+    [compCode, redeemableName, action, quantity]
+  );
+
   const onScan = useCallback(
     async (qrCode: string) => {
       open();
@@ -52,77 +111,82 @@ export default function ScanRedeemable({
           message: 'This code does not belong to any attendee',
           color: 'red',
         });
-        close();
-        return;
-      }
-
-      if (!redeemableName || !quantity || !action) {
-        notifications.show({
-          color: 'red',
-          title: 'Missing fields',
-          message: 'Please select a redeemable, quantity, and action',
-        });
-        close();
-        return;
-      }
-
-      modals.openConfirmModal({
-        title: 'Confirm Transaction',
-        children: (
-          <TransactionModal
-            redeemableName={redeemableName}
-            action={action}
-            quantity={quantity}
-            competitionCode={compCode}
-            user={attendee.user}
-          />
-        ),
-        labels: { confirm: 'Confirm', cancel: 'Cancel' },
-        confirmProps: { color: 'red' },
-        onConfirm: async () =>
-          await onTransactionConfirm(
-            attendee.user,
-            compCode,
-            redeemableName,
-            action,
-            quantity
-          ),
-      });
+      } else openConfirmModal(attendee.user);
 
       close();
     },
-    [compCode, redeemableName, action, quantity, open, close]
+    [compCode, open, close, openConfirmModal]
   );
+
+  const columns = useMemo<MRT_ColumnDef<Required<GetAttendeesResponse>>[]>(
+    () => [
+      {
+        header: 'Name',
+        accessorFn: ({ user: { firstName, lastName } }) =>
+          `${firstName} ${lastName}`,
+        enableEditing: false,
+      },
+      {
+        header: 'Email',
+        accessorFn: ({ user }) => user.email,
+        enableEditing: false,
+      },
+    ],
+    []
+  );
+
+  const table = useMantineReactTable({
+    columns,
+    data: attendees,
+    enableEditing: false,
+    enableRowActions: true,
+    renderRowActions: ({ row }) => (
+      <Button
+        color='green'
+        onClick={() => openConfirmModal(row.original.user)}
+        disabled={!redeemableName || !quantity || !action}
+        styles={{
+          root: { '--button-padding-x': '3px', '--button-height': '32px' },
+        }}
+      >
+        <IconScan color='white' />
+      </Button>
+    ),
+  });
 
   return (
     <div className='flex flex-col gap-4'>
-      <Select
-        label='Redeemable'
-        placeholder='Select Redeemable'
-        data={redeemables.map((r) => r.name)}
-        defaultValue={redeemableName ?? undefined}
-        onChange={(value) => setRedeemableName(value)}
-        required={true}
-      />
-      <Flex gap='sm'>
-        <Select
-          label='Action'
-          placeholder='Select Action'
-          data={actions}
-          onChange={(value) => setAction(value)}
-          defaultValue={actions[0]}
-          required={true}
-        />
-        <NumberInput
-          label='Quantity'
-          defaultValue={1}
-          min={1}
-          onChange={(value) =>
-            setQuantity(typeof value === 'number' ? value : parseInt(value))
-          }
-          required={true}
-        />
-      </Flex>
+      <Stack align='center'>
+        <div className='flex w-full max-w-[500px] flex-col gap-4'>
+          <Select
+            label='Redeemable'
+            placeholder='Select Redeemable'
+            data={redeemables.map((r) => r.name)}
+            defaultValue={redeemableName ?? undefined}
+            onChange={(value) => setRedeemableName(value)}
+            required={true}
+          />
+          <div className='grid grid-cols-2 gap-4'>
+            <Select
+              label='Action'
+              placeholder='Select Action'
+              data={actions}
+              onChange={(value) => setAction(value)}
+              defaultValue={actions[0]}
+              required={true}
+            />
+            <NumberInput
+              label='Quantity'
+              defaultValue={1}
+              min={1}
+              onChange={(value) =>
+                setQuantity(typeof value === 'number' ? value : parseInt(value))
+              }
+              required={true}
+            />
+          </div>
+        </div>
+      </Stack>
 
       <Stack align='center'>
         <LoadingOverlay
@@ -132,13 +196,7 @@ export default function ScanRedeemable({
         <QrScanner onScan={onScan} rememberAs='redeemable-scanner' />
       </Stack>
 
-      <AttendeeTable
-        compCode={compCode}
-        applicants={attendees}
-        redeemableName={redeemableName}
-        quantity={quantity}
-        action={action}
-      />
+      <MantineReactTable table={table} />
     </div>
   );
 }

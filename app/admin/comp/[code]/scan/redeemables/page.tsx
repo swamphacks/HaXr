@@ -1,6 +1,5 @@
 import { getAttendees } from '@/actions/applications';
 import { getRedeemables } from '@/actions/redeemable';
-import { Redeemable } from '@prisma/client';
 import { Text } from '@mantine/core';
 import ScanRedeemable from '@/components/redeemables/ScanRedeemable';
 

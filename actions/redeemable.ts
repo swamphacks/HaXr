@@ -2,7 +2,7 @@
 
 import prisma from '@/prisma';
 import { ValidationError } from 'yup';
-import { Prisma, Transaction, User } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import {
   CreateRedeemableBody,
   UpdateRedeemableBody,
@@ -46,9 +46,9 @@ export async function getRedeemables(options: GetRedeemableOptions) {
   console.log(validatedOptions);
 
   const canSkip =
-    !!validatedOptions.cursor &&
-    !!validatedOptions.cursor.name &&
-    !!validatedOptions.cursor.name;
+    validatedOptions.cursor !== undefined &&
+    validatedOptions.cursor.name !== undefined &&
+    validatedOptions.cursor.competitionCode !== undefined;
 
   return await prisma.redeemable.findMany({
     take: validatedOptions.limit,
@@ -269,6 +269,9 @@ export async function getTransactions(
         },
       },
       redeemable: true,
+    },
+    orderBy: {
+      transactedAt: 'desc',
     },
   });
 }

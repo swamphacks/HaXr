@@ -1,37 +1,25 @@
 'use client';
 
-import { Transaction, User } from '@prisma/client';
 import { TransactionWithUserAndRedeemable } from '@/types/redeemable';
 import { useMemo, useState } from 'react';
-import {
-  createRedeemable,
-  updateRedeemable,
-  deleteRedeemable,
-} from '@/actions/redeemable';
-import { Flex, Button, Text, Tooltip } from '@mantine/core';
+import { Button } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { Redeemable } from '@prisma/client';
 import { modals } from '@mantine/modals';
-import { CreateRedeemableBody } from '@/types/redeemable';
 import { deleteTransaction } from '@/actions/redeemable';
 import {
-  IconEdit,
   IconClock,
   IconAt,
   IconCoin,
   IconUser,
   IconLego,
   IconTrash,
-  IconScan,
 } from '@tabler/icons-react';
 import {
   MantineReactTable,
   useMantineReactTable,
   type MRT_ColumnDef,
-  type MRT_TableOptions,
   type MRT_Row,
 } from 'mantine-react-table';
-import Link from 'next/link';
 
 interface Props {
   transactions: TransactionWithUserAndRedeemable[];
