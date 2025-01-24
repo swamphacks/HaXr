@@ -1,8 +1,10 @@
 import {
   CompetitionWithApplication,
   confirmAttendance,
+  setApplicationStatus,
 } from '@/actions/applications';
 import {
+  ActionIcon,
   Button,
   Card,
   CopyButton,
@@ -29,6 +31,8 @@ import {
 } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { notifications } from '@mantine/notifications';
+import { useDisclosure } from '@mantine/hooks';
+import CheckInApplicantModal from './CheckInApplicantModal';
 
 interface Props {
   competition: CompetitionWithApplication;
@@ -55,8 +59,11 @@ const AdvancedStatuses: DisplayStatus[] = [
   Status.ATTENDING,
 ];
 
-export default function CompetitionCard({
-  competition: {
+export default function CompetitionCard({ competition }: Props) {
+  const router = useRouter();
+  const [opened, { open, close }] = useDisclosure();
+
+  const {
     code,
     name,
     description,
@@ -69,9 +76,7 @@ export default function CompetitionCard({
     start_date,
     end_date,
     application,
-  },
-}: Props) {
-  const router = useRouter();
+  } = competition;
 
   const startDateStr = formatDateTime(start_date),
     endDateStr = formatDateTime(end_date),
@@ -242,9 +247,45 @@ export default function CompetitionCard({
 
     [Status.ATTENDING]: (
       <Group justify='space-between' w='100%'>
-        <Button color='green' variant='light' rightSection={<IconConfetti />}>
-          Attending
-        </Button>
+        <Menu>
+          <Menu.Target>
+            <Button
+              color='green'
+              variant='light'
+              leftSection={<IconConfetti />}
+              rightSection={<IconChevronDown />}
+            >
+              Attending
+            </Button>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Item
+              color='red'
+              onClick={async () => {
+                if (
+                  application &&
+                  confirm('Are you sure you want to give up your spot?')
+                ) {
+                  // TODO add error handling
+                  await setApplicationStatus(
+                    application.id,
+                    Status.NOT_ATTENDING
+                  );
+
+                  notifications.show({
+                    title: 'Status Updated',
+                    message:
+                      'Your spot has been released. Thank you for letting us know and we hope to see you at future events!',
+                  });
+                  router.refresh();
+                }
+              }}
+            >
+              I can no longer attend.
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
 
         <Group>
           <CopyButton value={application?.id || ''}>
@@ -264,18 +305,7 @@ export default function CompetitionCard({
             leftSection={<IconQrcode />}
             variant='light'
             color='gray'
-            onClick={() =>
-              notifications.show({
-                title: 'Check-in',
-                color: 'gray',
-                message:
-                  now < start_date
-                    ? `Check-in will be available on ${formatDateTime(
-                        start_date
-                      )}.`
-                    : 'Not implemented yet.',
-              })
-            }
+            onClick={open}
           >
             Check-in
           </Button>
@@ -297,31 +327,39 @@ export default function CompetitionCard({
     status = 'MISSED_CONFIRMATION_DEADLINE';
 
   return (
-    <Card w='100%'>
-      <Group justify='space-between' px={10} py={10}>
-        <Stack gap='xs'>
-          <Title order={2}>{name}</Title>
-          <Text>{description}</Text>
+    <>
+      <CheckInApplicantModal
+        opened={opened}
+        close={close}
+        competition={competition}
+      />
 
-          <Group gap='xl'>
-            <Group gap='xs'>
-              <IconMapPin size={20} color='gray' />
-              <Text c='dimmed' size='md' mt={3}>
-                {location}
-              </Text>
+      <Card w='100%'>
+        <Group justify='space-between' px={10} py={10}>
+          <Stack gap='xs'>
+            <Title order={2}>{name}</Title>
+            <Text>{description}</Text>
+
+            <Group gap='xl'>
+              <Group gap='xs'>
+                <IconMapPin size={20} color='gray' />
+                <Text c='dimmed' size='md' mt={3}>
+                  {location}
+                </Text>
+              </Group>
+
+              <Group gap='xs'>
+                <IconCalendar size={20} color='gray' />
+                <Text c='dimmed' size='md' mt={3}>
+                  {sameDay ? startDateStr : `${startDateStr} - ${endDateStr}`}
+                </Text>
+              </Group>
             </Group>
+          </Stack>
 
-            <Group gap='xs'>
-              <IconCalendar size={20} color='gray' />
-              <Text c='dimmed' size='md' mt={3}>
-                {sameDay ? startDateStr : `${startDateStr} - ${endDateStr}`}
-              </Text>
-            </Group>
-          </Group>
-        </Stack>
-
-        {StatusButton[status]}
-      </Group>
-    </Card>
+          {StatusButton[status]}
+        </Group>
+      </Card>
+    </>
   );
 }

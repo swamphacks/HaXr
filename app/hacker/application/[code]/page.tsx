@@ -24,7 +24,7 @@ import {
   rem,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { Competition, Status, User } from '@prisma/client';
+import { Application, Competition, Status, User } from '@prisma/client';
 import { useEffect, useState } from 'react';
 import { IconArrowLeft, IconCheck, IconFileUpload } from '@tabler/icons-react';
 import { useForm, yupResolver } from '@mantine/form';
@@ -34,7 +34,7 @@ import { notifications } from '@mantine/notifications';
 import { uploadResume } from '@/actions/storage';
 import {
   createApplication,
-  getApplication,
+  getApplicationByUser,
   setApplicationStatus,
 } from '@/actions/applications';
 import { useSession } from 'next-auth/react';
@@ -64,6 +64,10 @@ export interface HackerApplicationFormValues {
   codeOfConductConsent: boolean;
   resumeUrl: string;
 }
+
+export type TypedApplication = Omit<Application, 'content'> & {
+  content: HackerApplicationFormValues;
+};
 
 export default function HackerApplication({
   params: { code },
@@ -143,7 +147,7 @@ export default function HackerApplication({
 
     const fetchApplication = async () => {
       if (!session?.user?.id) return;
-      const application = await getApplication(code, session.user.id);
+      const application = await getApplicationByUser(code, session.user.id);
       setApplied(application !== null);
       setLoading(false);
     };

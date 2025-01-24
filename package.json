@@ -46,8 +46,10 @@
     "react": "^18",
     "react-dom": "^18",
     "react-imask": "^7.6.1",
+    "react-qr-code": "^2.0.15",
+    "react-qrcode-logo": "^3.0.0",
     "superjson": "^2.2.1",
-    "swr": "^2.2.5",
+    "swr": "^2.3.0",
     "template-file": "^6.0.1",
     "yup": "^1.4.0"
   },

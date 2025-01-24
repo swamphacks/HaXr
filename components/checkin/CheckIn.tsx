@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Application, User } from '@prisma/client';
+import { Application, Attendee, User } from '@prisma/client';
 import { useDisclosure } from '@mantine/hooks';
 import { getUser } from '@/actions/scanning';
 import { notifications } from '@mantine/notifications';
@@ -9,10 +9,11 @@ import QrScanner from '@/components/scan/QrScanner';
 import CheckInModal from '@/components/checkin/CheckInModal';
 import { Divider, LoadingOverlay, Stack } from '@mantine/core';
 import CheckInTable from '@/components/checkin/CheckInTable';
+import { TypedApplication } from '@/app/hacker/application/[code]/page';
 
 interface Props {
   comp: string;
-  applicants: (Application & { user: User })[];
+  applicants: (TypedApplication & { user: User; attendee: Attendee | null })[];
 }
 
 export default function CheckIn({ comp, applicants }: Props) {
@@ -22,7 +23,7 @@ export default function CheckIn({ comp, applicants }: Props) {
 
   const selectUser = useCallback(
     async (userId: string) => {
-      if (userId === userRef.current?.id) return;
+      if (user) return;
 
       open();
       const selectedUser = await getUser(userId);
@@ -36,12 +37,12 @@ export default function CheckIn({ comp, applicants }: Props) {
       } else setUser(selectedUser);
       close();
     },
-    [open, close]
+    [user, open, close]
   );
 
+  // TODO: figure out why I used this ridiculous ref hack (this is the devil's work)
   useEffect(() => {
     userRef.current = user; // Update the ref whenever the user state changes
-    console.log('Updated user:', user);
   }, [user]);
 
   return (
@@ -57,7 +58,7 @@ export default function CheckIn({ comp, applicants }: Props) {
           visible={visible}
           overlayProps={{ radius: 'sm', blur: 3 }}
         />
-        <QrScanner onScan={selectUser} />
+        <QrScanner onScan={selectUser} rememberAs='applicant-scanner' />
       </Stack>
 
       <Divider my='sm' />

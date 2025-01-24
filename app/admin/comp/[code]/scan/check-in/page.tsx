@@ -1,5 +1,6 @@
 import CheckIn from '@/components/checkin/CheckIn';
-import { getApplicants } from '@/actions/applications';
+import { getCheckInApplicants } from '@/actions/scanning';
+import { TypedApplication } from '@/app/hacker/application/[code]/page';
 
 interface Props {
   params: {
@@ -8,5 +9,12 @@ interface Props {
 }
 
 export default async function ScanCheckIn({ params: { code } }: Props) {
-  return <CheckIn comp={code} applicants={await getApplicants(code)} />;
+  const checkInApplicants = (await getCheckInApplicants(code)).map(
+    ({ content, ...rest }) => ({
+      ...rest,
+      content: content as unknown as TypedApplication['content'],
+    })
+  );
+
+  return <CheckIn comp={code} applicants={checkInApplicants} />;
 }

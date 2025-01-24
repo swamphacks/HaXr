@@ -2,75 +2,22 @@ import { Application, User } from '@prisma/client';
 import {
   Avatar,
   Button,
-  List,
+  Code,
   Modal,
+  Overlay,
   Stack,
   Text,
-  ThemeIcon,
   Title,
 } from '@mantine/core';
 import { checkIn, getCheckInChecks } from '@/actions/scanning';
-import { ReactNode, useEffect, useState } from 'react';
-import {
-  IconCircleCheck,
-  IconCircleDashed,
-  IconInfoCircle,
-  IconListCheck,
-} from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
-import { Check, CheckType, SingleCheck } from '@/types/scanning';
-import { getApplication } from '@/actions/applications';
-
-const getCheckIcon = (check: Check): ReactNode => {
-  if (check.type === CheckType.Automated) {
-    return (
-      <ThemeIcon color={check.complete ? 'green' : 'red'} size={24} radius='xl'>
-        <IconCircleCheck size={16} />
-      </ThemeIcon>
-    );
-  } else if (check.type === CheckType.Manual) {
-    return (
-      <ThemeIcon color='gray' size={24} radius='xl'>
-        <IconCircleDashed size={16} />
-      </ThemeIcon>
-    );
-  } else if (check.type === CheckType.Info) {
-    return (
-      <ThemeIcon color='blue' size={24} radius='xl'>
-        <IconInfoCircle size={16} />
-      </ThemeIcon>
-    );
-  } else if (check.type === CheckType.Dependent) {
-    return (
-      <ThemeIcon
-        color={
-          check.dependsOn
-            .filter((c) => c.type === CheckType.Automated && c.required)
-            .every((c) => 'complete' in c && c.complete!)
-            ? 'green'
-            : 'red'
-        }
-        size={24}
-        radius='xl'
-      >
-        <IconListCheck size={16} />
-      </ThemeIcon>
-    );
-  }
-};
-
-const renderSingleCheck = (c: SingleCheck) => {
-  if ('required' in c) {
-    if (!c.required) {
-      return (
-        <List.Item icon={getCheckIcon(c)}>
-          <b>(Optional)</b> {c.name}
-        </List.Item>
-      );
-    }
-  }
-  return <List.Item icon={getCheckIcon(c)}>{c.name}</List.Item>;
-};
+import { Check } from '@/types/scanning';
+import { getApplicationByUser } from '@/actions/applications';
+import CheckInChecks from './CheckInChecks';
+import QrScanner from '../scan/QrScanner';
+import { IconCheck } from '@tabler/icons-react';
+import { useLocalStorage } from '@mantine/hooks';
 
 interface Props {
   comp: string | null;
@@ -81,11 +28,16 @@ interface Props {
 export default function CheckInModal({ comp, user, deselectUser }: Props) {
   const [application, setApplication] = useState<Application | null>(null);
   const [checks, setChecks] = useState<Check[] | null>(null);
+  const [badgeId, setBadgeId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Ensure are checking into the correct competition. Don't receive application ID's, we specify the competition!
     if (comp && user) {
-      getApplication(comp, user.id).then((app) => setApplication(app));
-      getCheckInChecks(comp, user.id).then((tasks) => setChecks(tasks));
+      getApplicationByUser(comp, user.id).then(async (app) => {
+        setApplication(app);
+        if (app)
+          await getCheckInChecks(app.id).then((tasks) => setChecks(tasks));
+      });
     }
   }, [comp, user]);
 
@@ -113,23 +65,31 @@ export default function CheckInModal({ comp, user, deselectUser }: Props) {
             </Stack>
           </Stack>
 
-          <List spacing='xs' size='sm' center m='xs'>
-            {checks.map((c) => {
-              if (c.type === CheckType.Dependent) {
-                return (
-                  <>
-                    <List.Item icon={getCheckIcon(c)}>{c.name}</List.Item>
-                    <List.Item>
-                      <List withPadding size='sm'>
-                        {c.dependsOn.map(renderSingleCheck)}
-                      </List>
-                    </List.Item>
-                  </>
-                );
-              }
-              return renderSingleCheck(c);
-            })}
-          </List>
+          <CheckInChecks checks={checks} />
+
+          <Stack align='center' pos='relative'>
+            {badgeId && (
+              <Overlay
+                bg='green'
+                center
+                radius={10}
+                onClick={() => setBadgeId(null)}
+              >
+                <Stack align='center' gap='xs'>
+                  <IconCheck size={128} />
+
+                  <Text size='xl'>
+                    <b>Badge Scanned</b> <br />
+                    <i>(Click to Re-scan)</i>
+                  </Text>
+
+                  <Code>{badgeId}</Code>
+                </Stack>
+              </Overlay>
+            )}
+
+            <QrScanner onScan={setBadgeId} rememberAs='badge-scanner' />
+          </Stack>
 
           <Stack gap='xs' mt='sm'>
             <Button
@@ -137,7 +97,13 @@ export default function CheckInModal({ comp, user, deselectUser }: Props) {
               size='md'
               fullWidth
               onClick={async () => {
-                const r = await checkIn(application.competitionCode, user.id);
+                if (
+                  !badgeId &&
+                  !confirm('You did not scan a badge. Continue with check-in?')
+                )
+                  return;
+
+                const r = await checkIn(application.id, badgeId ?? undefined);
                 if ('error' in r) {
                   if (r.checks) setChecks(r.checks);
                   notifications.show({

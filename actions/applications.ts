@@ -15,6 +15,16 @@ import { getAttendeeOptionsSchema } from '@/schemas/application';
 import { GenericResponse } from '@/types/responses';
 
 export async function getApplication(
+  applicationId: string
+): Promise<Application | null> {
+  return prisma.application.findUnique({
+    where: {
+      id: applicationId,
+    },
+  });
+}
+
+export async function getApplicationByUser(
   competitionCode: string,
   userId: string
 ): Promise<Application | null> {
@@ -69,15 +79,11 @@ export async function getApplicants(
 }
 
 export async function getAttendee(
-  competitionCode: string,
-  userId: string
+  applicationId: string
 ): Promise<Attendee | null> {
   return prisma.attendee.findUnique({
     where: {
-      compCode_userId: {
-        competitionCode,
-        userId,
-      },
+      applicationId,
     },
   });
 }

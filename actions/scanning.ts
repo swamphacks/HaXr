@@ -1,25 +1,44 @@
 'use server';
 
-import { Status, User } from '@prisma/client';
+import { Application, Attendee, Status, User } from '@prisma/client';
 import prisma from '@/prisma';
-import { Check, CheckInResponse, CheckType } from '@/types/scanning';
+import {
+  Check,
+  CheckInResponse,
+  CheckOutResponse,
+  CheckType,
+} from '@/types/scanning';
 import { getApplication, getAttendee } from '@/actions/applications';
 
 export async function getUser(userId: string): Promise<User | null> {
   return prisma.user.findUnique({ where: { id: userId } });
 }
 
-export async function getCheckInChecks(
-  competitionCode: string,
-  userId: string
-): Promise<Check[] | null> {
-  const application = await getApplication(competitionCode, userId);
+export async function getCheckInApplicants(
+  competitionCode: string
+): Promise<(Application & { user: User; attendee: Attendee | null })[]> {
+  return await prisma.application.findMany({
+    where: {
+      competitionCode,
+    },
+    include: {
+      user: true,
+      attendee: true,
+    },
+  });
+}
 
-  // TODO: integrate with forms
+export async function getCheckInChecks(
+  applicationId: string
+): Promise<Check[] | null> {
+  const application = await prisma.application.findUnique({
+    where: { id: applicationId },
+  });
+
   if (application) {
     return [
       {
-        name: 'Is an accepted applicant',
+        name: 'Is an accepted/ applicant',
         type: CheckType.Automated,
         complete:
           application.status === Status.ACCEPTED ||
@@ -27,61 +46,73 @@ export async function getCheckInChecks(
         required: true,
       },
       {
-        name: 'Has completed necessary forms', // TODO: integrate with forms
+        name: 'Has completed necessary forms',
         type: CheckType.Dependent,
         dependsOn: [
           {
-            name: 'Photo release',
-            type: CheckType.Automated,
-            complete: true,
+            // TODO: make this automated
+            name: 'Participation Form',
+            type: CheckType.Manual,
             required: true,
-          },
-          {
-            name: 'Some optional form',
-            type: CheckType.Automated,
-            complete: false,
-            required: false,
           },
         ],
       },
       {
-        name: "Student's ID matches information above",
+        name: 'Has a valid form of identification (e.g. student ID)',
         type: CheckType.Manual,
         required: true,
       },
       {
-        name: 'Some info here',
+        name: 'Student should join the Discord server and link their accounts',
         type: CheckType.Info,
         required: true,
       },
     ];
   }
+  console.error('No application found with applicationId ' + applicationId);
   return null;
 }
 
 export async function checkIn(
-  competitionCode: string,
-  userId: string
+  applicationId: string,
+  badgeId?: string
 ): Promise<CheckInResponse> {
   // Check if already checked-in
-  const checkedInAttendee = await getAttendee(competitionCode, userId);
+  const checkedInAttendee = await getAttendee(applicationId);
   if (checkedInAttendee) {
-    return {
-      attendee: checkedInAttendee,
-      idempotent: true,
-    };
+    // Update badge ID if provided
+    if (badgeId && checkedInAttendee.badgeId !== badgeId) {
+      try {
+        const updated = await prisma.attendee.update({
+          where: { applicationId },
+          data: { badgeId },
+        });
+
+        return { attendee: updated, idempotent: true };
+      } catch {
+        return {
+          error: 'Encountered error updating badge ID',
+        };
+      }
+    } else {
+      // Aleady checked in, nothing to do
+      return {
+        attendee: checkedInAttendee,
+        idempotent: true,
+      };
+    }
   }
 
   // Find application
-  const application = await getApplication(competitionCode, userId);
+  const application = await getApplication(applicationId);
   if (!application) {
     return {
-      error: 'Application does not exist for this user',
+      error: 'Application does not exist.',
     };
   }
 
   // Verify applicant completed all automated checks
-  const checks = await getCheckInChecks(competitionCode, userId);
+  const checks = await getCheckInChecks(application.id);
   if (!checks) return { error: "Couldn't get checks for applicant" };
   if (
     checks
@@ -98,9 +129,11 @@ export async function checkIn(
   try {
     const attendee = await prisma.attendee.create({
       data: {
-        competitionCode,
-        userId,
+        competitionCode: application.competitionCode,
         applicationId: application.id,
+        userId: application.userId,
+
+        badgeId, // Optional
       },
     });
 
@@ -110,7 +143,25 @@ export async function checkIn(
   } catch {
     return {
       error:
-        'Encountered error checking in applicant (they may already be checked in)',
+        'Encountered error checking in applicant (they may already be checked in or that badge may already be in use)',
+    };
+  }
+}
+
+export async function checkOut(
+  applicationId: string
+): Promise<CheckOutResponse> {
+  try {
+    await prisma.attendee.delete({
+      where: { applicationId },
+    });
+
+    return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      error:
+        'Encountered error checking out applicant. It may be that they are not checked in.',
     };
   }
 }

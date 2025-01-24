@@ -1,5 +1,5 @@
 import {
-  getApplication,
+  getApplicationByUser,
   getCompetitionApplicationStats,
 } from '@/actions/applications';
 import { getCompetition } from '@/actions/competition';
@@ -28,7 +28,7 @@ export default async function WaitlistPage({
   const statusCounts = await getCompetitionApplicationStats(code);
 
   // Fetch user application
-  const userApp = await getApplication(code, session.user.id);
+  const userApp = await getApplicationByUser(code, session.user.id);
   if (!userApp || userApp.status !== Status.WAITLISTED) redirect('/hacker');
 
   return (
