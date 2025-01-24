@@ -27,6 +27,11 @@ export const createRedeemableSchema = yup
       .trim()
       .optional()
       .max(descriptionLength, descriptionError),
+    quantity: yup
+      .number()
+      .integer()
+      .required()
+      .min(0, 'Quantity must be at least 0'),
   });
 
 export const updateRedeemableSchema = yup

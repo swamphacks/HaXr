@@ -85,7 +85,7 @@ export default function RedeemableTable({ compCode, redeemables }: Props) {
 
         if (resp.status === 204) {
           console.log(resp);
-          data[row.index] = values;
+          data[row.index] = { ...values, createdAt: data[row.index].createdAt };
           setData([...data]);
           table.setEditingRow(null);
           notifications.show({
@@ -115,6 +115,7 @@ export default function RedeemableTable({ compCode, redeemables }: Props) {
     async ({ values, exitCreatingMode }) => {
       try {
         delete values.createdAt;
+        values.quantity = parseInt(values.quantity) || values.quantity;
         const request: CreateRedeemableBody = {
           ...values,
           competitionCode: compCode,

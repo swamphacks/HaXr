@@ -11,6 +11,7 @@ import {
   IconCoin,
   IconLego,
   IconGavel,
+  IconAt,
 } from '@tabler/icons-react';
 import { useDisclosure } from '@mantine/hooks';
 import { GetAttendeesResponse } from '@/types/application';
@@ -83,6 +84,11 @@ export default function ScanRedeemable({
               <IconUser width={20} color='#995ff5' />
             </div>
             <h1>{`${user.firstName} ${user.lastName}`}</h1>
+
+            <div className='col-start-1'>
+              <IconAt width={20} color='#fcba03' />
+            </div>
+            <h1>{user.email}</h1>
           </div>
         ),
         labels: { confirm: 'Confirm', cancel: 'Cancel' },
