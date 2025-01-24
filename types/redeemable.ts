@@ -1,5 +1,4 @@
-import { Transaction } from '@prisma/client';
-import { Redeemable } from '@prisma/client';
+import { Transaction, Redeemable, User } from '@prisma/client';
 
 export type GenericResponse = {
   status: number;
@@ -50,3 +49,8 @@ export class InsufficientFundsError extends Error {
     Object.setPrototypeOf(this, InsufficientFundsError.prototype);
   }
 }
+
+export type TransactionWithUserAndRedeemable = Transaction & {
+  attendee: { user: User };
+  redeemable: Redeemable;
+};

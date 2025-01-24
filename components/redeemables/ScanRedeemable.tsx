@@ -96,13 +96,6 @@ export default function ScanRedeemable({
 
   return (
     <div className='flex flex-col gap-4'>
-      <Stack align='center'>
-        <LoadingOverlay
-          visible={visible}
-          overlayProps={{ radius: 'sm', blur: 3 }}
-        />
-        <QrScanner onScan={onScan} rememberAs='redeemable-scanner' />
-      </Stack>
       <Select
         label='Redeemable'
         placeholder='Select Redeemable'
@@ -130,6 +123,14 @@ export default function ScanRedeemable({
           required={true}
         />
       </Flex>
+
+      <Stack align='center'>
+        <LoadingOverlay
+          visible={visible}
+          overlayProps={{ radius: 'sm', blur: 3 }}
+        />
+        <QrScanner onScan={onScan} rememberAs='redeemable-scanner' />
+      </Stack>
 
       <AttendeeTable
         compCode={compCode}

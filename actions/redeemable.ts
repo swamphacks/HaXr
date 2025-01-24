@@ -2,7 +2,7 @@
 
 import prisma from '@/prisma';
 import { ValidationError } from 'yup';
-import { Prisma } from '@prisma/client';
+import { Prisma, Transaction, User } from '@prisma/client';
 import {
   CreateRedeemableBody,
   UpdateRedeemableBody,
@@ -14,6 +14,7 @@ import {
   InsufficientFundsError,
   GetRedeemableOptions,
   TransactionInfo,
+  TransactionWithUserAndRedeemable,
 } from '@/types/redeemable';
 import {
   createRedeemableSchema,
@@ -248,6 +249,48 @@ export async function createTransaction(
             statusText: 'Redeemable does not exist',
           };
       }
+    }
+
+    throw e;
+  }
+}
+
+export async function getTransactions(
+  competitionCode: string
+): Promise<TransactionWithUserAndRedeemable[] | undefined> {
+  return await prisma.transaction.findMany({
+    where: {
+      competitionCode,
+    },
+    include: {
+      attendee: {
+        include: {
+          user: true,
+        },
+      },
+      redeemable: true,
+    },
+  });
+}
+
+export async function deleteTransaction(id: string) {
+  try {
+    await prisma.transaction.delete({
+      where: {
+        id,
+      },
+    });
+
+    return { status: 204 };
+  } catch (e) {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      e.code === 'P2025'
+    ) {
+      return {
+        status: 404,
+        statusText: 'Transaction does not exist',
+      };
     }
 
     throw e;
