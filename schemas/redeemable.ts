@@ -45,6 +45,7 @@ export const updateRedeemableSchema = yup
       .trim()
       .optional()
       .max(descriptionLength, descriptionError),
+    quantity: yup.number().integer().optional(),
   });
 
 export const getRedeemableSchema = yup
@@ -86,7 +87,11 @@ export const createTransactionSchema = yup
       .string()
       .trim()
       .required('Please provide a redeemable name'),
-    quantity: yup.number().integer().required('Please provide a quantity'),
+    quantity: yup
+      .number()
+      .integer()
+      .notOneOf([0])
+      .required('Please provide a quantity'),
   });
 
 export const getTransactionSchema = yup

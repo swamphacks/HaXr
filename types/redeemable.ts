@@ -1,18 +1,17 @@
 import { Transaction } from '@prisma/client';
 import { Redeemable } from '@prisma/client';
 
-export type CreateRedeemableResponse = {
+export type GenericResponse = {
   status: number;
   statusText?: string;
   data: Redeemable | null;
 };
-export type UpdateRedeemableResponse = CreateRedeemableResponse;
-export type GetRedeemableResponse = CreateRedeemableResponse;
 
-export type DeleteRedeemableResponse = {
-  status: number;
-  statusText?: string;
-};
+export type CreateRedeemableResponse = GenericResponse;
+export type UpdateRedeemableResponse = GenericResponse;
+export type GetRedeemableResponse = GenericResponse;
+export type CreateTransactionResponse = Omit<GenericResponse, 'data'>;
+export type DeleteRedeemableResponse = Omit<GenericResponse, 'data'>;
 
 export type GetRedeemableOptionsCursor = {
   competitionCode?: string;

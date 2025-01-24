@@ -11,7 +11,7 @@ import { notifications } from '@mantine/notifications';
 import { Redeemable } from '@prisma/client';
 import { modals } from '@mantine/modals';
 import { CreateRedeemableBody } from '@/types/redeemable';
-import { IconEdit, IconTrash, IconPlus } from '@tabler/icons-react';
+import { IconEdit, IconTrash } from '@tabler/icons-react';
 import {
   MantineReactTable,
   useMantineReactTable,
@@ -19,6 +19,7 @@ import {
   type MRT_TableOptions,
   type MRT_Row,
 } from 'mantine-react-table';
+import Link from 'next/link';
 
 type RedeemableColumn = Omit<Redeemable, 'createdAt'> & { createdAt: string };
 
@@ -28,18 +29,24 @@ interface Props {
 }
 
 export default function RedeemableTable({ compCode, redeemables }: Props) {
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string | undefined>
-  >({});
-
   const columns = useMemo<MRT_ColumnDef<RedeemableColumn>[]>(
     () => [
       {
         header: 'Name',
         accessorKey: 'name',
         enableEditing: true,
-        mantineEditTextInputProps: ({ cell, row }) => ({
+        mantineEditTextInputProps: () => ({
           type: 'email',
+          required: true,
+        }),
+      },
+      {
+        header: 'Quantity',
+        accessorKey: 'quantity',
+        enableEditing: true,
+        mantineEditTextInputProps: () => ({
+          type: 'number',
+          min: 0,
           required: true,
         }),
       },
@@ -60,17 +67,22 @@ export default function RedeemableTable({ compCode, redeemables }: Props) {
   const [data, setData] = useState<RedeemableColumn[]>(() =>
     redeemables.map((r) => ({
       ...r,
-      createdAt: new Date(r.createdAt).toDateString(),
+      createdAt: new Date(r.createdAt).toLocaleString(),
     }))
   );
 
   const handleSaveRow: MRT_TableOptions<RedeemableColumn>['onEditingRowSave'] =
     async ({ table, row, values }) => {
       try {
+        delete values.createdAt;
+        delete values.competitionCode;
+
+        values.quantity = parseInt(values.quantity) || 0;
+
         const resp = await updateRedeemable(compCode, data[row.index].name, {
-          name: values.name,
-          description: values.description,
+          ...values,
         });
+
         if (resp.status === 204) {
           console.log(resp);
           data[row.index] = values;
@@ -186,17 +198,32 @@ export default function RedeemableTable({ compCode, redeemables }: Props) {
     onEditingRowSave: handleSaveRow,
     onCreatingRowSave: handleCreateRow,
     renderTopToolbarCustomActions: ({ table }) => (
-      <Button
-        styles={{
-          root: {
-            '--button-padding-x': '12px',
-          },
-        }}
-        variant='light'
-        onClick={() => table.setCreatingRow(true)}
-      >
-        Create
-      </Button>
+      <Flex gap='sm'>
+        <Button
+          styles={{
+            root: {
+              '--button-padding-x': '12px',
+            },
+          }}
+          variant='light'
+          onClick={() => table.setCreatingRow(true)}
+        >
+          Create
+        </Button>
+        <Button
+          color='violet'
+          component={Link}
+          href={`/admin/comp/${compCode}/scan/redeemables`}
+          styles={{
+            root: {
+              '--button-padding-x': '12px',
+            },
+          }}
+          variant='light'
+        >
+          Scan
+        </Button>
+      </Flex>
     ),
     renderRowActions: ({ row, table }) => (
       <Flex gap='sm'>

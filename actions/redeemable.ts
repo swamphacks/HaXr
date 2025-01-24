@@ -9,6 +9,7 @@ import {
   CreateRedeemableResponse,
   UpdateRedeemableResponse,
   DeleteRedeemableResponse,
+  CreateTransactionResponse,
   GetRedeemableResponse,
   InsufficientFundsError,
   GetRedeemableOptions,
@@ -47,6 +48,7 @@ export async function getRedeemables(options: GetRedeemableOptions) {
     !!validatedOptions.cursor &&
     !!validatedOptions.cursor.name &&
     !!validatedOptions.cursor.name;
+
   return await prisma.redeemable.findMany({
     take: validatedOptions.limit,
     skip: canSkip ? 1 : 0,
@@ -173,46 +175,84 @@ export async function deleteRedeemable(
 }
 
 export async function createTransaction(
-  competitionCode: string,
-  redeemableName: string,
   info: TransactionInfo
-) {
-  const vInfo = await createTransactionSchema.validate(info);
+): Promise<CreateTransactionResponse> {
+  try {
+    const vInfo = await createTransactionSchema.validate(info);
 
-  // Giving user a redeemable
-  if (info.quantity > 0) {
-    await prisma.transaction.create({
-      data: {
-        ...vInfo,
-      },
-    });
-    return;
-  }
+    if (info.quantity > 0) {
+      await prisma.transaction.create({
+        data: {
+          ...vInfo,
+        },
+      });
+    } else {
+      await prisma.$transaction(async (tx) => {
+        // Get default quantity
+        const redeemable = await tx.redeemable.findUniqueOrThrow({
+          where: {
+            competitionCode_name: {
+              competitionCode: vInfo.competitionCode,
+              name: vInfo.redeemableName,
+            },
+          },
+        });
 
-  // User is redeeming a redeemable - use db transactions
-  await prisma.$transaction(async (tx) => {
-    // Calculate user balance
-    const balance = await tx.transaction.aggregate({
-      _sum: {
-        quantity: true,
-      },
-      where: {
-        competitionCode: vInfo.competitionCode,
-        userId: vInfo.userId,
-        redeemableName: vInfo.redeemableName,
-      },
-    });
+        // Calculate total quantity redeembed from transactions
+        const aggregate = await tx.transaction.aggregate({
+          where: {
+            competitionCode: vInfo.competitionCode,
+            redeemableName: vInfo.redeemableName,
+          },
+          _sum: {
+            quantity: true,
+          },
+        });
 
-    if ((balance._sum.quantity ?? 0) + info.quantity < 0) {
-      throw new InsufficientFundsError(
-        'Cannot redeem redeemable due to insufficient funds'
-      );
+        console.log(
+          redeemable.quantity + (aggregate._sum?.quantity ?? 0) + vInfo.quantity
+        );
+        if (
+          redeemable.quantity +
+            (aggregate._sum?.quantity ?? 0) +
+            vInfo.quantity <
+          0
+        ) {
+          throw new InsufficientFundsError(
+            'Insufficient quantity, unable to redeem.'
+          );
+        }
+
+        // Record transaction
+        await tx.transaction.create({
+          data: {
+            ...vInfo,
+          },
+        });
+      });
     }
 
-    await tx.transaction.create({
-      data: {
-        ...info,
-      },
-    });
-  });
+    return { status: 201 };
+  } catch (e) {
+    if (e instanceof ValidationError)
+      return { status: 400, statusText: e.message };
+    if (e instanceof InsufficientFundsError)
+      return { status: 403, statusText: e.message };
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      switch (e.code) {
+        case 'P2003':
+          return {
+            status: 404,
+            statusText: 'competitionCode, userId, or redeemableName not found',
+          };
+        case 'P2025':
+          return {
+            status: 404,
+            statusText: 'Redeemable does not exist',
+          };
+      }
+    }
+
+    throw e;
+  }
 }

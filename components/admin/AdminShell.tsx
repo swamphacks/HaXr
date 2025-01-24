@@ -164,9 +164,9 @@ export default function AdminShell({
             />
             <NavLink
               component={Link}
-              label='Swag Shop'
+              label='Redeemables'
               leftSection={<IconLego size='1rem' />}
-              href={`/admin/comp/${safeCode}/scan/swag`}
+              href={`/admin/comp/${safeCode}/scan/redeemables`}
               active={pathname === `/admin/comp/${safeCode}/scan/swag`}
             />
             <NavLink

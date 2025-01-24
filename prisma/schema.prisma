@@ -152,7 +152,6 @@ model Attendee {
 
   competition  Competition   @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  // attendeeRedeemables AttendeeRedeemables[]
   transactions Transaction[]
 
   @@unique([competitionCode, userId], name: "compCode_userId")
@@ -166,9 +165,23 @@ model Redeemable {
   description  String        @default("")
   createdAt    DateTime      @default(now())
   transactions Transaction[]
+  quantity     Int           @default(1)
 
   @@id([competitionCode, name])
 }
+
+// model AttendeeRedeemables {
+//   competitionCode String
+//   userId          String
+//   redeemableName  String
+//
+//   attendee   Attendee   @relation(fields: [competitionCode, userId], references: [competitionCode, userId], onDelete: Cascade, onUpdate: Cascade)
+//   redeemable Redeemable @relation(fields: [competitionCode, redeemableName], references: [competitionCode, name], onDelete: Cascade, onUpdate: Cascade)
+//
+//   quantity Int
+//
+//   @@id([competitionCode, userId, redeemableName])
+// }
 
 model Transaction {
   id              String @id @default(cuid())
