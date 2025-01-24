@@ -5,29 +5,29 @@ import { Text } from '@mantine/core';
 import ScanRedeemable from '@/components/redeemables/ScanRedeemable';
 
 interface Props {
-  params: {
-    code: string;
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-  };
+	params: {
+		code: string;
+	};
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function ScanRedeemables({ params }: Props) {
-  const [attendees, redeemables, searchParams] = await Promise.all([
-    await getAttendees(params.code, { user: true }),
-    await getRedeemables({ competitionCode: params.code }),
-    await params.searchParams,
-  ]);
+export default async function ScanRedeemables({ params, searchParams }: Props) {
+	const [attendees, redeemables, search] = await Promise.all([
+		await getAttendees(params.code, { user: true }),
+		await getRedeemables({ competitionCode: params.code }),
+		await searchParams
+	]);
 
-  const name = searchParams?.name;
+	const name = Array.isArray(search.name) ? search.name.at(0) : search.name;
 
-  if (!attendees.data) return <Text>{attendees.statusText}</Text>;
+	if (!attendees.data) return <Text>{attendees.statusText}</Text>;
 
-  return (
-    <ScanRedeemable
-      compCode={params.code}
-      attendees={attendees.data}
-      redeemables={redeemables}
-      name={Array.isArray(name) ? name.at(0) : name}
-    />
-  );
+	return (
+		<ScanRedeemable
+			compCode={params.code}
+			attendees={attendees.data}
+			redeemables={redeemables}
+			name={Array.isArray(name) ? name.at(0) : name}
+		/>
+	);
 }
