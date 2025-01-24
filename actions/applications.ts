@@ -10,9 +10,10 @@ import { ValidationError } from 'yup';
 import prisma from '@/prisma';
 import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 import { PromoteError, PromoteFromWaitlistResponse } from '@/types/waitlist';
-import { GetAttendeesResponse, GetAttendeesOptions } from '@/types/application';
+import { GetAttendeesOptions } from '@/types/application';
 import { getAttendeeOptionsSchema } from '@/schemas/application';
 import { GenericResponse } from '@/types/responses';
+import { AttendeeWithUser } from '@/types/attendee';
 
 export async function getApplication(
   applicationId: string
@@ -84,6 +85,21 @@ export async function getAttendee(
   return prisma.attendee.findUnique({
     where: {
       applicationId,
+    },
+  });
+}
+
+export async function getAttendeeByBadgeId(
+  badgeId: string,
+  code?: string
+): Promise<AttendeeWithUser | null> {
+  return prisma.attendee.findUnique({
+    where: {
+      badgeId,
+      competitionCode: code,
+    },
+    include: {
+      user: true,
     },
   });
 }

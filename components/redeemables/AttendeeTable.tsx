@@ -1,20 +1,19 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Redeemable, Application, User } from '@prisma/client';
-import { Button, Text } from '@mantine/core';
+import { Button } from '@mantine/core';
 import { GetAttendeesResponse } from '@/types/application';
-import { createTransaction } from '@/actions/redeemable';
 import { notifications } from '@mantine/notifications';
 import { modals } from '@mantine/modals';
 import { IconScan } from '@tabler/icons-react';
+import { onTransactionConfirm } from '@/utils/redeemable';
 import {
   MantineReactTable,
   useMantineReactTable,
   type MRT_ColumnDef,
-  type MRT_TableOptions,
   type MRT_Row,
 } from 'mantine-react-table';
+import TransactionModal from '@/components/redeemables/TransactionModal';
 
 interface Props {
   compCode: string;
@@ -54,61 +53,39 @@ export default function AttendeeTable({
   const openTransactionModal = (
     row: MRT_Row<Required<GetAttendeesResponse>>
   ) => {
+    if (!redeemableName || !quantity || !action) {
+      notifications.show({
+        color: 'red',
+        title: 'Missing fields',
+        message: 'Please select a redeemable, quantity, and action',
+      });
+      close();
+      return;
+    }
+
+    const user = row.original.user;
+
     return modals.openConfirmModal({
       title: 'Confirm Transaction',
       children: (
-        <div className='flex flex-col gap-4'>
-          <div>
-            <h1 className='font-bold'>Redeemable</h1>
-            <p>{redeemableName}</p>
-          </div>
-          <div>
-            <h1 className='font-bold'>Action</h1>
-            <p>{action}</p>
-          </div>
-          <div>
-            <h1 className='font-bold'>Quantity</h1>
-            <p>{quantity}</p>
-          </div>
-          <div>
-            <h1 className='font-bold'>Attendee</h1>
-            <p>{`${row.original.user.firstName} ${row.original.user.lastName}`}</p>
-          </div>
-        </div>
+        <TransactionModal
+          redeemableName={redeemableName}
+          action={action}
+          quantity={quantity}
+          competitionCode={compCode}
+          user={user}
+        />
       ),
       labels: { confirm: 'Confirm', cancel: 'Cancel' },
       confirmProps: { color: 'red' },
-      onConfirm: async () => {
-        try {
-          const resp = await createTransaction({
-            competitionCode: compCode,
-            redeemableName: redeemableName ?? '',
-            quantity: (action === 'Redeem' ? -1 : 1) * (quantity ?? 1),
-            userId: row.original.userId,
-          });
-
-          if (resp.status === 201) {
-            notifications.show({
-              color: 'green',
-              title: 'Success!',
-              message: 'Transaction created successfully.',
-            });
-          } else {
-            notifications.show({
-              color: 'red',
-              title: 'Error creating transaction',
-              message: resp.statusText,
-            });
-          }
-        } catch (e) {
-          notifications.show({
-            color: 'red',
-            title: 'An unknown error occurred.',
-            message: 'Check console for more info.',
-          });
-          console.error(e);
-        }
-      },
+      onConfirm: async () =>
+        await onTransactionConfirm(
+          user,
+          compCode,
+          redeemableName,
+          action,
+          quantity
+        ),
     });
   };
 
