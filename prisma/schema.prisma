@@ -174,19 +174,6 @@ model Redeemable {
   @@id([competitionCode, name])
 }
 
-// model AttendeeRedeemables {
-//   competitionCode String
-//   userId          String
-//   redeemableName  String
-//
-//   attendee   Attendee   @relation(fields: [competitionCode, userId], references: [competitionCode, userId], onDelete: Cascade, onUpdate: Cascade)
-//   redeemable Redeemable @relation(fields: [competitionCode, redeemableName], references: [competitionCode, name], onDelete: Cascade, onUpdate: Cascade)
-//
-//   quantity Int
-//
-//   @@id([competitionCode, userId, redeemableName])
-// }
-
 model Transaction {
   id              String @id @default(cuid())
   competitionCode String
