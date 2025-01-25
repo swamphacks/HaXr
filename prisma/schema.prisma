@@ -206,8 +206,11 @@ model Event {
 
 model EventAttendee {
   eventId       String
-  applicationId String @unique
+  applicationId String
+  scanTime      DateTime @default(now())
 
   event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   attendee Attendee @relation(fields: [applicationId], references: [applicationId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([eventId, applicationId])
 }

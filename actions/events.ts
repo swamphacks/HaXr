@@ -66,8 +66,10 @@ export async function markAttendance(
 
   await prisma.eventAttendee.upsert({
     where: {
-      eventId,
-      applicationId,
+      eventId_applicationId: {
+        eventId,
+        applicationId,
+      },
     },
     update: {},
     create: {
