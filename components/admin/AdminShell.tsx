@@ -30,6 +30,9 @@ import {
   IconSocial,
   IconStatusChange,
   IconTicket,
+  IconCheck,
+  IconForms,
+  IconClipboardCheck,
 } from '@tabler/icons-react';
 import UserAvatar from '@/components/UserAvatar';
 import { Session } from 'next-auth';
@@ -137,19 +140,19 @@ export default function AdminShell({
           >
             <NavLink
               component={Link}
-              label='Edit Form'
-              leftSection={<IconEdit size='1rem' />}
-              href={`/admin/comp/${safeCode}/apps/edit-form`}
-              active={pathname === `/admin/comp/${safeCode}/apps/edit-form`}
-            />
-
-            <NavLink
-              component={Link}
               label='Review'
               description={`${percentAppsReviewed}% reviewed (${comp.stats.remaining} remaining)`}
               leftSection={<IconStatusChange size='1rem' />}
               href={`/admin/comp/${safeCode}/apps`}
               active={pathname === `/admin/comp/${safeCode}/apps`}
+            />
+
+            <NavLink
+              component={Link}
+              label='Form Status'
+              leftSection={<IconClipboardCheck size='1rem' />}
+              href={`/admin/comp/${safeCode}/apps/form-status`}
+              active={pathname === `/admin/comp/${safeCode}/apps/form-status`}
             />
           </NavLink>
 

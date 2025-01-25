@@ -13,7 +13,7 @@ interface Props {
 }
 
 const getCheckIcon = (check: Check): ReactNode => {
-  if (check.type === CheckType.Automated) {
+  if ('complete' in check) {
     return (
       <ThemeIcon color={check.complete ? 'green' : 'red'} size={24} radius='xl'>
         <IconCircleCheck size={16} />

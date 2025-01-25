@@ -52,8 +52,9 @@ export async function getCheckInChecks(
           {
             // TODO: make this automated
             name: 'Participation Form',
-            type: CheckType.Manual,
-            required: true,
+            type: CheckType.Automated,
+            complete: application.completedForm,
+            required: false,
           },
         ],
       },
@@ -71,6 +72,16 @@ export async function getCheckInChecks(
   }
   console.error('No application found with applicationId ' + applicationId);
   return null;
+}
+
+// Every required automated check must be complete
+function canCheckIn(checks: Check[]): boolean {
+  const requiredAutomated = checks
+    .flatMap((c) => (c.type === CheckType.Dependent ? c.dependsOn : c))
+    .filter((c) => c.type === CheckType.Automated)
+    .filter((c) => c.required);
+
+  return requiredAutomated.every((c) => c.complete);
 }
 
 export async function checkIn(
@@ -114,12 +125,7 @@ export async function checkIn(
   // Verify applicant completed all automated checks
   const checks = await getCheckInChecks(application.id);
   if (!checks) return { error: "Couldn't get checks for applicant" };
-  if (
-    checks
-      .flatMap((c) => (c.type === CheckType.Dependent ? c.dependsOn : c))
-      .filter((c) => c.type === CheckType.Automated)
-      .some((c) => !('complete' in c && c.required ? c.complete : true))
-  ) {
+  if (!canCheckIn(checks)) {
     return {
       checks,
       error: 'Not all automated checks are complete',
