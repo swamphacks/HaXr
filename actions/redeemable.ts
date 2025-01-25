@@ -204,6 +204,7 @@ export async function createTransaction(
           where: {
             competitionCode: vInfo.competitionCode,
             redeemableName: vInfo.redeemableName,
+            userId: vInfo.userId,
           },
           _sum: {
             quantity: true,
