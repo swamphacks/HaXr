@@ -11,7 +11,6 @@ import {
   Image,
   NavLink,
   ScrollArea,
-  Text,
   Title,
 } from '@mantine/core';
 import {
@@ -21,7 +20,6 @@ import {
   IconCoin,
   IconDoorEnter,
   IconEdit,
-  IconExchange,
   IconInbox,
   IconInfoCircle,
   IconLego,
@@ -197,7 +195,7 @@ export default function AdminShell({
             <NavLink
               component={Link}
               label='Check-in'
-              description='17% checked-in (323 remaining)'
+              // description='17% checked-in (323 remaining)'
               leftSection={<IconDoorEnter size='1rem' />}
               href={`/admin/comp/${safeCode}/scan/check-in`}
               active={pathname === `/admin/comp/${safeCode}/scan/check-in`}
