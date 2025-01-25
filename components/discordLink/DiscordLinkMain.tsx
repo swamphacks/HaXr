@@ -76,8 +76,6 @@ export default function DiscordLinkMain() {
         }
 
         const data: DiscordLinkInfo = await res.json();
-
-        console.log('DATA', data);
         setDiscordInfo(data);
       } catch (e) {
         setPageError('Error fetching Discord profile');
@@ -87,7 +85,6 @@ export default function DiscordLinkMain() {
       }
     };
 
-    console.log('Snowflake: ', discordSnowflake);
     fetchDiscordProfile();
   }, [discordSnowflake]);
 
@@ -105,8 +102,6 @@ export default function DiscordLinkMain() {
       setButtonLoading(false);
       return;
     }
-
-    console.log('User', user);
 
     try {
       const result = await linkDiscord(user.user.id, discordSnowflake);
