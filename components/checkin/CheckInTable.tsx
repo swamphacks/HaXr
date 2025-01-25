@@ -25,7 +25,7 @@ export default function CheckInTable({ applicants, selectUser }: Props) {
     () => [
       {
         header: 'Name',
-        accessorFn: (row) => `${row.user.firstName} ${row.user.lastName}`,
+        accessorFn: (row) => `${row.content.firstName} ${row.content.lastName}`,
         filterVariant: 'autocomplete',
         Cell: ({ renderedCellValue, row }) => (
           <Group wrap='nowrap'>
