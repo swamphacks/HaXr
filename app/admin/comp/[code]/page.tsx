@@ -1,4 +1,6 @@
-import { Code } from '@mantine/core';
+import { getCheckInApplicants } from '@/actions/scanning';
+import { Code, Divider } from '@mantine/core';
+import { Status } from '@prisma/client';
 
 interface Props {
   params: {
@@ -6,10 +8,22 @@ interface Props {
   };
 }
 
-export default function Admin({ params: { code } }: Props) {
+export default async function Admin({ params: { code } }: Props) {
+  const { checkedIn, total } = await getCheckInApplicants(code).then((apps) => {
+    const attending = apps.filter((app) => app.status === Status.ATTENDING);
+
+    return {
+      checkedIn: attending.filter((app) => app.attendee !== null).length,
+      total: attending.length,
+    };
+  });
+
   return (
     <>
-      Admin. Managing competition with <Code>code = {code}</Code>.
+      Managing competition with <Code>code = {code}</Code>.
+      <Divider my='sm' />
+      {checkedIn} / {total} attendees checked in (
+      {((checkedIn / total) * 100).toFixed(0)}%)
     </>
   );
 }
