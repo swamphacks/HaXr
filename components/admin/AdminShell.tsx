@@ -16,6 +16,7 @@ import {
 } from '@mantine/core';
 import {
   IconArrowLeft,
+  IconCashRegister,
   IconCalendar,
   IconCoin,
   IconDoorEnter,
@@ -134,12 +135,29 @@ export default function AdminShell({
           </NavLink>
 
           <NavLink
-            component={Link}
-            label='Redeemables & Swag'
+            label='Redeemables'
             leftSection={<IconCoin size='1rem' />}
-            href={`/admin/comp/${safeCode}/redeemables`}
-            active={pathname === `/admin/comp/${safeCode}/redeemables`}
-          />
+            defaultOpened={pathname.startsWith(
+              `/admin/comp/${safeCode}/redeemables`
+            )}
+          >
+            <NavLink
+              component={Link}
+              label='Manage Redeemables'
+              leftSection={<IconLego size='1rem' />}
+              href={`/admin/comp/${safeCode}/redeemables/manage`}
+              active={pathname === `/admin/comp/${safeCode}/redeemables/manage`}
+            />
+            <NavLink
+              component={Link}
+              label='Transactions'
+              leftSection={<IconCashRegister size='1rem' />}
+              href={`/admin/comp/${safeCode}/redeemables/transactions`}
+              active={
+                pathname === `/admin/comp/${safeCode}/redeemables/transactions`
+              }
+            />
+          </NavLink>
 
           <NavLink
             component={Link}
@@ -164,9 +182,9 @@ export default function AdminShell({
             />
             <NavLink
               component={Link}
-              label='Swag Shop'
+              label='Redeemables'
               leftSection={<IconLego size='1rem' />}
-              href={`/admin/comp/${safeCode}/scan/swag`}
+              href={`/admin/comp/${safeCode}/scan/redeemables`}
               active={pathname === `/admin/comp/${safeCode}/scan/swag`}
             />
             <NavLink

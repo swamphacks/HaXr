@@ -10,6 +10,7 @@ import Head from 'next/head';
 import { SessionProvider } from 'next-auth/react';
 import { DatesProvider } from '@mantine/dates';
 import { Notifications } from '@mantine/notifications';
+import { ModalsProvider } from '@mantine/modals';
 
 export const metadata: Metadata = {
   title: 'SwampHacks Portal',
@@ -29,10 +30,12 @@ export default function RootLayout({
         </Head>
         <body>
           <MantineProvider defaultColorScheme='dark'>
-            <DatesProvider settings={{ timezone: 'EST' }}>
-              <Notifications />
-              {children}
-            </DatesProvider>
+            <ModalsProvider>
+              <DatesProvider settings={{ timezone: 'EST' }}>
+                <Notifications />
+                {children}
+              </DatesProvider>
+            </ModalsProvider>
           </MantineProvider>
         </body>
       </html>

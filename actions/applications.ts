@@ -6,9 +6,13 @@ import {
   Status,
   User,
 } from '@prisma/client';
+import { ValidationError } from 'yup';
 import prisma from '@/prisma';
 import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 import { PromoteError, PromoteFromWaitlistResponse } from '@/types/waitlist';
+import { AttendeeWithUser, GetAttendeesOptions } from '@/types/application';
+import { getAttendeeOptionsSchema } from '@/schemas/application';
+import { GenericResponse } from '@/types/responses';
 
 export async function getApplication(
   applicationId: string
@@ -82,6 +86,44 @@ export async function getAttendee(
       applicationId,
     },
   });
+}
+
+export async function getAttendeeByBadgeId(
+  badgeId: string,
+  code?: string
+): Promise<AttendeeWithUser | null> {
+  return prisma.attendee.findUnique({
+    where: {
+      badgeId,
+      competitionCode: code,
+    },
+    include: {
+      user: true,
+    },
+  });
+}
+
+export async function getAttendees(
+  competitionCode: string,
+  options?: GetAttendeesOptions
+): Promise<GenericResponse> {
+  try {
+    const vOptions = await getAttendeeOptionsSchema.validate(options ?? {});
+    const resp = await prisma.attendee.findMany({
+      include: {
+        ...vOptions,
+      },
+      where: {
+        competitionCode,
+      },
+    });
+    return { status: 200, data: resp };
+  } catch (e) {
+    if (e instanceof ValidationError)
+      return { status: 400, statusText: e.message, data: null };
+
+    throw e;
+  }
 }
 
 export const createApplication = async (
