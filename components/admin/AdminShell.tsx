@@ -216,7 +216,7 @@ export default function AdminShell({
               href={`/admin/comp/${safeCode}/scan/event`}
               active={pathname === `/admin/comp/${safeCode}/scan/event`}
             />
-            <NavLink
+            {/* <NavLink
               component={Link}
               label='Item Loan'
               description={
@@ -227,7 +227,7 @@ export default function AdminShell({
               leftSection={<IconExchange size='1rem' />}
               href={`/admin/comp/${safeCode}/scan/loan`}
               active={pathname === `/admin/comp/${safeCode}/scan/loan`}
-            />
+            /> */}
           </NavLink>
 
           <NavLink
