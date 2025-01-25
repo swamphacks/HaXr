@@ -10,7 +10,7 @@ import { ValidationError } from 'yup';
 import prisma from '@/prisma';
 import { HackerApplicationFormValues } from '@/app/hacker/application/[code]/page';
 import { PromoteError, PromoteFromWaitlistResponse } from '@/types/waitlist';
-import { GetAttendeesOptions } from '@/types/application';
+import { AttendeeWithUser, GetAttendeesOptions } from '@/types/application';
 import { getAttendeeOptionsSchema } from '@/schemas/application';
 import { GenericResponse } from '@/types/responses';
 
