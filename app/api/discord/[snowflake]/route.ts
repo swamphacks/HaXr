@@ -57,8 +57,6 @@ export async function GET(
     }
 
     if (discordProfile.status === 400) {
-      console.log('Invalid Discord snowflake', await discordProfile.json());
-
       return NextResponse.json(
         { error: 'Invalid Discord snowflake' },
         { status: 400 }
