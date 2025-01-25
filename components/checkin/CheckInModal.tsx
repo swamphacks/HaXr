@@ -17,7 +17,6 @@ import { getApplicationByUser } from '@/actions/applications';
 import CheckInChecks from './CheckInChecks';
 import QrScanner from '../scan/QrScanner';
 import { IconCheck } from '@tabler/icons-react';
-import { useLocalStorage } from '@mantine/hooks';
 
 interface Props {
   comp: string | null;
@@ -113,6 +112,7 @@ export default function CheckInModal({ comp, user, deselectUser }: Props) {
                   });
                 } else {
                   deselectUser();
+                  setBadgeId(null); // Doesn't unmount
                   notifications.show({
                     title: 'Success',
                     message: r.idempotent

@@ -4,7 +4,6 @@ import {
   Alert,
   Center,
   Paper,
-  LoadingOverlay,
   Button,
   Box,
   Skeleton,
@@ -15,14 +14,7 @@ import CheckInChecks from '../checkin/CheckInChecks';
 import { CompetitionWithApplication } from '@/actions/applications';
 import useSWR from 'swr';
 import { getCheckInChecks } from '@/actions/scanning';
-import {
-  Icon123,
-  IconCheckbox,
-  IconError404,
-  IconListCheck,
-  IconRefresh,
-  IconX,
-} from '@tabler/icons-react';
+import { IconListCheck, IconRefresh, IconX } from '@tabler/icons-react';
 
 interface Props {
   opened: boolean;
