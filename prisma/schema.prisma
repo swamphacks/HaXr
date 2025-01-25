@@ -31,6 +31,7 @@ model User {
   bio         String?  @db.Text
   githubURL   String?
   linkedinURL String?
+  discordId   String? @unique
   skills      String[]
 
   resumeUrl String?
@@ -97,6 +98,9 @@ model Competition {
   waitlist_open    DateTime?
   waitlist_close   DateTime?
   max_attendees    Int?
+
+  // For discord role
+  attendeeDiscordRoleId String?
 
   interestedPeople InterestedPerson[]
   attendees        Attendee[]
