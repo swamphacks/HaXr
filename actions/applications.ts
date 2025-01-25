@@ -284,3 +284,24 @@ export const promoteFromWaitlist = async (
     };
   });
 };
+
+export async function markFormsAsCompleted(
+  applicationIds: string[]
+): Promise<boolean> {
+  try {
+    await prisma.application.updateMany({
+      where: {
+        id: {
+          in: applicationIds,
+        },
+      },
+      data: {
+        completedForm: true,
+      },
+    });
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}

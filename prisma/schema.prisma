@@ -31,7 +31,7 @@ model User {
   bio         String?  @db.Text
   githubURL   String?
   linkedinURL String?
-  discordId   String? @unique
+  discordId   String?  @unique
   skills      String[]
 
   resumeUrl String?
@@ -139,7 +139,8 @@ model Application {
   competitionCode String
   userId          String
 
-  content Json
+  content       Json
+  completedForm Boolean @default(false)
 
   status      Status      @default(STARTED)
   competition Competition @relation(fields: [competitionCode], references: [code], onDelete: Cascade, onUpdate: Cascade)
