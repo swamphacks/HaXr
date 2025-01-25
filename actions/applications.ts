@@ -13,7 +13,6 @@ import { PromoteError, PromoteFromWaitlistResponse } from '@/types/waitlist';
 import { GetAttendeesOptions } from '@/types/application';
 import { getAttendeeOptionsSchema } from '@/schemas/application';
 import { GenericResponse } from '@/types/responses';
-import { AttendeeWithUser } from '@/types/attendee';
 
 export async function getApplication(
   applicationId: string

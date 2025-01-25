@@ -15,7 +15,7 @@ export const createRedeemableSchema = yup
     name: yup
       .string()
       .trim()
-      .min(1, 'Name must be at leaset 1 character')
+      .min(1, 'Name must be at least 1 character')
       .required('Please provide a name'),
     competitionCode: yup
       .string()
