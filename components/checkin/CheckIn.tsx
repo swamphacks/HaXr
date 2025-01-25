@@ -47,11 +47,13 @@ export default function CheckIn({ comp, applicants }: Props) {
 
   return (
     <>
-      <CheckInModal
-        comp={comp}
-        user={user}
-        deselectUser={() => setUser(null)}
-      />
+      {user && (
+        <CheckInModal
+          comp={comp}
+          user={user}
+          deselectUser={() => setUser(null)}
+        />
+      )}
 
       <Stack align='center'>
         <LoadingOverlay
