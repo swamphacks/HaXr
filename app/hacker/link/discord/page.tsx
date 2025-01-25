@@ -4,7 +4,12 @@
  */
 
 import DiscordLinkMain from '@/components/discordLink/DiscordLinkMain';
+import { Suspense } from 'react';
 
 export default function DiscordLinkPage() {
-  return <DiscordLinkMain />;
+  return (
+    <Suspense>
+      <DiscordLinkMain />
+    </Suspense>
+  );
 }
